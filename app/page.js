@@ -10,19 +10,8 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(true)
 
   useEffect(() => {
-    const text = "Welcome to Prompt Master: Unleash Your AI Potential!"
-    let i = 0
-    const typingInterval = setInterval(() => {
-      if (i < text.length) {
-        setPrompt(prev => prev + text.charAt(i))
-        i++
-      } else {
-        setIsTyping(false)
-        clearInterval(typingInterval)
-      }
-    }, 100)
-
-    return () => clearInterval(typingInterval)
+    const text = "Welcome to NxtAI: Unleash Your AI Potential!"
+    setPrompt(text)
   }, [])
 
   return (
@@ -42,7 +31,7 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="text-3xl font-bold flex items-center"
           >
-            <Sparkles className="mr-2 text-blue-400" /> Prompt Master
+            <Sparkles className="mr-2 text-blue-400" /> NxtAI
           </motion.div>
           <nav>
             <button className="px-4 py-2 text-gray-300 hover:text-white mr-4">Login</button>

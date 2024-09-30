@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# NxtAI 🚀
 
-## Getting Started
+## Description
 
-First, run the development server:
+nxtai is a project focused on prompt engineering. It allows users to experiment with different prompts, get instant results, and share their prompts with an open community. The project is built using React, Next.js, Tailwind CSS, and PostCSS.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Installation
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Clone the repository
+2. Install the dependencies using `npm install`
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+To start the development server, use the command `npm run dev`.
 
-## Learn More
+## Features
 
-To learn more about Next.js, take a look at the following resources:
+- **Prompt Labs**: Experiment with different prompts and get instant results.
+- **Community Sharing**: Share your prompts with an open community.
+- **Instant Results**: Get immediate feedback on your prompts.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Please read the [contributing guide](CONTRIBUTE.md) for details on our code of conduct, and the process for submitting pull requests.
 
-## Deploy on Vercel
+## Our Valuable Contributors:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+<a href="https://github.com/tkrupesh14/nxtai/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=tkrupesh14/nxtai" />
+</a>
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Made with [contrib.rocks](https://contrib.rocks).
