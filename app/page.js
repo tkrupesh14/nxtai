@@ -99,7 +99,7 @@ export default function Home() {
 
         {/* Floating GitHub Stars Button */}
         <a 
-          href="https://github.com/your-github-repo" 
+          href="https://github.com/tkrupesh14/nxtai" 
           target="_blank" 
           rel="noopener noreferrer" 
           className="fixed bottom-6 right-6 p-3 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-colors duration-300 flex items-center justify-center"
