@@ -44,7 +44,7 @@ export default function LoginPage() {
     try {
       const { email, password } = data
       await account.createEmailPasswordSession(email, password)
-      router.push("/") // Redirect to home
+      router.push("/dashboard") // Redirect to home
     } catch (error: any) {
       console.error("Login error:", error)
       setErrorMessage(error?.message || "Something went wrong. Please try again.")
@@ -56,7 +56,7 @@ export default function LoginPage() {
     try {
       await account.createOAuth2Session(
         OAuthProvider.Github,
-        `${window.location.origin}/`, // success redirect URL
+        `${window.location.origin}/dashboard`, // success redirect URL
         `${window.location.origin}/auth/login`,
         ['repo', 'user'] // Scopes you want to request
       )

@@ -54,7 +54,7 @@ export default function SignupPage() {
       // Example auto-login:
       await account.createEmailPasswordSession(email, password)
   
-      router.push('/') // Redirect to dashboard or home page
+      router.push('/dashboard') // Redirect to dashboard or home page
     } catch (error: any) {
       console.error("Error creating account:", error)
       alert(error?.message || "An error occurred while creating your account.")
@@ -66,7 +66,7 @@ export default function SignupPage() {
     try {
       await account.createOAuth2Session(
         OAuthProvider.Github,
-        `${window.location.origin}/`, // success redirect URL
+        `${window.location.origin}/dashboard`, // success redirect URL
         `${window.location.origin}/auth/signup`,
         ['repo', 'user'] // Scopes you want to request
       )
