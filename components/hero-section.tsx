@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { ArrowRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import TerminalDemo from "@/components/terminal-demo"
+import PromptBuilderDemo from "@/components/prompt-builder-demo"
 import { motion } from "framer-motion"
 
 export default function HeroSection() {
@@ -120,15 +120,9 @@ export default function HeroSection() {
             </motion.div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="relative"
-          >
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500 to-emerald-500 rounded-lg blur opacity-30 animate-pulse"></div>
-            <TerminalDemo />
-          </motion.div>
+          
+            <PromptBuilderDemo />
+          
         </div>
       </div>
 

@@ -9,7 +9,6 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "NxtAI - Master Prompt Engineering & LLMs",
   description: "Learn prompt engineering and LLM interaction with AI-powered assessments and expert mentorship.",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -18,16 +17,17 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
           {children}
         </ThemeProvider>
       </body>
     </html>
   )
 }
-
-
-
-import './globals.css'

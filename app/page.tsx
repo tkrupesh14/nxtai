@@ -9,10 +9,12 @@ import FloatingParticles from "@/components/floating-particles"
 import ScrollReveal from "@/components/scroll-reveal"
 import AnimatedBackground from "@/components/animated-background"
 import AnimatedStats from "@/components/animated-stats"
+import Navbar from "@/components/navbar"
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col bg-black text-white overflow-hidden">
+      <Navbar />
       {/* Hero Section with Animated Background */}
       <HeroSection />
 
