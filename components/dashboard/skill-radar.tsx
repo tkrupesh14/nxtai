@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { motion } from "framer-motion"
 
 export default function SkillRadar() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -37,7 +38,12 @@ export default function SkillRadar() {
       { name: "Constraint Handling", value: 0.5, color: "#3b82f6" },
     ]
 
-    // Draw radar chart
+    // Animation variables
+    let animationProgress = 0
+    const animationSpeed = 0.02
+    let animationFrame: number
+
+    // Draw radar chart with animation
     const drawRadar = () => {
       const rect = canvas.getBoundingClientRect()
       const centerX = rect.width / 2
@@ -47,7 +53,7 @@ export default function SkillRadar() {
       // Clear canvas
       ctx.clearRect(0, 0, rect.width, rect.height)
 
-      // Draw background circles
+      // Draw background circles with glow
       const levels = 5
       for (let i = 1; i <= levels; i++) {
         const levelRadius = (radius / levels) * i
@@ -82,11 +88,11 @@ export default function SkillRadar() {
         ctx.fillText(skill.name, labelX, labelY)
       })
 
-      // Draw data points and area
+      // Draw data points and area with animation
       ctx.beginPath()
       skills.forEach((skill, i) => {
         const angle = i * angleStep - Math.PI / 2
-        const pointRadius = radius * skill.value
+        const pointRadius = radius * skill.value * Math.min(1, animationProgress)
 
         const x = centerX + Math.cos(angle) * pointRadius
         const y = centerY + Math.sin(angle) * pointRadius
@@ -100,25 +106,37 @@ export default function SkillRadar() {
 
       // Close the path
       const firstAngle = -Math.PI / 2
-      const firstPointRadius = radius * skills[0].value
+      const firstPointRadius = radius * skills[0].value * Math.min(1, animationProgress)
       ctx.lineTo(centerX + Math.cos(firstAngle) * firstPointRadius, centerY + Math.sin(firstAngle) * firstPointRadius)
 
+      // Create gradient fill
+      const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius)
+      gradient.addColorStop(0, "rgba(139, 92, 246, 0.3)")
+      gradient.addColorStop(1, "rgba(139, 92, 246, 0.05)")
+
       // Fill area
-      ctx.fillStyle = "rgba(139, 92, 246, 0.2)"
+      ctx.fillStyle = gradient
       ctx.fill()
 
-      // Draw stroke
+      // Draw stroke with glow effect
+      ctx.shadowColor = "rgba(139, 92, 246, 0.5)"
+      ctx.shadowBlur = 10
       ctx.strokeStyle = "rgba(139, 92, 246, 0.8)"
       ctx.lineWidth = 2
       ctx.stroke()
+      ctx.shadowBlur = 0
 
       // Draw data points
       skills.forEach((skill, i) => {
         const angle = i * angleStep - Math.PI / 2
-        const pointRadius = radius * skill.value
+        const pointRadius = radius * skill.value * Math.min(1, animationProgress)
 
         const x = centerX + Math.cos(angle) * pointRadius
         const y = centerY + Math.sin(angle) * pointRadius
+
+        // Glow effect
+        ctx.shadowColor = skill.color
+        ctx.shadowBlur = 10
 
         ctx.beginPath()
         ctx.arc(x, y, 4, 0, Math.PI * 2)
@@ -127,21 +145,36 @@ export default function SkillRadar() {
         ctx.strokeStyle = "#1f1f23"
         ctx.lineWidth = 1
         ctx.stroke()
+
+        ctx.shadowBlur = 0
       })
+
+      // Update animation
+      if (animationProgress < 1) {
+        animationProgress += animationSpeed
+        animationFrame = requestAnimationFrame(drawRadar)
+      }
     }
 
-    drawRadar()
-    window.addEventListener("resize", drawRadar)
+    // Start animation
+    animationFrame = requestAnimationFrame(drawRadar)
 
     return () => {
       window.removeEventListener("resize", setCanvasDimensions)
-      window.removeEventListener("resize", drawRadar)
+      cancelAnimationFrame(animationFrame)
     }
   }, [])
 
   return (
     <div className="h-72 flex flex-col">
-      <canvas ref={canvasRef} className="w-full h-full" />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative w-full h-full"
+      >
+        <canvas ref={canvasRef} className="w-full h-full" />
+      </motion.div>
       <div className="flex justify-center mt-2">
         <div className="flex items-center text-xs text-zinc-400">
           <span>Beginner</span>
@@ -152,4 +185,3 @@ export default function SkillRadar() {
     </div>
   )
 }
-

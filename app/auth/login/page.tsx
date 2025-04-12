@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useForm } from "react-hook-form"
 import AuthFormToggle from "@/components/auth-form-toggle"
 import AuthIllustration from "@/components/auth-illustration"
-import { account, OAuthProvider } from "@/lib/appwrite"
+import {login} from './actions'
 
 interface LoginFormData {
   email: string
@@ -37,33 +37,8 @@ export default function LoginPage() {
     },
   })
 
-  const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true)
-    setErrorMessage("") // Reset any previous error
-  
-    try {
-      const { email, password } = data
-      await account.createEmailPasswordSession(email, password)
-      router.push("/dashboard") // Redirect to home
-    } catch (error: any) {
-      console.error("Login error:", error)
-      setErrorMessage(error?.message || "Something went wrong. Please try again.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
   const handleOAuthLogin = async () => {
-    try {
-      await account.createOAuth2Session(
-        OAuthProvider.Github,
-        `${window.location.origin}/dashboard`, // success redirect URL
-        `${window.location.origin}/auth/login`,
-        ['repo', 'user'] // Scopes you want to request
-      )
-    } catch (error) {
-      console.error("OAuth login error:", error)
-      alert("GitHub login failed. Please try again.")
-    }
+    // 
   }
   
 
@@ -124,7 +99,6 @@ export default function LoginPage() {
           </div>
 
           <motion.form
-            onSubmit={handleSubmit(onSubmit)}
             className="space-y-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -189,6 +163,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
+              formAction={login}
               className="w-full bg-violet-600 hover:bg-violet-700 text-white group relative overflow-hidden"
               disabled={isLoading}
             >

@@ -4,7 +4,6 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { BookOpen, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 
 export default function CourseProgress() {
   const [courses] = useState([
@@ -47,6 +46,32 @@ export default function CourseProgress() {
     }
   }
 
+  const getGlowColor = (color: string) => {
+    switch (color) {
+      case "violet":
+        return "hover:shadow-violet-500/20"
+      case "emerald":
+        return "hover:shadow-emerald-500/20"
+      case "amber":
+        return "hover:shadow-amber-500/20"
+      default:
+        return "hover:shadow-violet-500/20"
+    }
+  }
+
+  const getBorderColor = (color: string) => {
+    switch (color) {
+      case "violet":
+        return "hover:border-violet-700/50"
+      case "emerald":
+        return "hover:border-emerald-700/50"
+      case "amber":
+        return "hover:border-amber-700/50"
+      default:
+        return "hover:border-violet-700/50"
+    }
+  }
+
   return (
     <div className="space-y-4">
       {courses.map((course, index) => (
@@ -55,10 +80,13 @@ export default function CourseProgress() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
-          className="p-3 bg-zinc-800 rounded-lg"
+          className={`p-3 bg-zinc-800/50 backdrop-blur-sm rounded-lg border border-zinc-800/60 ${getBorderColor(course.color)} transition-all duration-300 hover:shadow-lg ${getGlowColor(course.color)} group`}
+          whileHover={{ y: -2 }}
         >
           <div className="flex justify-between items-start mb-2">
-            <h3 className="text-sm font-medium">{course.title}</h3>
+            <h3 className="text-sm font-medium group-hover:text-white transition-colors duration-300">
+              {course.title}
+            </h3>
             <span className="text-xs text-zinc-400 flex items-center">
               <BookOpen className="h-3 w-3 mr-1" />
               {course.lessonsCompleted}/{course.totalLessons}
@@ -69,17 +97,23 @@ export default function CourseProgress() {
               <span className="text-zinc-400">Progress</span>
               <span className="text-zinc-300">{course.progress}%</span>
             </div>
-            <Progress value={course.progress} className="h-1.5 bg-zinc-700">
-              <div className={`h-full ${getProgressColor(course.color)}`} style={{ width: `${course.progress}%` }} />
-            </Progress>
+            <div className="relative h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+              <div className="absolute inset-0 bg-black/20"></div>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${course.progress}%` }}
+                transition={{ duration: 1, delay: 0.2 }}
+                className={`h-full ${getProgressColor(course.color)}`}
+              />
+            </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-between text-zinc-300 hover:bg-zinc-700 hover:text-white"
+            className="w-full justify-between text-zinc-300 hover:bg-zinc-700 hover:text-white group"
           >
             <span>Continue</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
           </Button>
         </motion.div>
       ))}
@@ -90,4 +124,3 @@ export default function CourseProgress() {
     </div>
   )
 }
-

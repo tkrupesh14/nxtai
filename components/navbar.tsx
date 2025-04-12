@@ -5,26 +5,13 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useIsHydrated } from '@/hooks/useIsHydrated'
 import { useState, useEffect } from 'react'
-import { account } from '@/lib/appwrite'
 
 export default function Navbar() {
   const router = useRouter()
   const hydrated = useIsHydrated()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const session = await account.getSession("current")
-        setIsLoggedIn(!!session)
-      } catch (error) {
-        console.log("No active session", error)
-        setIsLoggedIn(false)
-      }
-    }
 
-    checkSession()
-  }, [])
 
   if (!hydrated) return null // avoid rendering until hydration completes
 
@@ -42,7 +29,7 @@ export default function Navbar() {
           </>
         ) : (
           <Button onClick={() => {
-            account.deleteSession('current')
+        
             setIsLoggedIn(false)
             router.push('/')
           }}>Logout</Button>

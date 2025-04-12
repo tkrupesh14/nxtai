@@ -52,15 +52,15 @@ export default function RecentActivity() {
   const getIconBackground = (color: string) => {
     switch (color) {
       case "violet":
-        return "bg-violet-900/20 text-violet-400"
+        return "bg-violet-900/30 text-violet-400 group-hover:bg-violet-900/50 group-hover:text-violet-300"
       case "emerald":
-        return "bg-emerald-900/20 text-emerald-400"
+        return "bg-emerald-900/30 text-emerald-400 group-hover:bg-emerald-900/50 group-hover:text-emerald-300"
       case "amber":
-        return "bg-amber-900/20 text-amber-400"
+        return "bg-amber-900/30 text-amber-400 group-hover:bg-amber-900/50 group-hover:text-amber-300"
       case "rose":
-        return "bg-rose-900/20 text-rose-400"
+        return "bg-rose-900/30 text-rose-400 group-hover:bg-rose-900/50 group-hover:text-rose-300"
       default:
-        return "bg-violet-900/20 text-violet-400"
+        return "bg-violet-900/30 text-violet-400 group-hover:bg-violet-900/50 group-hover:text-violet-300"
     }
   }
 
@@ -72,11 +72,18 @@ export default function RecentActivity() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
-          className="flex items-start gap-3 group"
+          whileHover={{ x: 3 }}
+          className="flex items-start gap-3 group cursor-pointer"
         >
-          <div className={`p-2 rounded-full ${getIconBackground(activity.color)} mt-0.5`}>{activity.icon}</div>
+          <div
+            className={`p-2 rounded-full ${getIconBackground(activity.color)} mt-0.5 transition-colors duration-300`}
+          >
+            {activity.icon}
+          </div>
           <div className="flex-1">
-            <p className="text-sm text-zinc-300">{activity.title}</p>
+            <p className="text-sm text-zinc-300 group-hover:text-white transition-colors duration-300">
+              {activity.title}
+            </p>
             <div className="flex items-center text-xs text-zinc-500 mt-1">
               <Clock className="h-3 w-3 mr-1" />
               <span>{activity.time}</span>
@@ -93,4 +100,3 @@ export default function RecentActivity() {
     </div>
   )
 }
-

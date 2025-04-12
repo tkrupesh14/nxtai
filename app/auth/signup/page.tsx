@@ -12,13 +12,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useForm } from "react-hook-form"
 import AuthFormToggle from "@/components/auth-form-toggle"
 import AuthIllustration from "@/components/auth-illustration"
-import { account, ID, OAuthProvider} from "@/lib/appwrite";
+import {signup} from './actions'
 
 interface SignupFormData {
   name: string
   email: string
   password: string
-  agreeTerms: boolean
 }
 
 export default function SignupPage() {
@@ -33,47 +32,12 @@ export default function SignupPage() {
     defaultValues: {
       name: "",
       email: "",
-      password: "",
-      agreeTerms: false,
+      password: ""
     },
   })
 
-  const onSubmit = async (data: SignupFormData) => {
-    setIsLoading(true)
-  
-    try {
-      const { name, email, password } = data
-  
-      // Create the user account with Appwrite
-      await account.create(ID.unique(), email, password, name)
-  
-      // Optional: auto login or show a message to verify email
-      // You can also redirect to login or dashboard here
-      console.log("Account created successfully!")
-  
-      // Example auto-login:
-      await account.createEmailPasswordSession(email, password)
-  
-      router.push('/dashboard') // Redirect to dashboard or home page
-    } catch (error: any) {
-      console.error("Error creating account:", error)
-      alert(error?.message || "An error occurred while creating your account.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
   const handleOAuthLogin = async () => {
-    try {
-      await account.createOAuth2Session(
-        OAuthProvider.Github,
-        `${window.location.origin}/dashboard`, // success redirect URL
-        `${window.location.origin}/auth/signup`,
-        ['repo', 'user'] // Scopes you want to request
-      )
-    } catch (error) {
-      console.error("OAuth login error:", error)
-      alert("GitHub login failed. Please try again.")
-    }
+    
   }
   
   
@@ -145,7 +109,6 @@ export default function SignupPage() {
           </div>
 
           <motion.form
-            onSubmit={handleSubmit(onSubmit)}
             className="space-y-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -222,6 +185,7 @@ export default function SignupPage() {
               type="submit"
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white group relative overflow-hidden"
               disabled={isLoading}
+              formAction={signup}
             >
               <span className="relative z-10 flex items-center">
                 {isLoading ? (
