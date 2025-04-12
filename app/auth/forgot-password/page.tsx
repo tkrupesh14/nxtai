@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useForm } from "react-hook-form"
-import { account } from "@/lib/appwrite"
 
 interface ForgotPasswordFormData {
   email: string
@@ -33,16 +32,6 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
     setErrorMessage("")
 
-    try {
-      const redirectUrl = `${window.location.origin}/auth/reset-password` // Make sure this route exists and is set in Appwrite
-      await account.createRecovery(data.email, redirectUrl)
-      setIsSubmitted(true)
-    } catch (error: any) {
-      console.error("Recovery error:", error)
-      setErrorMessage(error?.message || "Failed to send reset link")
-    } finally {
-      setIsLoading(false)
-    }
   }
 
   return (

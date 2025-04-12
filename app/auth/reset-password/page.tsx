@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { useForm } from "react-hook-form"
-import { account } from "@/lib/appwrite"
 
 
 interface ResetPasswordFormData {
@@ -119,15 +118,7 @@ const secret = searchParams.get("secret")
   
     setIsLoading(true)
   
-    try {
-      await account.updateRecovery(userId, secret, data.password)
-      setIsSuccess(true)
-    } catch (error: any) {
-      console.error("Recovery failed:", error)
-      setTokenValid(false)
-    } finally {
-      setIsLoading(false)
-    }
+   
   }
   
 
