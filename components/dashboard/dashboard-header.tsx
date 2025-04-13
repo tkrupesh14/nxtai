@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -31,7 +31,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 
-export default function DashboardHeader() {
+export default function DashboardHeader({
+  user,
+  avatarFallback,
+}: {
+  user: { full_name: string; avatar_url?: string }
+  avatarFallback: string
+}) {
   const [notifications] = useState([
     {
       id: 1,
@@ -63,6 +69,29 @@ export default function DashboardHeader() {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<any[]>([])
   const unreadCount = notifications.filter((n) => !n.read).length
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if the '/' key is pressed and no input or textarea is focused
+      const tagName = document.activeElement?.tagName
+if (event.key === '/' && tagName && !['INPUT', 'TEXTAREA'].includes(tagName)) {
+  event.preventDefault()
+  setIsSearchOpen(true)
+}
+    }
+  
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+  
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen])
 
   // Handle search
   useEffect(() => {
@@ -95,15 +124,15 @@ export default function DashboardHeader() {
   // Close search on escape key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsSearchOpen(false)
-        setSearchQuery("")
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false);
+        setSearchQuery('');
       }
-    }
-
-    window.addEventListener("keydown", handleEsc)
-    return () => window.removeEventListener("keydown", handleEsc)
-  }, [])
+    };
+  
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -214,10 +243,10 @@ export default function DashboardHeader() {
                 className="relative h-8 flex items-center gap-2 text-zinc-400 hover:text-white hover:bg-zinc-800"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                  <AvatarFallback className="bg-violet-900 text-violet-100">AJ</AvatarFallback>
+                  <AvatarImage src={user?.avatar_url || ''} alt={user?.full_name || 'User'} />
+                                <AvatarFallback className="bg-violet-900 text-violet-100">{avatarFallback}</AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline-block text-sm font-medium">Alex Johnson</span>
+                <span className="hidden md:inline-block text-sm font-medium">{user.full_name}</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -272,6 +301,7 @@ export default function DashboardHeader() {
                   placeholder="Search for assessments, courses, help..."
                   className="pl-12 pr-12 py-6 bg-transparent border-0 border-b border-zinc-700 rounded-none text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
                   value={searchQuery}
+                  ref={searchInputRef}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
                 />

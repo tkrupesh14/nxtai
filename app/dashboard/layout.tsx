@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
-import DashboardSidebar from "@/components/dashboard/dashboard-sidebar"
-import DashboardHeader from "@/components/dashboard/dashboard-header"
+import DashboardSidebarServer from "@/components/dashboard/dashboard-sidebar-server"
+import DashboardHedaerServer from "@/components/dashboard/dashboard-header-server"
 import FloatingParticles from "@/components/floating-particles"
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -13,11 +13,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <FloatingParticles count={15} color="violet" />
 
       {/* Sidebar */}
-      <DashboardSidebar />
+      <DashboardSidebarServer />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative z-10">
-        <DashboardHeader />
+        <DashboardHedaerServer />
         <main className="flex-1 overflow-auto p-6 pb-20 custom-scrollbar">
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>

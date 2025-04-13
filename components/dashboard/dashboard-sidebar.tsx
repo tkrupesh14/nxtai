@@ -24,7 +24,13 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 
-export default function DashboardSidebar() {
+export default function DashboardHeader({
+  user,
+  avatarFallback,
+}: {
+  user: { full_name: string; avatar_url?: string }
+  avatarFallback: string
+}) {
   const pathname = usePathname()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(true)
@@ -149,13 +155,13 @@ export default function DashboardSidebar() {
             className={`p-4 border-b border-zinc-800 ${isExpanded ? "flex items-center" : "flex flex-col items-center"}`}
           >
             <Avatar className={`${isExpanded ? "h-10 w-10" : "h-10 w-10"} border-2 border-violet-500`}>
-              <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-              <AvatarFallback className="bg-violet-900 text-violet-100">AJ</AvatarFallback>
+            <AvatarImage src={user?.avatar_url || ''} alt={user?.full_name || 'User'} />
+              <AvatarFallback className="bg-violet-900 text-violet-100">{avatarFallback}</AvatarFallback>
             </Avatar>
 
             {isExpanded && (
               <div className="ml-3 overflow-hidden">
-                <p className="text-sm font-medium truncate">Alex Johnson</p>
+                <p className="text-sm font-medium truncate">{user?.full_name}</p>
                 <p className="text-xs text-zinc-400 truncate">Level 4 • Prompt Engineer</p>
                 <div className="mt-1.5">
                   <div className="flex justify-between text-xs mb-1">

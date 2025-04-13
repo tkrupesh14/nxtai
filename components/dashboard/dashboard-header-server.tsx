@@ -1,9 +1,9 @@
 // app/(dashboard)/dashboard/welcome-banner.tsx
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import WelcomeBannerClient from './welcome-banner-client'
+import DashboardHeader from './dashboard-header'
 
-export default async function WelcomeBanner() {
+export default async function DashboardSidebarServer() {
   const supabase = await createClient()
 
   // Get the logged-in user
@@ -15,6 +15,7 @@ export default async function WelcomeBanner() {
   if (userError || !user) {
     redirect('/auth/login')
   }
+  
 
   // Fetch full_name from `users` table
   const {
@@ -31,22 +32,17 @@ export default async function WelcomeBanner() {
     redirect('/auth/login') // or redirect to error page / show fallback name
   }
 
-  const now = new Date()
-  const hours = now.getHours()
-  const timeString = now.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-
-  let greeting = 'Good evening'
-  if (hours < 12) greeting = 'Good morning'
-  else if (hours < 18) greeting = 'Good afternoon'
+  function getInitials(name: string): string {
+    if (!name) return "U" // fallback
+    const words = name.trim().split(" ")
+    if (words.length === 1) return words[0][0]?.toUpperCase()
+    return `${words[0][0]}${words[1][0]}`.toUpperCase()
+  }
 
   return (
-    <WelcomeBannerClient
-      name={userProfile.full_name || 'user'}
-      timeString={timeString}
-      greeting={greeting}
+    <DashboardHeader
+      user={userProfile}
+      avatarFallback = {getInitials(userProfile.full_name)}
     />
   )
 }
