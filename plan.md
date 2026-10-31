@@ -1,82 +1,111 @@
 # NxtAI — Roadmap
 
-_Last updated: 2026-10-31 · Branch: `dev` · Status of every item lives in [tracker.md](./tracker.md)._
+_Last updated: 2026-11-01 · Branch: `dev` · Live: https://krpex.in · Task status lives in [tracker.md](./tracker.md)._
 
 ## Where we are
 
-- **Public site** (`app/(site)`): `/`, `/about`, `/pricing`, `/contact`, `/login`, `/create-account` match nxtai.in pixel-for-pixel (light and dark, desktop and mobile). Commit `e71289b`.
-- **App** (`app/(app)`): dashboard and legacy `/auth/*` pages still use the old purple dark theme, with Supabase email/password auth.
-- **Stack:** Next.js 15.2.4, React 19, Tailwind v4.1.14, Supabase (`dkdkokkzbptjbgjyjkpz`), pnpm.
-- **Hosting:** one EC2 box at `http://3.25.236.158`, with Nginx in front of pm2 (`nxtai`, port 3000). HTTP only, no domain, no CI.
+- **Public site** (`app/(site)`): `/`, `/about`, `/pricing`, `/contact`, `/login`, `/create-account` match nxtai.in (light/dark, desktop/mobile). Added a mobile menu, working footer links, a `/error` page, and a contact form that saves to Supabase.
+- **AI learning loop** (`app/(learn)`, new design system): `/onboarding` quiz → AI course plan → `/learn` course list → course outline with ordered unlocking → lessons written on first open (Markdown, takeaways, quiz) → server-graded quiz (60% to pass) unlocks the next lesson.
+- **AI provider:** GPT-6 Luna ($0.10 / $0.50 per 1M tokens) through **OpenRouter** (`lib/ai/llm.ts`). The Amazon Bedrock path is built but blocked: the AWS account has no access to third-party models yet (support case open). Measured: course plan ~14 s, lesson ~35 s, ~₹4–5 per 20-lesson course.
+- **Auth:** Supabase. GitHub OAuth enabled; Google not yet. Email/password still uses the old `/auth/*` pages. Middleware protects `/dashboard`, `/learn`, `/onboarding`. Profile rows are created by a DB trigger and on OAuth callback.
+- **Database (Supabase `dkdkokkzbptjbgjyjkpz`):** `users` (+ `on_auth_user_created` trigger), `contact_messages`, `learner_profiles`, `courses`, `course_modules`, `lessons`, all with RLS. SQL lives in `supabase/migrations/` and is applied by hand in the SQL editor.
+- **Dashboard** (`app/(app)/dashboard`): still the old purple theme with **hard-coded sample data** on every page; its "Courses" link now goes to `/learn`.
+- **Stack:** Next.js **15.5.28**, React 19.3, Tailwind v4.1.14, Supabase, OpenAI SDK (OpenRouter/Bedrock), pnpm.
+- **Hosting:** one EC2 instance (Sydney), Elastic IP `54.79.194.65`, domain **krpex.in** (DNS at Hostinger), Let's Encrypt HTTPS with auto-renew, Nginx → pm2 (`nxtai`, port 3000). Pushes go to GitHub with a repo-scoped deploy key.
 
-## Known gaps (found while building the current version)
+## Security incident (2026-10-31)
 
-| # | Gap | Impact |
+Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between 21:46 and 22:58 UTC, automated scanners (`102.220.161.89`, `176.65.144.34`) sent 5 exploit requests that dumped the server's environment variables. Exposed: the Supabase anon key (public by design) and a Claude Code session token. The Bedrock key was not in the dumps but was on disk, so it is treated as exposed. No persistence was found (cron, SSH keys, processes, files, connections).
+**Done:** upgraded to Next 15.5.28 / React 19.3.1, restarted pm2 with a clean environment. **Still to do:** see Phase 0.
+
+## Known gaps
+
+| # | Gap | Status |
 |---|-----|--------|
-| G1 | GitHub/Google providers are **not enabled** in Supabase ("Unsupported provider") | `/login` and `/create-account` buttons fail |
-| G2 | Dashboard requires a row in the custom `users` table. Only email sign-up (`auth/signup/actions.ts`) creates it | OAuth users get bounced to `/auth/login` |
-| G3 | Unauthenticated dashboard visits redirect to the **old** `/auth/login`, not the new `/login` | Two login experiences |
-| G4 | Auth actions `redirect('/error')`, but there is **no `/error` page** | Failed logins show a 404 |
-| G5 | Home pricing (₹0 / ₹699 / ₹2499 per mo) **differs from** `/pricing` (₹0 / ₹499 / ₹1,999 per month), copied as-is from nxtai.in | Conflicting prices for customers |
-| G6 | Mobile header has no menu, so About, Pricing, Contact and Log in are unreachable on phones (same as nxtai.in) | Mobile navigation |
-| G7 | Footer links (`#platform`, `#features`…) only work on the home page | Dead links on other pages |
-| G8 | Contact form has no backend (fake 0.9 s delay) | Messages are lost |
-| G9 | `next.config.mjs` ignores TS and ESLint errors; 21 existing TS errors | Bugs can ship silently |
-| G10 | Dashboard still uses the old purple theme and the Inter font | Inconsistent with the new brand |
-| G11 | HTTP only, IP-based URL, pm2 not started on boot, no Elastic IP | Not production-ready |
-| G12 | Deprecated packages: `next@15.2.4`, `@supabase/auth-helpers-nextjs`, `recharts@2.15` | Security and maintenance |
+| G1 | OAuth providers not enabled | 🟡 GitHub done; Google pending |
+| G2 | OAuth users had no `users` row → bounced from dashboard | ✅ Trigger + callback create it |
+| G3 | Dashboard redirected to old `/auth/login` | ✅ Goes to `/login?next=…` |
+| G4 | No `/error` page | ✅ Added |
+| G5 | Home pricing (₹699/₹2499) ≠ `/pricing` (₹499/₹1,999) | ⬜ Needs a business decision |
+| G6 | No mobile menu | ✅ Added |
+| G7 | Footer anchors broken off the home page | ✅ Fixed |
+| G8 | Contact form had no backend | 🟡 Saves to Supabase; no email notification |
+| G9 | TS/ESLint errors ignored in builds (20 TS errors) | ⬜ |
+| G10 | Dashboard on old theme with sample data | ⬜ |
+| G11 | No domain/HTTPS/static IP; pm2 not on boot | 🟡 Domain, HTTPS, Elastic IP done; pm2 startup + log rotation pending |
+| G12 | Outdated packages | 🟡 Next patched; `@supabase/auth-helpers-nextjs`, `recharts` 2.x, Next 16 pending |
+| G13 | Secrets pasted in chat / possibly exposed | ⬜ Rotate OpenRouter key, delete Bedrock key, revoke old GitHub PAT, restart Claude Code session |
+| G14 | AWS account can't use third-party Bedrock models | ⛔ AWS support case (Marketplace Buyer Request) open |
+| G15 | `pnpm audit`: PostCSS (build-time) and Zod highs | ⬜ Bump when compatible |
+| G16 | AI cost controls are minimal (3 courses/day only) | ⬜ Spending cap, per-lesson limits, usage log |
+| G17 | Learning loop not yet verified by a real user in the browser; no automated tests | ⬜ |
+| G18 | Site navbar shows "Log in" when already signed in | ⬜ |
+| G19 | Email/password sign-in still on old purple `/auth/*` pages | ⬜ |
 
 ## Phases
 
-### Phase 1 — Make sign-in actually work (P0, about 1–2 days)
-Goal: a new visitor can sign up with GitHub or Google and land on a working dashboard.
-1. Enable GitHub and Google providers in Supabase. Add `http://3.25.236.158/auth/callback` (and the future domain) to the redirect allow-list. **(G1)**
-2. Create the `users` profile row automatically, using either a Postgres trigger on `auth.users` insert or an upsert in `/auth/callback`. Backfill existing auth users. **(G2)**
-3. Point every dashboard redirect at `/login`. Decide whether to keep email/password; if yes, add it to the new `/login` design and retire the `/auth/login` and `/auth/signup` pages. **(G3)**
-4. Add `app/error.tsx` and a friendly `/error` route; show OAuth errors (`/login?error=oauth`) on the login page. **(G4)**
-5. Protect `/dashboard/*` in `middleware.ts` (redirect when there is no session) instead of in each server component.
+### Phase 0 — Security follow-up (P0, now)
+1. Rotate the OpenRouter key and set a monthly spending limit; delete the Bedrock API key and its IAM user; revoke the GitHub PAT used earlier. **(G13)**
+2. Restart the Claude Code session (token was exposed).
+3. Decide: keep this instance (patched, no persistence found) or rebuild a fresh one from the repo.
+4. Turn on GitHub Dependabot security alerts and updates for the repo.
+5. Add basic Nginx hardening: rate limits on `POST`, block known scanner paths; consider AWS WAF or Cloudflare in front.
+6. Move AI keys out of `.env.local` into a secret store or an EC2 IAM role (Bedrock) once access is approved.
 
-### Phase 2 — Production hosting (P0/P1, about 1 day)
-1. Attach an Elastic IP; point `nxtai.in` (or a staging subdomain) DNS at it. **(G11)**
-2. Set up HTTPS with Let's Encrypt (certbot + Nginx) and redirect HTTP to HTTPS. Update the Supabase site URL and redirect URLs.
-3. Run `pm2 startup` and `pm2 save` so the app survives reboots; add pm2 log rotation.
-4. Add a deploy script (`git pull && pnpm install && pnpm build && pm2 reload nxtai`), then GitHub Actions to deploy on push to `main`.
-5. Decide the long-term host: keep EC2, or move to Vercel where nxtai.in runs today.
+### Phase 1 — Sign-in (mostly done)
+1. ✅ GitHub OAuth; profile row creation; redirects to `/login`; `/error`; middleware protection.
+2. Enable Google OAuth (Google Cloud OAuth client → Supabase). **(G1)**
+3. Rebuild email/password sign-in in the new design on `/login` and `/create-account`, then retire the `/auth/*` pages. **(G19)**
+4. Show the signed-in state in the site navbar ("My courses" / avatar instead of "Log in"). **(G18)**
 
-### Phase 3 — Content and conversion fixes on the public site (P1, about 1 day)
-1. Settle on **one** price list and use it on both home and `/pricing`. **(G5)**
-2. Add a mobile menu (shadcn `Sheet`) with the nav links and Log in. **(G6)**
-3. Make footer links absolute (`/#platform`, `/pricing`, `/contact`). **(G7)**
-4. Contact form backend: Supabase `contact_messages` table with RLS (insert-only for anon), plus an email notification. Add the success toast the live site meant to show. **(G8)**
-5. SEO basics: favicon, Open Graph image, per-page `<title>`/description, `sitemap.xml`, `robots.txt`.
-6. Analytics (Vercel Analytics, Plausible or PostHog) and error tracking (Sentry).
+### Phase 2 — Production hosting
+1. ✅ Elastic IP, `krpex.in` DNS, HTTPS with auto-renew, Nginx timeouts and header buffers.
+2. Run `pm2 startup` + `pm2 save`; add `pm2-logrotate`. **(G11)**
+3. Deploy script (`git pull && pnpm install && pnpm build && pm2 reload nxtai`), then GitHub Actions deploy over SSH on push.
+4. Uptime monitoring and alerts (e.g. UptimeRobot / Better Stack); Supabase backups.
+5. Decide long-term host (EC2 vs Vercel).
 
-### Phase 4 — Rebrand the dashboard (P1, about 3–5 days)
-1. Move the dashboard onto the site design system: blue/neutral tokens, Geist, and shadcn v4 components from `components/site/ui`. **(G10)**
-2. Use one shared theme toggle and token set for site and app; delete the legacy theme, the `space-y` compat shim and `tailwindcss-animate`.
-3. Remove unused legacy components (`hero-section`, `navbar`, `floating-particles`, `hero-animation` and others) and `styles/globals.css`.
+### Phase 3 — Public site
+1. One price list for home and `/pricing`. **(G5)**
+2. Contact form email notification (Resend/SES) and a dashboard view of messages. **(G8)**
+3. SEO: favicon, OG image, per-page metadata, `sitemap.xml`, `robots.txt`.
+4. Analytics and error tracking (PostHog or Plausible; Sentry).
 
-### Phase 5 — Core product features (P1/P2, ongoing)
-These are the promises the landing page makes:
-1. **Onboarding quiz, then a personal course plan** ("built from a few questions"), generated with Claude.
-2. **Bring your own docs**: PDF upload to Supabase Storage, chunking, and AI lessons from the user's own material.
-3. **Auto assessments and practice**: quiz generation and grading.
-4. **Proctored coding**: sandboxed runner and AI code review.
-5. **Mock interviews**: AI interviewer, scoring and feedback.
-6. **Communities and events**: event pages, RSVPs, hackathons.
-7. **Rewards and streaks**: XP, badges, leaderboard.
+### Phase 4 — Dashboard on real data
+1. Bring the dashboard onto the site design system (blue/Geist) and merge it with `/learn`. **(G10)**
+2. Replace sample data with real data from `courses`/`lessons`: progress, time studied, quiz scores, streaks.
+3. Delete unused legacy components and CSS, the `space-y` compat shim and `tailwindcss-animate`.
 
-### Phase 6 — Payments (P2, after pricing is settled)
-1. Razorpay subscriptions for Student Pro and Community Host (INR).
-2. Webhooks write plan status to Supabase; gate features by plan.
-3. Billing page in the dashboard (plan, invoices, cancel).
+### Phase 5 — Core product
+1. **Learning loop polish (next):** verify end-to-end with real users **(G17)**; "regenerate lesson" and "report a problem"; stream lesson text as it is written; course archive/delete; per-user AI usage log and limits **(G16)**.
+2. Bring your own docs: PDF upload to Supabase Storage → lessons from the learner's material.
+3. Standalone assessments: module tests and a final exam, with certificates.
+4. Proctored coding practice with AI code review.
+5. AI mock interviews.
+6. Communities, events, hackathons.
+7. XP, badges, streaks, leaderboard.
 
-### Phase 7 — Quality and maintenance (P1, runs alongside)
-1. Fix the 21 TS errors, then turn off `ignoreBuildErrors` / `ignoreDuringBuilds`. **(G9)**
-2. Upgrade Next.js to the latest patched release and remove `@supabase/auth-helpers-nextjs`. **(G12)**
-3. Add Playwright end-to-end tests (auth flow, contact form) and visual regression tests for the public pages. The comparison script used for the nxtai.in clone is a good base.
-4. Run CI on pull requests: typecheck, lint, build and tests.
+### Phase 6 — Payments (after G5)
+1. Razorpay subscriptions for Student Pro and Community Host.
+2. Webhooks → plan status in Supabase; gate features (e.g. courses per month) by plan.
+3. Billing page.
+
+### Phase 7 — Quality
+1. Fix the 20 TS errors and stop ignoring TS/ESLint in builds. **(G9)**
+2. Upgrade to Next 16, remove `@supabase/auth-helpers-nextjs`, update `recharts`, clear `pnpm audit` highs. **(G12, G15)**
+3. Playwright e2e tests: sign-in, onboarding → course → lesson → quiz, contact form; visual regression for public pages.
+4. CI on pull requests: typecheck, lint, build, tests.
+
+## Decisions log
+
+| Date | Decision |
+|------|----------|
+| 2026-10-31 | Public site cloned from nxtai.in; Tailwind v4; route groups `(site)`, `(app)`, `(learn)` with separate root layouts |
+| 2026-10-31 | First product feature = AI learning loop; new screens use the nxtai.in design system |
+| 2026-10-31 | AI model = GPT-6 Luna (cheapest current GPT, $0.10/$0.50) — via OpenRouter for now; Bedrock path kept for when AWS grants access; switch by which key is set, override with `AI_MODEL` |
+| 2026-10-31 | Hosting on EC2 + Nginx + pm2 at `krpex.in`; Supabase migrations applied by hand |
+| 2026-10-31 | GitHub access from the server via a repo-scoped deploy key (no tokens in chat) |
 
 ## Suggested order
 
-Phase 1 → Phase 2 → Phase 3 → Phase 7.1–7.2 → Phase 4 → Phase 5 (start with the onboarding quiz) → Phase 6.
+Phase 0 → finish Phase 1 and Phase 2 items 2–4 → Phase 5.1 (verify + polish the learning loop) → Phase 4 (dashboard on real data) → Phase 3 → Phase 7 → Phase 6 once pricing is settled.
