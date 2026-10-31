@@ -7,16 +7,16 @@ export function Footer() {
             © {new Date().getFullYear()} NxtAI. All rights reserved.
           </p>
           <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-            <a href="#platform" className="hover:text-foreground">
+            <a href="/#platform" className="hover:text-foreground">
               Platform
             </a>
-            <a href="#features" className="hover:text-foreground">
+            <a href="/#features" className="hover:text-foreground">
               Features
             </a>
-            <a href="#pricing" className="hover:text-foreground">
+            <a href="/pricing" className="hover:text-foreground">
               Pricing
             </a>
-            <a href="#get-started" className="hover:text-foreground">
+            <a href="/contact" className="hover:text-foreground">
               Contact
             </a>
           </nav>

@@ -53,7 +53,7 @@ export default function DashboardHeader({
     },
     {
       name: "Courses",
-      href: "/dashboard/courses",
+      href: "/learn",
       icon: <BookOpen className="h-5 w-5" />,
     },
     {

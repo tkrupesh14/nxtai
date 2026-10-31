@@ -1,0 +1,20 @@
+/* Lesson typography (Markdown from Claude), using the site tokens from site.css. */
+.lesson-prose { line-height: 1.75; font-size: 1rem; }
+.lesson-prose > * + * { margin-top: 1rem; }
+.lesson-prose h2 { margin-top: 2.25rem; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+.lesson-prose h3 { margin-top: 1.75rem; font-size: 1.2rem; font-weight: 600; line-height: 1.4; }
+.lesson-prose h4 { margin-top: 1.5rem; font-weight: 600; }
+.lesson-prose ul, .lesson-prose ol { padding-left: 1.5rem; }
+.lesson-prose ul { list-style: disc; }
+.lesson-prose ol { list-style: decimal; }
+.lesson-prose li + li { margin-top: 0.35rem; }
+.lesson-prose a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+.lesson-prose strong { font-weight: 600; }
+.lesson-prose blockquote { border-left: 3px solid var(--primary); padding: 0.25rem 0 0.25rem 1rem; color: var(--muted-foreground); }
+.lesson-prose code { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 0.875em; background: var(--muted); border-radius: 0.3rem; padding: 0.1rem 0.35rem; }
+.lesson-prose pre { background: var(--muted); border: 1px solid var(--border); border-radius: 0.6rem; padding: 1rem; overflow-x: auto; line-height: 1.55; }
+.lesson-prose pre code { background: none; padding: 0; font-size: 0.85rem; }
+.lesson-prose table { width: 100%; border-collapse: collapse; font-size: 0.925rem; display: block; overflow-x: auto; }
+.lesson-prose th, .lesson-prose td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
+.lesson-prose th { background: var(--muted); font-weight: 600; }
+.lesson-prose hr { border-color: var(--border); margin: 2rem 0; }

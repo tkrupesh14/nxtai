@@ -128,6 +128,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Keep in-page anchors (/#features etc.) clear of the sticky header. */
+  html {
+    scroll-padding-top: 4.5rem;
+  }
 }
 
 /* Scroll reveal (components/site/reveal.tsx) */

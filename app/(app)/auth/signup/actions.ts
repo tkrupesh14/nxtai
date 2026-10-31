@@ -20,11 +20,13 @@ export async function signup(formData: FormData) {
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
+    // Stored on auth.users so the profile trigger (supabase/migrations) can use it.
+    options: { data: { full_name: name } },
   })
 
   if (signUpError) {
     console.error("Signup Error:", signUpError.message)
-    redirect('/error') // or show error toast
+    redirect('/error?reason=signup')
     return
   }
 
@@ -32,23 +34,12 @@ export async function signup(formData: FormData) {
 
   if (!userId) {
     console.error("No user ID returned after signup.")
-    redirect('/error')
+    redirect('/error?reason=signup')
     return
   }
 
-  // Insert into the custom `users` table
-  const { error: insertError } = await supabase.from('users').insert({
-    id: userId,
-    full_name: name,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  })
-
-  if (insertError) {
-    console.error("Insert into users table failed:", insertError.message)
-    redirect('/error')
-    return
-  }
+  // The public.users profile row is created by the on_auth_user_created trigger
+  // (supabase/migrations), using the full_name passed in options.data above.
 
   revalidatePath('/auth/confirm-user', 'layout')
   redirect('/auth/confirm-user')

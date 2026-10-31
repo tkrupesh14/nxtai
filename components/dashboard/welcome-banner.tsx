@@ -1,35 +1,8 @@
-// app/(dashboard)/dashboard/welcome-banner.tsx
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { getCurrentProfile } from '@/lib/supabase/profile'
 import WelcomeBannerClient from './welcome-banner-client'
 
 export default async function WelcomeBanner() {
-  const supabase = await createClient()
-
-  // Get the logged-in user
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError || !user) {
-    redirect('/auth/login')
-  }
-
-  // Fetch full_name from `users` table
-  const {
-    data: userProfile,
-    error: profileError,
-  } = await supabase
-    .from('users')
-    .select('full_name')
-    .eq('id', user.id)
-    .single()
-
-  if (profileError || !userProfile) {
-    console.error('Failed to fetch user profile:', profileError)
-    redirect('/auth/login') // or redirect to error page / show fallback name
-  }
+  const { profile: userProfile } = await getCurrentProfile()
 
   const now = new Date()
   const hours = now.getHours()

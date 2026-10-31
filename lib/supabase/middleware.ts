@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { publicOrigin } from '@/lib/request-origin'
+
 type CookieItem = {
   name: string
   value: string
@@ -14,6 +16,9 @@ type CookieItem = {
   }
 }
 
+// Paths that need a signed-in user. Everything else is public.
+const PROTECTED_PREFIXES = ['/dashboard', '/learn', '/onboarding']
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -26,8 +31,8 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet: CookieItem[]) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({ request })
-
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
@@ -36,6 +41,21 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
+  // Refreshes the session cookie if it has expired. Do not remove.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { pathname, search } = request.nextUrl
+  const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+
+  if (!user && isProtected) {
+    const url = new URL(`/login?next=${encodeURIComponent(pathname + search)}`, publicOrigin(request))
+    const redirect = NextResponse.redirect(url)
+    // Keep any cookies Supabase just cleared/refreshed.
+    supabaseResponse.cookies.getAll().forEach((c) => redirect.cookies.set(c))
+    return redirect
+  }
 
   return supabaseResponse
 }

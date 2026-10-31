@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { MobileMenu } from "@/components/site/mobile-menu"
 import { ThemeToggle } from "@/components/site/theme-toggle"
 import { Button } from "@/components/site/ui/button"
 
@@ -32,6 +33,7 @@ export function Navbar() {
           <Button asChild>
             <Link href="/create-account">Create account</Link>
           </Button>
+          <MobileMenu links={links} />
         </div>
       </div>
     </header>
