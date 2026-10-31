@@ -120,7 +120,7 @@ export default function HeroAnimation() {
         }}
       />
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="bg-slate-800/70 backdrop-blur-sm p-8 rounded-xl border border-emerald-500/30 shadow-lg">
+        <div className="bg-slate-800/70 backdrop-blur-xs p-8 rounded-xl border border-emerald-500/30 shadow-lg">
           <h3 className="text-2xl font-bold text-white mb-2">AI-Powered Learning</h3>
           <p className="text-slate-300">Real-time assessments & personalized feedback</p>
         </div>

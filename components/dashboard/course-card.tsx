@@ -82,7 +82,7 @@ export default function CourseCard({ course, status }: CourseCardProps) {
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-zinc-900 to-transparent"></div>
 
         {status === "completed" && (
           <div className="absolute top-2 right-2 flex items-center bg-emerald-900/70 text-emerald-400 px-2 py-1 rounded-full text-xs font-medium">

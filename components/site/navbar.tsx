@@ -1,0 +1,39 @@
+import Link from "next/link"
+
+import { ThemeToggle } from "@/components/site/theme-toggle"
+import { Button } from "@/components/site/ui/button"
+
+const links = [
+  { href: "/about", label: "About" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/contact", label: "Contact" },
+]
+
+export function Navbar() {
+  return (
+    <header className="sticky top-0 z-50 border-b bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:py-4">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="h-6 w-6 rounded-md bg-primary" aria-hidden />
+          <span className="text-lg font-semibold tracking-tight">NxtAI</span>
+        </Link>
+        <nav className="hidden items-center gap-6 md:flex">
+          {links.map((l) => (
+            <a key={l.href} href={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              {l.label}
+            </a>
+          ))}
+        </nav>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Button asChild variant="ghost" className="hidden md:inline-flex">
+            <Link href="/login">Log in</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/create-account">Create account</Link>
+          </Button>
+        </div>
+      </div>
+    </header>
+  )
+}

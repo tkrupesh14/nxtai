@@ -16,7 +16,7 @@ export default function CourseCard({ title, description, level, duration, image 
       <div className="relative h-48 w-full">
         <Image src={image || "/placeholder.svg"} alt={title} fill className="object-cover" />
       </div>
-      <div className="p-6 flex-grow">
+      <div className="p-6 grow">
         <h3 className="text-xl font-semibold mb-2">{title}</h3>
         <p className="text-slate-600 mb-4">{description}</p>
         <div className="flex items-center gap-4 mb-4">

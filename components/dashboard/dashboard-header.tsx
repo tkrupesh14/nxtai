@@ -225,7 +225,7 @@ if (event.key === '/' && tagName && !['INPUT', 'TEXTAREA'].includes(tagName)) {
                           <p className="text-xs text-zinc-400 mt-1">{notification.message}</p>
                         </div>
                       </div>
-                      <span className="text-xs text-zinc-500 ml-2 flex-shrink-0">{notification.time}</span>
+                      <span className="text-xs text-zinc-500 ml-2 shrink-0">{notification.time}</span>
                     </div>
                   </div>
                 ))}
@@ -284,7 +284,7 @@ if (event.key === '/' && tagName && !['INPUT', 'TEXTAREA'].includes(tagName)) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center pt-[15vh]"
+            className="fixed inset-0 bg-black/80 backdrop-blur-xs z-50 flex items-start justify-center pt-[15vh]"
             onClick={() => setIsSearchOpen(false)}
           >
             <motion.div

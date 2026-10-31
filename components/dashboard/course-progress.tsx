@@ -80,7 +80,7 @@ export default function CourseProgress() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
-          className={`p-3 bg-zinc-800/50 backdrop-blur-sm rounded-lg border border-zinc-800/60 ${getBorderColor(course.color)} transition-all duration-300 hover:shadow-lg ${getGlowColor(course.color)} group`}
+          className={`p-3 bg-zinc-800/50 backdrop-blur-xs rounded-lg border border-zinc-800/60 ${getBorderColor(course.color)} transition-all duration-300 hover:shadow-lg ${getGlowColor(course.color)} group`}
           whileHover={{ y: -2 }}
         >
           <div className="flex justify-between items-start mb-2">

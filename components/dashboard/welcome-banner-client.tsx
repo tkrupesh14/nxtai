@@ -16,7 +16,7 @@ export default function WelcomeBannerClient({ name, timeString, greeting }: Prop
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="relative overflow-hidden rounded-xl border border-zinc-800/60 bg-gradient-to-r from-zinc-900/90 via-zinc-900/80 to-zinc-900/90 backdrop-blur-sm"
+      className="relative overflow-hidden rounded-xl border border-zinc-800/60 bg-linear-to-r from-zinc-900/90 via-zinc-900/80 to-zinc-900/90 backdrop-blur-xs"
     >
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-violet-600/10 rounded-full blur-3xl"></div>

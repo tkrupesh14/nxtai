@@ -368,8 +368,8 @@ export default function PromptBuilderDemo() {
                   </>
                 )}
               </span>
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-violet-600 to-violet-500"></span>
-              <span className="absolute bottom-0 left-0 w-full h-0 bg-gradient-to-r from-fuchsia-600 to-violet-600 transition-all duration-300 group-hover:h-full"></span>
+              <span className="absolute inset-0 w-full h-full bg-linear-to-r from-violet-600 to-violet-500"></span>
+              <span className="absolute bottom-0 left-0 w-full h-0 bg-linear-to-r from-fuchsia-600 to-violet-600 transition-all duration-300 group-hover:h-full"></span>
             </Button>
             <Button onClick={handleReset} variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
               <RefreshCw className="h-4 w-4" />

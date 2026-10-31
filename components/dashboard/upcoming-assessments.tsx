@@ -77,7 +77,7 @@ export default function UpcomingAssessments() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
-          className={`p-3 bg-zinc-800/50 backdrop-blur-sm rounded-lg border border-zinc-800/60 ${getBorderColor(assessment.color)} transition-all duration-300 hover:shadow-lg ${getGlowColor(assessment.color)} group`}
+          className={`p-3 bg-zinc-800/50 backdrop-blur-xs rounded-lg border border-zinc-800/60 ${getBorderColor(assessment.color)} transition-all duration-300 hover:shadow-lg ${getGlowColor(assessment.color)} group`}
           whileHover={{ y: -2 }}
         >
           <div className="flex justify-between items-start mb-2">

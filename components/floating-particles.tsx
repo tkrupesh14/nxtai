@@ -51,7 +51,7 @@ export default function FloatingParticles({ count = 10, color = "violet" }: Floa
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
-          className={`absolute rounded-full ${getColor()} opacity-20 blur-sm`}
+          className={`absolute rounded-full ${getColor()} opacity-20 blur-xs`}
           style={{
             width: particle.size,
             height: particle.size,

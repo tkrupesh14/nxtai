@@ -35,12 +35,12 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-black"></div>
 
       <div
-        className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-violet-900/20 via-zinc-900 to-black"
+        className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-violet-900/20 via-zinc-900 to-black"
         style={{ transform: `translateY(${calculateParallax(0.05)}px)` }}
       ></div>
 
       {/* Grid Lines */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(255,255,255,0.05)_1px,_transparent_1px),_linear-gradient(to_bottom,_rgba(255,255,255,0.05)_1px,_transparent_1px)] bg-[size:4rem_4rem]"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-size-[4rem_4rem]"></div>
 
       {/* Animated Gradient Orbs */}
       <div
@@ -76,11 +76,11 @@ export default function HeroSection() {
               className="text-5xl md:text-7xl font-bold mb-6"
             >
               <span className="inline-block relative">
-                <span className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-emerald-400">
+                <span className="relative z-10 bg-clip-text text-transparent bg-linear-to-r from-violet-400 to-emerald-400">
                   Master the Art of <br />
                   Prompt Engineering
                 </span>
-                <span className="absolute -inset-1 bg-gradient-to-r from-violet-400/20 to-emerald-400/20 blur-xl opacity-50 z-0"></span>
+                <span className="absolute -inset-1 bg-linear-to-r from-violet-400/20 to-emerald-400/20 blur-xl opacity-50 z-0"></span>
               </span>
             </motion.h1>
 
@@ -105,8 +105,8 @@ export default function HeroSection() {
                   Start Assessment
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </span>
-                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-violet-600 to-violet-500"></span>
-                <span className="absolute bottom-0 left-0 w-full h-0 bg-gradient-to-r from-fuchsia-600 to-violet-600 transition-all duration-300 group-hover:h-full"></span>
+                <span className="absolute inset-0 w-full h-full bg-linear-to-r from-violet-600 to-violet-500"></span>
+                <span className="absolute bottom-0 left-0 w-full h-0 bg-linear-to-r from-fuchsia-600 to-violet-600 transition-all duration-300 group-hover:h-full"></span>
               </Button>
 
               <Button

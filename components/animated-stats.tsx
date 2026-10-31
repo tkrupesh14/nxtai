@@ -117,7 +117,7 @@ export default function AnimatedStats() {
             visible: { opacity: 1, y: 0 },
           }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
-          className={`bg-zinc-800/50 backdrop-blur-sm rounded-xl p-6 border ${getBorderColor(stat.color)} shadow-lg ${getGlowColor(stat.color)}`}
+          className={`bg-zinc-800/50 backdrop-blur-xs rounded-xl p-6 border ${getBorderColor(stat.color)} shadow-lg ${getGlowColor(stat.color)}`}
         >
           <div className="flex items-start">
             <div className={`p-3 rounded-lg bg-${stat.color}-900/20 mr-4`}>{stat.icon}</div>

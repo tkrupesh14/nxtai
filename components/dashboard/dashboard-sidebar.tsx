@@ -99,7 +99,7 @@ export default function DashboardHeader({
           variant="outline"
           size="icon"
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="bg-zinc-900/80 backdrop-blur-sm border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+          className="bg-zinc-900/80 backdrop-blur-xs border-zinc-700 text-zinc-300 hover:bg-zinc-800"
         >
           {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
@@ -113,7 +113,7 @@ export default function DashboardHeader({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-black/80 backdrop-blur-xs z-40 md:hidden"
             onClick={() => setIsMobileOpen(false)}
           />
         )}
@@ -131,8 +131,8 @@ export default function DashboardHeader({
           {/* Logo */}
           <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="relative w-8 h-8 flex-shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-emerald-500 rounded-md blur opacity-60"></div>
+              <div className="relative w-8 h-8 shrink-0">
+                <div className="absolute inset-0 bg-linear-to-r from-violet-500 to-emerald-500 rounded-md blur-sm opacity-60"></div>
                 <div className="absolute inset-0 bg-zinc-900 rounded-md flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-violet-400" />
                 </div>
@@ -197,7 +197,7 @@ export default function DashboardHeader({
                         transition={{ type: "spring", duration: 0.5 }}
                       />
                     )}
-                    <span className="flex-shrink-0">{item.icon}</span>
+                    <span className="shrink-0">{item.icon}</span>
                     {isExpanded && <span className="ml-3">{item.name}</span>}
                   </Link>
                 )
@@ -226,7 +226,7 @@ export default function DashboardHeader({
                             transition={{ type: "spring", duration: 0.5 }}
                           />
                         )}
-                        <span className="flex-shrink-0">{item.icon}</span>
+                        <span className="shrink-0">{item.icon}</span>
                         <span className="ml-3">{item.name}</span>
                       </Link>
                     )
@@ -244,7 +244,7 @@ export default function DashboardHeader({
                 isExpanded ? "justify-start" : "justify-center"
               }`}
             >
-              <LogOut className="h-4 w-4 flex-shrink-0" />
+              <LogOut className="h-4 w-4 shrink-0" />
               {isExpanded && <span className="ml-2">Log Out</span>}
             </Button>
           </div>

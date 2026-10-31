@@ -178,7 +178,7 @@ export default function SkillRadar() {
       <div className="flex justify-center mt-2">
         <div className="flex items-center text-xs text-zinc-400">
           <span>Beginner</span>
-          <div className="w-24 h-1 mx-2 bg-gradient-to-r from-zinc-700 to-violet-500 rounded-full"></div>
+          <div className="w-24 h-1 mx-2 bg-linear-to-r from-zinc-700 to-violet-500 rounded-full"></div>
           <span>Expert</span>
         </div>
       </div>

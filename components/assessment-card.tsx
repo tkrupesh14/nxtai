@@ -89,11 +89,11 @@ export default function AssessmentCard({
       className={`bg-zinc-800 rounded-xl overflow-hidden border ${getBorderColor()} transition-all duration-300 hover:shadow-lg ${getGlowColor()} group relative`}
     >
       {/* Animated gradient border */}
-      <div className={`h-2 bg-gradient-to-r ${getGradient()}`}></div>
+      <div className={`h-2 bg-linear-to-r ${getGradient()}`}></div>
 
       {/* Animated background glow on hover */}
       <div
-        className={`absolute inset-0 bg-gradient-to-b from-${color}-900/0 to-${color}-900/0 group-hover:from-${color}-900/10 group-hover:to-transparent transition-all duration-500`}
+        className={`absolute inset-0 bg-linear-to-b from-${color}-900/0 to-${color}-900/0 group-hover:from-${color}-900/10 group-hover:to-transparent transition-all duration-500`}
       ></div>
 
       <div className="p-6 relative z-10">

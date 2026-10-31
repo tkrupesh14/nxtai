@@ -148,14 +148,14 @@ export default function AuthIllustration({ type }: AuthIllustrationProps) {
         <div className="relative w-full h-full flex items-center justify-center">
           <div className="absolute w-64 h-64 bg-violet-900/20 rounded-full blur-3xl"></div>
           <motion.div
-            className="relative z-10 bg-zinc-800/80 backdrop-blur-sm p-8 rounded-2xl border border-zinc-700 shadow-xl"
+            className="relative z-10 bg-zinc-800/80 backdrop-blur-xs p-8 rounded-2xl border border-zinc-700 shadow-xl"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.7 }}
           >
             <div className="w-64 h-64 flex flex-col items-center justify-center">
               <motion.div
-                className="w-24 h-24 rounded-full bg-gradient-to-br from-violet-500 to-violet-700 mb-6 relative overflow-hidden"
+                className="w-24 h-24 rounded-full bg-linear-to-br from-violet-500 to-violet-700 mb-6 relative overflow-hidden"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.5, duration: 0.5, type: "spring" }}
@@ -201,14 +201,14 @@ export default function AuthIllustration({ type }: AuthIllustrationProps) {
         <div className="relative w-full h-full flex items-center justify-center">
           <div className="absolute w-64 h-64 bg-emerald-900/20 rounded-full blur-3xl"></div>
           <motion.div
-            className="relative z-10 bg-zinc-800/80 backdrop-blur-sm p-8 rounded-2xl border border-zinc-700 shadow-xl"
+            className="relative z-10 bg-zinc-800/80 backdrop-blur-xs p-8 rounded-2xl border border-zinc-700 shadow-xl"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.7 }}
           >
             <div className="w-64 h-64 flex flex-col items-center justify-center">
               <motion.div
-                className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 mb-6 relative overflow-hidden"
+                className="w-24 h-24 rounded-full bg-linear-to-br from-emerald-500 to-emerald-700 mb-6 relative overflow-hidden"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.5, duration: 0.5, type: "spring" }}

@@ -93,9 +93,9 @@ export default function QuickActions() {
         >
           <Link
             href={action.href}
-            className={`flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br ${getGradient(
+            className={`flex flex-col items-center justify-center p-4 rounded-xl bg-linear-to-br ${getGradient(
               action.color,
-            )} backdrop-blur-sm border transition-all duration-300 hover:shadow-lg group h-full`}
+            )} backdrop-blur-xs border transition-all duration-300 hover:shadow-lg group h-full`}
           >
             <div
               className={`p-3 rounded-full bg-black/30 mb-3 ${getIconColor(

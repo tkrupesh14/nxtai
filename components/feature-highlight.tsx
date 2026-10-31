@@ -86,7 +86,7 @@ export default function FeatureHighlight({ title, description, image, color }: F
             className="object-cover opacity-80 transition-transform duration-500 group-hover:scale-105"
           />
         </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-zinc-900 to-transparent"></div>
 
         {/* Animated overlay on hover */}
         <motion.div
