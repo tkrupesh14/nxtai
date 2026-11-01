@@ -3,8 +3,10 @@ import Link from "next/link"
 import { AuthDivider } from "@/components/site/auth-divider"
 import { EmailSignupForm } from "@/components/site/email-auth"
 import { OAuthButtons } from "@/components/site/oauth-buttons"
+import { safeNext } from "@/lib/safe-next"
 
-export default function CreateAccountPage() {
+export default async function CreateAccountPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const next = safeNext((await searchParams).next, "/onboarding")
   return (
     <main className="mx-auto max-w-md px-4 py-16">
       <div className="mb-8 text-center">
@@ -14,9 +16,9 @@ export default function CreateAccountPage() {
         </p>
       </div>
       <section className="rounded-lg border bg-card p-6">
-        <OAuthButtons next="/onboarding" />
+        <OAuthButtons next={next} />
         <AuthDivider />
-        <EmailSignupForm />
+        <EmailSignupForm next={next} />
       </section>
       <p className="mt-4 text-center text-xs text-muted-foreground text-pretty">
         By creating an account you agree to our{" "}
@@ -31,7 +33,7 @@ export default function CreateAccountPage() {
       </p>
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-primary hover:underline">
+        <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-medium text-primary hover:underline">
           Log in
         </Link>
       </p>

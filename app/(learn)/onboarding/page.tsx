@@ -21,6 +21,13 @@ export default async function OnboardingPage() {
         <p className="mt-2 text-muted-foreground text-pretty">
           Answer a few quick questions. Krpex designs a learning path around your goal, level and schedule.
         </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Or{" "}
+          <Link href="/courses" className="font-medium text-primary hover:underline">
+            start a ready-made course
+          </Link>{" "}
+          in one tap.
+        </p>
       </div>
       {allowance && !allowance.allowed ? (
         <section className="rounded-xl border bg-card p-6 md:p-8">

@@ -16,6 +16,8 @@ function watchErrors(page: Page) {
 const PUBLIC_PAGES = [
   ["/", /personal AI professor/i],
   ["/pricing", /₹499/],
+  ["/courses", /Ready-made courses/],
+  ["/courses/python-fundamentals", /Syllabus/],
   ["/about", /Krpex/],
   ["/contact", /contact/i],
   ["/terms", /terms/i],
@@ -71,4 +73,20 @@ test("API routes refuse bad input without crashing", async ({ request }) => {
   const hook = await request.post("/api/razorpay/webhook", { data: "{}", headers: { "x-razorpay-signature": "bad" } })
   expect(hook.status()).toBeGreaterThanOrEqual(400)
   expect(hook.status()).toBeLessThan(500)
+})
+
+test("starting a ready-made course while signed out goes through sign-up and back", async ({ page }) => {
+  await page.goto("/courses/sql-from-zero")
+  await page.getByRole("button", { name: "Start this course" }).click()
+  await expect(page).toHaveURL(/\/create-account\?next=%2Fcourses%2Fsql-from-zero/)
+  await expect(page.getByRole("link", { name: /log in/i }).last()).toHaveAttribute("href", "/login?next=%2Fcourses%2Fsql-from-zero")
+})
+
+test("unknown course pages are 404s", async ({ request }) => {
+  expect((await request.get("/courses/not-a-course")).status()).toBe(404)
+})
+
+test("sitemap lists the course pages", async ({ request }) => {
+  const xml = await (await request.get("/sitemap.xml")).text()
+  expect(xml).toContain("/courses/python-fundamentals")
 })

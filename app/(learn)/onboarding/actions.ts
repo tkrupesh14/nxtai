@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 
 import { AIError, checkGoal, generateCoursePlan } from "@/lib/ai/llm"
 import { professorForCategory } from "@/lib/learning/catalog"
+import { COURSE_LIMIT_MESSAGES } from "@/lib/learning/plans"
 import { OnboardingSchema } from "@/lib/learning/schemas"
 import { createClient } from "@/lib/supabase/server"
 import { serverKey } from "@/lib/supabase/server-key"
@@ -14,12 +15,6 @@ export type OnboardingState = {
   betterCategory?: string
   /** Goal check: the goal is unclear or not allowed; send the learner back to edit it. */
   reviseGoal?: boolean
-}
-
-const COURSE_LIMIT_MESSAGES: Record<string, string> = {
-  daily_limit: "You can create up to 3 courses a day. Please come back tomorrow.",
-  monthly_limit:
-    "You've used this month's free courses. Each extra course uses 20 credits. Recharge from your account page, or finish your current courses first.",
 }
 
 export async function createCourse(_prev: OnboardingState, formData: FormData): Promise<OnboardingState> {

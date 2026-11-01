@@ -192,7 +192,7 @@ export function EmailLoginForm({ next }: { next: string }) {
   )
 }
 
-export function EmailSignupForm() {
+export function EmailSignupForm({ next = "/onboarding" }: { next?: string }) {
   const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -211,14 +211,14 @@ export function EmailSignupForm() {
       email: email.trim(),
       password,
       // full_name is read by the on_auth_user_created trigger to create the profile row.
-      options: { data: { full_name: name.trim() }, emailRedirectTo: callbackUrl("/onboarding", "signup") },
+      options: { data: { full_name: name.trim() }, emailRedirectTo: callbackUrl(next, "signup") },
     })
     setPending(false)
     if (error) return setError(messageFor(error))
     // Email confirmation off: signed in already. On (or the email is taken): "check your email",
     // which deliberately doesn't reveal whether the address already had an account.
     if (data.session) {
-      router.replace("/onboarding")
+      router.replace(next)
       router.refresh()
       return
     }

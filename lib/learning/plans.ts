@@ -9,6 +9,13 @@ export const PLANS: Record<PlanId, { name: string; askDay: number; askLesson: nu
 
 export const CREDIT_COST = { question: 1, course: 20 } as const
 
+/** Why a new course can't be created right now (reasons from course_allowance / the courses trigger). */
+export const COURSE_LIMIT_MESSAGES: Record<string, string> = {
+  daily_limit: "You can create up to 3 courses a day. Please come back tomorrow.",
+  monthly_limit:
+    "You've used this month's free courses. Each extra course uses 20 credits. Recharge from your account page, or finish your current courses first.",
+}
+
 /** What can be bought. Prices are set here only (never from the browser). */
 export const CREDIT_PACKS = [
   { id: "c100", credits: 100, priceInr: 49 },

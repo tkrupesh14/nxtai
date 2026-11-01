@@ -6,6 +6,8 @@ import { Button } from "@/components/site/ui/button"
 import { ProfessorAvatar } from "@/components/learn/professor"
 import { ProgressSummary } from "@/components/learn/progress-summary"
 import { getCategory, getProfessor, professorForCategory } from "@/lib/learning/catalog"
+import { CatalogCard } from "@/components/site/catalog-card"
+import { CATALOG } from "@/lib/learning/course-catalog"
 import { getQuestionTimes, listCourses } from "@/lib/learning/data"
 import { learningStats } from "@/lib/learning/stats"
 
@@ -83,6 +85,12 @@ export default async function MyCoursesPage() {
   const stats = learningStats(courses.flatMap((c) => c.lessons), questionTimes)
   const active = courses.filter((c) => c.status !== "archived")
   // Most recently studied unfinished course (or the newest one) for the "Continue" card.
+  // Ready-made courses to try next: the learner's own subjects first, skipping ones already started.
+  const started = new Set(courses.map((c) => c.title))
+  const mine = new Set(courses.map((c) => c.category))
+  const suggestions = CATALOG.filter((c) => !started.has(c.title))
+    .sort((a, b) => Number(mine.has(b.category)) - Number(mine.has(a.category)))
+    .slice(0, 3)
   const resume =
     [...active].filter((c) => c.nextLesson).sort((a, b) => (b.lastActive ?? b.created_at).localeCompare(a.lastActive ?? a.created_at))[0] ?? null
   const archived = courses.filter((c) => c.status === "archived")
@@ -118,6 +126,23 @@ export default async function MyCoursesPage() {
 
       <h2 className="mb-4 text-lg font-semibold tracking-tight">Your courses</h2>
       <CourseGrid courses={active} />
+      {suggestions.length > 0 && (
+        <section aria-labelledby="explore" className="mt-12">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+            <h2 id="explore" className="text-lg font-semibold tracking-tight">
+              Ready-made courses
+            </h2>
+            <Link href="/courses" className="text-sm font-medium text-primary hover:underline">
+              See all courses
+            </Link>
+          </div>
+          <ul className="grid gap-4 md:grid-cols-3">
+            {suggestions.map((c) => (
+              <CatalogCard key={c.slug} course={c} />
+            ))}
+          </ul>
+        </section>
+      )}
       {archived.length > 0 && (
         <details className="mt-10">
           <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">

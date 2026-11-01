@@ -8,6 +8,7 @@ import { displayNameFor, initialsFor } from "@/lib/supabase/profile"
 import { createClient } from "@/lib/supabase/server"
 
 const links = [
+  { href: "/courses", label: "Courses" },
   { href: "/about", label: "About" },
   { href: "/pricing", label: "Pricing" },
   { href: "/contact", label: "Contact" },

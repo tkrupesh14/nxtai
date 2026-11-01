@@ -127,3 +127,25 @@ describe("course creation", () => {
     expect(await errorOf(t.createCourse(1))).toMatch(/course_daily_limit/)
   })
 })
+
+describe("ready-made courses", () => {
+  it("every catalog syllabus is accepted as-is by app_create_course", async () => {
+    const { CATALOG, lessonCount } = await import("@/lib/learning/course-catalog")
+    for (const c of CATALOG) {
+      // Skip the daily/monthly course limits between creations by moving earlier ones back in time.
+      await t.asOwner()
+      await t.query(`update public.course_creations set created_at = created_at - interval '40 days'`)
+      await t.asUser(USER_A)
+      const { id } = (await t.one<{ id: string }>(`select public.app_create_course($1, $2, $3) as id`, [
+        SERVER_KEY,
+        JSON.stringify({ title: c.title, summary: c.summary, level: c.level, estimated_weeks: c.estimated_weeks, goal: c.title, category: c.category, subcategory: c.subcategory, professor: "x", welcome: c.welcome }),
+        JSON.stringify(c.modules),
+      ]))!
+      const n = await t.one<{ lessons: number; modules: number }>(
+        `select (select count(*) from public.lessons where course_id = $1)::int as lessons, (select count(*) from public.course_modules where course_id = $1)::int as modules`,
+        [id],
+      )
+      expect(n, c.slug).toEqual({ lessons: lessonCount(c), modules: c.modules.length })
+    }
+  })
+})
