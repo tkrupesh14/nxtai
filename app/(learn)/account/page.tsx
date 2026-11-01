@@ -19,7 +19,20 @@ import { createClient } from "@/lib/supabase/server"
 import { getCurrentProfile, initialsFor } from "@/lib/supabase/profile"
 import { cn } from "@/lib/utils"
 
-function Meter({ label, used, limit, hint }: { label: string; used: number; limit: number; hint?: string }) {
+function Meter({
+  label,
+  used,
+  limit,
+  hint,
+  extra,
+}: {
+  label: string
+  used: number
+  limit: number
+  hint?: string
+  /** Shown after the free count, e.g. "then 100 more with credits". */
+  extra?: string
+}) {
   const left = Math.max(limit - used, 0)
   const pct = Math.min(100, Math.round((used / limit) * 100))
   return (
@@ -27,10 +40,14 @@ function Meter({ label, used, limit, hint }: { label: string; used: number; limi
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums">
         {left}
-        <span className="text-sm font-normal text-muted-foreground"> of {limit} left</span>
+        <span className="text-sm font-normal text-muted-foreground"> of {limit} free left</span>
       </p>
+      {extra ? <p className="text-sm text-primary">{extra}</p> : null}
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted" role="presentation">
-        <div className={cn("h-full rounded-full", left === 0 ? "bg-destructive" : "bg-primary")} style={{ width: `${pct}%` }} />
+        <div
+          className={cn("h-full rounded-full", left === 0 && !extra ? "bg-destructive" : "bg-primary")}
+          style={{ width: `${pct}%` }}
+        />
       </div>
       {hint ? <p className="mt-2 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
@@ -104,10 +121,11 @@ export default async function AccountPage() {
       <AccountSection title="Today's usage" description="Daily allowances reset at midnight (India time).">
         <div className="grid gap-3 sm:grid-cols-2">
           <Meter
-            label="Free questions to your professors"
+            label="Questions to your professors"
             used={usage.questionsToday}
             limit={account.askDay}
-            hint={`Up to ${account.askLesson} per lesson each day. After that, each question uses ${CREDIT_COST.question} credit.`}
+            extra={account.credits > 0 ? `then ${account.credits} more with your credits` : undefined}
+            hint={`Up to ${account.askLesson} free per lesson each day. After that, each question uses ${CREDIT_COST.question} credit.`}
           />
           <Meter
             label="Quick answers"
@@ -116,9 +134,14 @@ export default async function AccountPage() {
             hint="Opening one you've already seen is free."
           />
           <Meter
-            label="Free courses this month"
+            label="New courses this month"
             used={account.coursesUsed}
             limit={account.coursesMonth}
+            extra={
+              account.credits >= CREDIT_COST.course
+                ? `then ${Math.floor(account.credits / CREDIT_COST.course)} more with your credits`
+                : undefined
+            }
             hint={`After that, each new course uses ${CREDIT_COST.course} credits. Up to 3 new courses a day.`}
           />
           <Stat label="Lessons completed" value={usage.lessonsCompleted} />
