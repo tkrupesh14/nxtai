@@ -39,10 +39,12 @@ const nextConfig = {
       { source: "/dashboard/:path*", destination: "/learn", permanent: false },
     ]
   },
+  // Tuned for the 1.8 GB server: one build worker at a time and webpack's memory savings,
+  // instead of parallel compiles (faster, but several heavy processes at once).
   experimental: {
     webpackBuildWorker: true,
-    parallelServerBuildTraces: true,
-    parallelServerCompiles: true,
+    webpackMemoryOptimizations: true,
+    cpus: 1,
   },
 }
 
