@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Type check, tests, build, smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      # Public values (they ship in the site's JavaScript). Only the anon key: no server secrets in CI.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || 'https://dkdkokkzbptjbgjyjkpz.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrZGtva2t6YnB0amJnanlqa3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2ODAwNTUsImV4cCI6MjA3NTI1NjA1NX0.uX9rh96HlV2_C5rSBsJHa0bxGlluShF4nKK2NeDvmtE' }}
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck
+      - name: Unit + database tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Smoke tests (production build)
+        run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

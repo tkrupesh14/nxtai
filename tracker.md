@@ -130,10 +130,10 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 7.1 | Fix remaining TS errors (all in `hero-animation.tsx`); stop ignoring TS/ESLint in builds | P1 | 🟡 | 🤖 | G9 — 19 left |
+| 7.1 | Fix remaining TS errors (all in `hero-animation.tsx`); stop ignoring TS/ESLint in builds | P1 | ✅ | | 0 errors; `pnpm typecheck` runs in CI (the server build still skips it to save memory) |
 | 7.2 | Next 16; drop `auth-helpers-nextjs`; update `recharts`; clear audit highs | P1 | 🟡 | 🤖 | G12, G15 |
-| 7.3 | Playwright e2e + visual regression tests | P1 | ⬜ | 🤖 | |
-| 7.4 | CI on pull requests | P1 | ⬜ | 🤖 | |
+| 7.3 | Playwright e2e + visual regression tests | P1 | 🟡 | | Unit (Vitest), database (PGlite: RLS, server key, limits, payments) and Playwright smoke tests: `pnpm test`, `pnpm test:e2e`. Visual regression + signed-in flows still to do |
+| 7.4 | CI on pull requests | P1 | ✅ | | `.github/workflows/ci.yml`: typecheck → tests → build → smoke tests, on push to dev/main and PRs |
 
 ## Next up — Sprint 1: ready for real users (proposed)
 
