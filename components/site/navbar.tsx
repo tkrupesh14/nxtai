@@ -16,7 +16,7 @@ export function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:py-4">
         <Link href="/" className="flex items-center gap-2">
           <div className="h-6 w-6 rounded-md bg-primary" aria-hidden />
-          <span className="text-lg font-semibold tracking-tight">NxtAI</span>
+          <span className="text-lg font-semibold tracking-tight">Krpex</span>
         </Link>
         <nav className="hidden items-center gap-6 md:flex">
           {links.map((l) => (

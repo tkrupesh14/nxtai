@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "NxtAI - Master Prompt Engineering & LLMs",
+  title: "Dashboard — Krpex",
   description: "Learn prompt engineering and LLM interaction with AI-powered assessments and expert mentorship.",
 }
 

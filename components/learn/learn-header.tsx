@@ -13,7 +13,7 @@ export async function LearnHeader() {
         <div className="flex items-center gap-6">
           <Link href="/learn" className="flex items-center gap-2">
             <div className="h-6 w-6 rounded-md bg-primary" aria-hidden />
-            <span className="text-lg font-semibold tracking-tight">NxtAI</span>
+            <span className="text-lg font-semibold tracking-tight">Krpex</span>
           </Link>
           <nav className="hidden items-center gap-5 text-sm sm:flex">
             <Link href="/learn" className="text-muted-foreground transition-colors hover:text-foreground">

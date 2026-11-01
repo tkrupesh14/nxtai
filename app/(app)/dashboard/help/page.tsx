@@ -58,7 +58,7 @@ export default function HelpPage() {
   // Sample guides data
   const guides = [
     {
-      title: "Getting Started with NxtAI",
+      title: "Getting Started with Krpex",
       description: "A comprehensive guide to help you get started with the platform",
       type: "article",
       readTime: "5 min read",

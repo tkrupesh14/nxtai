@@ -125,9 +125,9 @@ export const PROFESSORS: Record<string, Professor> = {
 /** Used for courses created before categories existed. */
 export const DEFAULT_PROFESSOR: Professor = {
   id: "nxtai",
-  name: "NxtAI Professor",
+  name: "Krpex Professor",
   title: "AI professor",
-  bio: "Your NxtAI tutor.",
+  bio: "Your Krpex tutor.",
   style: "Clear, friendly and practical university lecturer.",
   initials: "N",
   avatarClass: "bg-primary text-primary-foreground",

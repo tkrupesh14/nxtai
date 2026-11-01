@@ -59,7 +59,7 @@ export function BuyButton({
         order_id: order.orderId,
         amount: order.amount,
         currency: "INR",
-        name: "NxtAI",
+        name: "Krpex",
         description: order.description,
         prefill: { name: order.name, email: order.email },
         theme: { color: "#3b82f6" },

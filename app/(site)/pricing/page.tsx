@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/site/ui/separator"
 import { PRICE_CARDS, PRICE_COMPARISON } from "@/lib/pricing"
 
-export const metadata = { title: "Pricing — NxtAI" }
+export const metadata = { title: "Pricing — Krpex" }
 
 function CompareCell({ value }: { value: string | boolean }) {
   if (value === true) {

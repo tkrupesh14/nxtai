@@ -4,7 +4,7 @@ import { ContactBlock, LegalPage, List, Section } from "@/components/site/legal-
 import { LEGAL, jurisdiction, operatorName } from "@/lib/legal"
 import { CREDIT_COST, PLANS } from "@/lib/learning/plans"
 
-export const metadata = { title: "Terms of Service — NxtAI" }
+export const metadata = { title: "Terms of Service — Krpex" }
 
 export default function TermsPage() {
   const op = operatorName()

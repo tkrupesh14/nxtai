@@ -117,6 +117,7 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 | 2026-11-01 | 9 categories, one labelled AI professor each; lessons generated as typed blocks |
 | 2026-11-01 | Ask the professor: lesson-scoped, quotas in Postgres, $2/day global budget |
 | 2026-11-01 | Email/password auth runs in the browser (per-learner rate limits) |
+| 2026-11-01 | Brand shown on the site renamed NxtAI → **Krpex** (company name on the AWS Activate application). Internal IDs (`nxtai` professor id, `nxtai:lecture` keys, repo name) unchanged |
 | 2026-11-01 | Free / Pro plans + one-time credit packs (₹49/100, ₹99/250, Pro ₹499/month); limits enforced in Postgres |
 
 ## Next up (proposed 2026-11-01)

@@ -3,7 +3,7 @@ import Link from "next/link"
 
 import { Button } from "@/components/site/ui/button"
 
-export const metadata: Metadata = { title: "Something went wrong — NxtAI" }
+export const metadata: Metadata = { title: "Something went wrong — Krpex" }
 
 const REASONS: Record<string, { title: string; body: string; retry: { href: string; label: string } }> = {
   login: {

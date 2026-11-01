@@ -3,7 +3,7 @@ import Link from "next/link"
 import { ResetPasswordForm } from "@/components/site/email-auth"
 import { createClient } from "@/lib/supabase/server"
 
-export const metadata = { title: "Set a new password · NxtAI" }
+export const metadata = { title: "Set a new password · Krpex" }
 
 // Reached from the reset email via /auth/callback, which signs the user in first.
 export default async function ResetPasswordPage() {

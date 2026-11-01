@@ -8,7 +8,7 @@ export default function CreateAccountPage() {
   return (
     <main className="mx-auto max-w-md px-4 py-16">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-semibold tracking-tight text-balance">Create your NxtAI account</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-balance">Create your Krpex account</h1>
         <p className="mt-2 text-muted-foreground text-pretty">
           Answer a few questions and get your personalized course plan with AI.
         </p>

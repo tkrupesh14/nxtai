@@ -3,7 +3,7 @@ import Link from "next/link"
 import { ContactBlock, LegalPage, List, Section } from "@/components/site/legal-page"
 import { LEGAL, operatorName } from "@/lib/legal"
 
-export const metadata = { title: "Privacy Policy — NxtAI" }
+export const metadata = { title: "Privacy Policy — Krpex" }
 
 export default function PrivacyPage() {
   return (

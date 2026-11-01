@@ -1,9 +1,9 @@
 // Business details shown on the policy pages and footer. Razorpay checks these against your KYC,
 // so fill in the operator's legal name and registered address before activating payments.
 export const LEGAL = {
-  brand: "NxtAI",
+  brand: "Krpex",
   site: "krpex.in",
-  /** Legal name of the person or company that runs NxtAI (as on PAN / GST / KYC). */
+  /** Legal name of the person or company that runs Krpex (as on PAN / GST / KYC). */
   operator: "" as string,
   /** Registered address shown on the policy pages. */
   address: "" as string,

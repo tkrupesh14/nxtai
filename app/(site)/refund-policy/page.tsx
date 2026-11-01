@@ -1,7 +1,7 @@
 import { ContactBlock, LegalPage, List, Section } from "@/components/site/legal-page"
 import { LEGAL } from "@/lib/legal"
 
-export const metadata = { title: "Refund & Cancellation Policy — NxtAI" }
+export const metadata = { title: "Refund & Cancellation Policy — Krpex" }
 
 export default function RefundPolicyPage() {
   return (

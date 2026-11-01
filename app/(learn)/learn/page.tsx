@@ -7,7 +7,7 @@ import { ProfessorAvatar } from "@/components/learn/professor"
 import { getCategory, getProfessor, professorForCategory } from "@/lib/learning/catalog"
 import { listCourses } from "@/lib/learning/data"
 
-export const metadata = { title: "My courses — NxtAI" }
+export const metadata = { title: "My courses — Krpex" }
 
 export default async function MyCoursesPage() {
   const courses = await listCourses()

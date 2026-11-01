@@ -2,7 +2,7 @@ import Link from "next/link"
 
 import { ForgotPasswordForm } from "@/components/site/email-auth"
 
-export const metadata = { title: "Reset your password · NxtAI" }
+export const metadata = { title: "Reset your password · Krpex" }
 
 export default function ForgotPasswordPage() {
   return (

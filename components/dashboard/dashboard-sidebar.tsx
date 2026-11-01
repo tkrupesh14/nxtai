@@ -137,7 +137,7 @@ export default function DashboardHeader({
                   <Sparkles className="h-4 w-4 text-violet-400" />
                 </div>
               </div>
-              {isExpanded && <span className="font-bold text-xl">NxtAI</span>}
+              {isExpanded && <span className="font-bold text-xl">Krpex</span>}
             </Link>
 
             <Button

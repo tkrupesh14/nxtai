@@ -197,7 +197,7 @@ export default function PromptBuilderDemo() {
           </div>
           <div className="text-xs text-zinc-400 font-mono flex items-center">
             <Sparkles className="h-3 w-3 mr-1.5 text-violet-400" />
-            NxtAI Prompt Builder
+            Krpex Prompt Builder
           </div>
           <div className="w-4"></div>
         </div>

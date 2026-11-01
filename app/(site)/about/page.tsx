@@ -11,7 +11,7 @@ const items: Item[] = [
   {
     title: "Adaptive course builder",
     description:
-      "Answer a few questions about your goals and background—NxtAI designs the right learning path with milestones, resources, and checkpoints.",
+      "Answer a few questions about your goals and background—Krpex designs the right learning path with milestones, resources, and checkpoints.",
     icon: BrainIcon,
   },
   {
@@ -53,13 +53,13 @@ export default function AboutPage() {
     <main className="mx-auto max-w-6xl px-6 py-12 md:py-16">
       <section className="text-center space-y-4">
         <Badge variant="secondary" className="rounded-full">
-          About NxtAI
+          About Krpex
         </Badge>
         <h1 className="text-3xl md:text-5xl font-semibold tracking-tight text-balance">
           One LMS for modern, AI-assisted learning
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto text-pretty">
-          NxtAI builds a personalized course plan for you by asking a few quick questions. Learn smarter with
+          Krpex builds a personalized course plan for you by asking a few quick questions. Learn smarter with
           AI-generated lessons, assessments, and a proctored coding space— plus communities, events, and mock interviews
           to practice for the real world.
         </p>

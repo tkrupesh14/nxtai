@@ -1,6 +1,6 @@
 import { AccountTabs } from "@/components/learn/account-tabs"
 
-export const metadata = { title: "Account — NxtAI" }
+export const metadata = { title: "Account — Krpex" }
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return (

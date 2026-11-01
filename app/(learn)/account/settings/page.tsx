@@ -6,7 +6,7 @@ import { getCurrentProfile } from "@/lib/supabase/profile"
 
 const PROVIDER_LABELS: Record<string, string> = { email: "Email & password", github: "GitHub", google: "Google" }
 
-export const metadata = { title: "Settings — NxtAI" }
+export const metadata = { title: "Settings — Krpex" }
 
 export default async function SettingsPage() {
   const { user } = await getCurrentProfile()

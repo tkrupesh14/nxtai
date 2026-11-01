@@ -8,7 +8,7 @@ import "../(site)/site.css"
 import "./learn.css"
 
 export const metadata: Metadata = {
-  title: "My learning — NxtAI",
+  title: "My learning — Krpex",
   robots: { index: false },
 }
 

@@ -9,9 +9,9 @@ import { Navbar } from "@/components/site/navbar"
 import "./site.css"
 
 export const metadata: Metadata = {
-  title: "NxtAI — AI-first LMS",
+  title: "Krpex — Your personal AI professor",
   description:
-    "NxtAI is the AI-integrated LMS for content generation, assessments, proctored coding, communities, mock interviews, and rewards.",
+    "Krpex builds a personal course for whatever you want to learn, taught by an AI professor: class-style lessons, quizzes and answers to your questions.",
 }
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {

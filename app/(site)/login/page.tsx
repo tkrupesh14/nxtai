@@ -23,7 +23,7 @@ export default async function LoginPage({
   return (
     <main className="mx-auto max-w-md px-4 py-16">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-semibold tracking-tight text-balance">Welcome back to NxtAI</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-balance">Welcome back to Krpex</h1>
         <p className="mt-2 text-muted-foreground text-pretty">
           Continue your adaptive course, track your progress, and connect with your community.
         </p>

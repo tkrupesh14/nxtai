@@ -22,7 +22,7 @@ type Feature = { title: string; description: string; icon: ComponentType<SVGProp
 const features: Feature[] = [
   {
     title: "Adaptive course builder",
-    description: "Answer a few questions—NxtAI builds your personal learning path and adapts as you learn.",
+    description: "Answer a few questions—Krpex builds your personal learning path and adapts as you learn.",
     icon: ClipboardCheckIcon,
   },
   {
@@ -74,7 +74,7 @@ export default function HomePage() {
               Your personal course—built from a few questions
             </h1>
             <p className="mt-4 text-pretty text-muted-foreground md:text-lg">
-              NxtAI asks you a few quick questions and builds your personal learning path—then generates content,
+              Krpex asks you a few quick questions and builds your personal learning path—then generates content,
               assessments, proctored coding, communities, mock interviews, and rewards in one place.
             </p>
             <div className="mt-7 flex items-center justify-center gap-3">
@@ -99,7 +99,7 @@ export default function HomePage() {
             Everything you need to learn with AI
           </h2>
           <p className="mt-3 text-pretty text-muted-foreground">
-            NxtAI brings together content, practice, coding, interviews, and community—so you can learn faster and
+            Krpex brings together content, practice, coding, interviews, and community—so you can learn faster and
             stay motivated.
           </p>
         </div>
