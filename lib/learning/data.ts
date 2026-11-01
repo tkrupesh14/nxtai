@@ -1,5 +1,6 @@
 import "server-only"
 
+import { FREE_SUMMARY, type AccountSummary, type PlanId } from "@/lib/learning/plans"
 import type { ChatTurn } from "@/lib/learning/professor"
 import { createClient } from "@/lib/supabase/server"
 
@@ -108,7 +109,8 @@ export async function getProfessorChat(lessonId: string) {
       .limit(60),
     supabase
       .from("professor_questions")
-      .select("lesson_id, status, kind")
+      .select("lesson_id, status, kind, paid")
+      .eq("paid", false)
       .gte("created_at", istDayStart()),
   ])
   const all = today ?? []
@@ -125,25 +127,15 @@ export async function getProfessorChat(lessonId: string) {
   }
 }
 
-/** Start of this month in India, for "courses this month". */
-function istMonthStart() {
-  const offset = 330 * 60 * 1000
-  const ist = new Date(Date.now() + offset)
-  ist.setUTCDate(1)
-  ist.setUTCHours(0, 0, 0, 0)
-  return new Date(ist.getTime() - offset).toISOString()
-}
-
 /** Everything the account page shows: learning profile, today's chat usage and course stats. */
 export async function getAccountOverview() {
   const supabase = await createClient()
-  const [{ data: learning }, { data: today }, coursesMonth, coursesTotal, lessonsDone] = await Promise.all([
+  const [{ data: learning }, { data: today }, coursesTotal, lessonsDone] = await Promise.all([
     supabase
       .from("learner_profiles")
       .select("level, background, hours_per_week, learning_style, timeline")
       .maybeSingle(),
-    supabase.from("professor_questions").select("status, kind").gte("created_at", istDayStart()),
-    supabase.from("courses").select("id", { count: "exact", head: true }).gte("created_at", istMonthStart()),
+    supabase.from("professor_questions").select("status, kind").eq("paid", false).gte("created_at", istDayStart()),
     supabase.from("courses").select("id", { count: "exact", head: true }),
     supabase.from("lessons").select("id", { count: "exact", head: true }).not("completed_at", "is", null),
   ])
@@ -161,9 +153,37 @@ export async function getAccountOverview() {
     usage: {
       questionsToday: count(rows.filter((r) => r.kind === "ask")),
       quickToday: count(rows.filter((r) => r.kind !== "ask")),
-      coursesThisMonth: coursesMonth.count ?? 0,
       coursesTotal: coursesTotal.count ?? 0,
       lessonsCompleted: lessonsDone.count ?? 0,
     },
+  }
+}
+
+/** Plan, limits, credit balance and free courses used this month (from my_account_summary()). */
+export async function getAccountSummary(): Promise<AccountSummary> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("my_account_summary").maybeSingle<{
+    plan: string
+    ask_day: number
+    ask_lesson: number
+    quick_day: number
+    courses_month: number
+    credits: number
+    courses_used: number
+    period_end: string | null
+  }>()
+  if (error || !data) {
+    if (error) console.error("my_account_summary failed:", error.message)
+    return FREE_SUMMARY
+  }
+  return {
+    plan: (data.plan === "pro" ? "pro" : "free") as PlanId,
+    askDay: data.ask_day,
+    askLesson: data.ask_lesson,
+    quickDay: data.quick_day,
+    coursesMonth: data.courses_month,
+    credits: data.credits,
+    coursesUsed: data.courses_used,
+    periodEnd: data.period_end,
   }
 }

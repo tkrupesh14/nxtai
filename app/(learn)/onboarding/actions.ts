@@ -15,7 +15,11 @@ export type OnboardingState = {
   reviseGoal?: boolean
 }
 
-const MAX_COURSES_PER_DAY = 3
+const COURSE_LIMIT_MESSAGES: Record<string, string> = {
+  daily_limit: "You can create up to 3 courses a day. Please come back tomorrow.",
+  monthly_limit:
+    "You've used this month's free courses. Each extra course uses 20 credits. Recharge from your account page, or finish your current courses first.",
+}
 
 export async function createCourse(_prev: OnboardingState, formData: FormData): Promise<OnboardingState> {
   const parsed = OnboardingSchema.safeParse(Object.fromEntries(formData))
@@ -30,11 +34,17 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
   } = await supabase.auth.getUser()
   if (!user) redirect("/login?next=/onboarding")
 
-  // Each course costs an AI call; keep it reasonable per user.
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const { count } = await supabase.from("courses").select("id", { count: "exact", head: true }).gte("created_at", since)
-  if ((count ?? 0) >= MAX_COURSES_PER_DAY) {
-    return { error: `You can create up to ${MAX_COURSES_PER_DAY} courses a day. Please come back tomorrow.` }
+  // Each course costs an AI call: check the plan's allowance (or credits) before calling the AI.
+  // The courses insert trigger enforces the same rule atomically.
+  const { data: allowance, error: allowanceError } = await supabase
+    .rpc("course_allowance")
+    .single<{ allowed: boolean; reason: string | null }>()
+  if (allowanceError) {
+    console.error("course_allowance failed:", allowanceError.message)
+    return { error: "Something went wrong. Please try again." }
+  }
+  if (!allowance?.allowed) {
+    return { error: COURSE_LIMIT_MESSAGES[allowance?.reason ?? ""] ?? "You can't create a new course right now." }
   }
 
   const { error: profileError } = await supabase.from("learner_profiles").upsert({
@@ -88,6 +98,8 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
     .single()
   if (courseError || !course) {
     console.error("courses insert failed:", courseError?.message)
+    if (courseError?.message === "course_daily_limit") return { error: COURSE_LIMIT_MESSAGES.daily_limit }
+    if (courseError?.message === "course_monthly_limit") return { error: COURSE_LIMIT_MESSAGES.monthly_limit }
     return { error: "We couldn't save your course. Please try again." }
   }
 

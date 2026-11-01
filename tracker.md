@@ -14,51 +14,59 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | D2 | Serve the app publicly via Nginx → pm2 | 2026-10-31 | — |
 | D3 | Switch to the `dev` branch and configure Supabase env vars | 2026-10-31 | — |
 | D4 | Public pages match nxtai.in; Tailwind v4 upgrade; OAuth callback route | 2026-10-31 | `e71289b` |
-| D5 | Sign-in fixes: profile row creation, `/login` redirects, `/error`, middleware protection, public-origin redirects | 2026-10-31 | `913ec25` |
+| D5 | Sign-in fixes: profile rows, `/login` redirects, `/error`, middleware protection | 2026-10-31 | `913ec25` |
 | D6 | Mobile menu, footer links, contact form → Supabase | 2026-10-31 | `913ec25` |
-| D7 | Domain `krpex.in`, Elastic IP `54.79.194.65`, HTTPS (Let's Encrypt), Nginx timeouts + header buffers | 2026-10-31 | server config |
-| D8 | Supabase schema: `users` + trigger, `contact_messages`, learning tables, RLS | 2026-10-31 | `supabase/migrations/` |
+| D7 | Domain `krpex.in`, Elastic IP, HTTPS, Nginx timeouts + header buffers | 2026-10-31 | server config |
+| D8 | Supabase schema: `users` + trigger, `contact_messages`, learning tables, RLS | 2026-10-31 | migrations 001–003 |
 | D9 | AI learning loop: onboarding → course plan → lessons → graded quizzes → unlocking | 2026-10-31 | `913ec25` |
 | D10 | AI via GPT-6 Luna on OpenRouter (Bedrock path built, awaiting AWS access) | 2026-10-31 | `lib/ai/llm.ts` |
 | D11 | GitHub OAuth enabled in Supabase | 2026-10-31 | Supabase dashboard |
 | D12 | **Security:** Next 15.2.4 → 15.5.28 after RCE exploitation; clean pm2 env; stopped cookie logging | 2026-10-31 | `913ec25` |
 | D13 | Repo-scoped deploy key for pushes from the server | 2026-10-31 | GitHub → Deploy keys |
-| D14 | AWS Activate Founders credits application staged and submitted | 2026-10-31 | startups.aws |
+| D14 | AWS Activate Founders credits application submitted | 2026-10-31 | startups.aws |
+| D15 | 9 categories, AI professors, goal check, 4-step onboarding | 2026-11-01 | `c31f5be`, migration 004 |
+| D16 | Class-style lessons: typed blocks, section-by-section stepper, gated checkpoints | 2026-11-01 | `c31f5be` |
+| D17 | Fix: onboarding submitted from the second-last step | 2026-11-01 | `c31f5be` |
+| D18 | Ask the professor: lesson chat, quick buttons, quotas in Postgres, cache, $2/day budget | 2026-11-01 | `f97ddab`, `b715e49`, migration 005 |
+| D19 | Email/password sign-up, login, forgot/reset password; old `/auth/*` pages retired; open-redirect fix | 2026-11-01 | `5225046` |
+| D20 | Account page, settings (password, sign-in methods, sign out everywhere, delete account), avatar menu | 2026-11-01 | `b91e899`, migration 006 |
+| D21 | Plans (Free/Pro), credit ledger, course limits, credits for extra questions/courses | 2026-11-01 | migration 007 |
 
 ## Phase 0 — Security follow-up
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
 | 0.1 | Rotate OpenRouter key; set a monthly spending limit | P0 | ⬜ | 👤 | Key was pasted in chat |
-| 0.2 | Delete Bedrock API key and its IAM user `BedrockAPIKey-23lt` | P0 | ⬜ | 👤 | On disk during the attack |
+| 0.2 | Delete Bedrock API key and IAM user `BedrockAPIKey-23lt` | P0 | ⬜ | 👤 | On disk during the attack |
 | 0.3 | Revoke the GitHub PAT used for the first push | P0 | ⬜ | 👤 | Pasted in chat |
 | 0.4 | Restart the Claude Code session | P0 | ⬜ | 👤 | Session token was in the dumped env |
 | 0.5 | Decide: keep patched instance or rebuild from repo | P1 | ⬜ | 👤 | No persistence found |
 | 0.6 | Enable Dependabot alerts + security updates | P1 | ⬜ | 👤 | Repo settings → Code security |
-| 0.7 | Nginx rate limiting on POST; block scanner paths; consider WAF/Cloudflare | P1 | ⬜ | 🤖 | |
-| 0.8 | AI keys out of `.env.local` (secret store / EC2 IAM role) | P2 | ⬜ | 🤖 | After Bedrock access |
+| 0.7 | Nginx rate limiting on POST; block scanner paths; consider Cloudflare | P1 | ⬜ | 🤖 | |
+| 0.8 | Lock down direct writes to `courses` / `course_modules` / `lessons` | P1 | ⬜ | 🤖 | G20 — prevents AI-cost abuse via the API |
+| 0.9 | AI keys out of `.env.local` (secret store / EC2 IAM role) | P2 | ⬜ | 🤖 | After Bedrock access |
 
 ## Phase 1 — Sign-in
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 1.1 | Enable OAuth providers; set Site URL + redirect URLs | P0 | 🟡 | 👤 | GitHub ✅; Google ⬜ |
-| 1.2 | Auto-create `users` profile row (trigger + callback) and backfill | P0 | ✅ | | D5, D8 |
-| 1.3 | Redirect unauthenticated visits to `/login?next=…` | P0 | ✅ | | D5 |
-| 1.4 | `/error` page, site error boundary, OAuth errors on `/login` | P0 | ✅ | | D5 |
-| 1.5 | Protect `/dashboard`, `/learn`, `/onboarding` in middleware | P1 | ✅ | | D5 |
-| 1.6 | Email/password in the new design; retire `/auth/*` pages | P1 | ⬜ | 🤖 | G19 |
+| 1.1 | Enable OAuth providers; Site URL + redirect URLs | P0 | 🟡 | 👤 | GitHub ✅; Google ⬜ |
+| 1.2 | Profile rows, protected routes, `/error` | P0 | ✅ | | D5, D8 |
+| 1.6 | Email/password in the new design; retire `/auth/*` pages | P1 | ✅ | | D19 |
 | 1.7 | Signed-in state in the site navbar | P1 | ⬜ | 🤖 | G18 |
-| 1.8 | Verify GitHub sign-in end to end on a phone | P0 | ⬜ | 👤 | 502 fixed; needs a retry |
+| 1.8 | Verify GitHub sign-in end to end on a phone | P0 | ✅ | 👤 | Used on a phone 2026-11-01 |
+| 1.9 | Custom SMTP for auth emails (confirm / reset) | P0 | ⬜ | 👤 | G21 — Hostinger `info@krpex.in`, Resend or SES |
+| 1.10 | Email provider settings: confirm email ON, min password 8, redirect `https://krpex.in/**` | P0 | ⬜ | 👤 | Supabase → Authentication |
+| 1.11 | Test email sign-up and password reset on a phone | P0 | ⬜ | 👤 | After 1.9 |
+| 1.12 | Cross-device email links (`token_hash` templates) | P2 | ⬜ | 👤🤖 | G22 |
 
 ## Phase 2 — Production hosting
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 2.1 | Elastic IP and DNS for the domain | P0 | ✅ | | D7 |
-| 2.2 | HTTPS, HTTP → HTTPS redirect, Supabase URLs | P0 | ✅ | | D7 |
+| 2.1 | Elastic IP, DNS, HTTPS | P0 | ✅ | | D7 |
 | 2.3 | `pm2 startup` + `pm2 save`; `pm2-logrotate` | P0 | ⬜ | 👤 | Needs one sudo command |
-| 2.4 | Deploy script, then GitHub Actions deploy on push | P1 | ⬜ | 🤖 | Deploy key exists (D13) |
+| 2.4 | Deploy script, then GitHub Actions deploy on push | P1 | ⬜ | 🤖 | |
 | 2.5 | Uptime monitoring + alerts; Supabase backups | P1 | ⬜ | 👤🤖 | |
 | 2.6 | Decide long-term host (EC2 or Vercel) | P2 | ⬜ | 👤 | |
 
@@ -66,51 +74,70 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 3.1 | One price list for home and `/pricing` | P0 | ⬜ | 👤 | G5 — business decision |
-| 3.2 | Mobile navigation menu | P1 | ✅ | | D6 |
-| 3.3 | Footer links on non-home pages | P1 | ✅ | | D6 |
-| 3.4 | Contact form → Supabase + email notification | P1 | 🟡 | 🤖 | Saving ✅; email ⬜ |
-| 3.5 | Favicon, OG image, per-page metadata, sitemap, robots | P1 | ⬜ | 🤖 | |
+| 3.1 | One price list for home and `/pricing`, matching plans + credit packs | P0 | ⬜ | 👤🤖 | G5 |
+| 3.2 | Terms, Privacy, Refund & Cancellation pages (Razorpay requirement) | P0 | ⬜ | 🤖👤 | Claude drafts; you review |
+| 3.4 | Contact form email notification | P1 | 🟡 | 🤖 | Saving ✅ |
+| 3.5 | Favicon, OG image, metadata, sitemap, robots | P1 | ⬜ | 🤖 | |
 | 3.6 | Analytics + Sentry | P2 | ⬜ | 👤🤖 | |
 
 ## Phase 4 — Dashboard on real data
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 4.1 | Dashboard on site tokens, Geist and `components/site/ui`; merge with `/learn` | P1 | ⬜ | 🤖 | G10 |
-| 4.2 | Replace sample data with real progress, scores, streaks | P1 | ⬜ | 🤖 | |
-| 4.3 | Delete legacy components, CSS, compat shim, `tailwindcss-animate` | P2 | ⬜ | 🤖 | |
+| 4.1 | Dashboard on the site design system; merge with `/learn` | P1 | ⬜ | 🤖 | G10 (profile/settings already moved to `/account`) |
+| 4.2 | Real progress, scores, streaks | P1 | ⬜ | 🤖 | |
+| 4.3 | Delete legacy components, CSS, compat shim | P2 | ⬜ | 🤖 | |
 
 ## Phase 5 — Core product
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 5.1 | Onboarding quiz → AI course plan → lessons → quizzes | P1 | ✅ | | D9, D10. Tested via real API calls |
-| 5.1a | Verify the learning loop end to end in the browser | P0 | ⬜ | 👤 | G17 |
+| 5.1 | Learning loop | P1 | ✅ | | D9 |
+| 5.1a | Verify the learning loop end to end on a phone | P0 | 🟡 | 👤 | Lessons + chat used; full course not yet |
+| 5.A | Categories + AI professors | P1 | ✅ | | D15 |
+| 5.B | Class-style lessons | P1 | ✅ | | D16 |
+| 5.C | Diagrams as code in lessons (Mermaid / SVG) | P1 | ⬜ | 🤖 | |
+| 5.D | Illustrations: GPT-5 Image Mini (max 2/lesson, cached in Storage) + photos | P1 | ⬜ | 🤖 | |
+| 5.E | Ask the professor | P1 | ✅ | | D18 |
+| 5.F | Catalog courses + narration | P2 | ⬜ | 🤖 | |
 | 5.1b | Regenerate lesson / report a problem; course archive & delete | P1 | ⬜ | 🤖 | |
-| 5.1c | Stream lesson text while it is written | P2 | ⬜ | 🤖 | Cuts the ~35 s wait |
-| 5.1d | AI usage log, per-user limits, spending alerts | P1 | ⬜ | 🤖 | G16 |
-| 5.2 | Doc upload (Storage) → lessons from the learner's docs | P1 | ⬜ | 🤖 | |
+| 5.1c | Stream lesson text while it is written | P2 | ⬜ | 🤖 | |
+| 5.2 | Doc upload → lessons from the learner's docs | P1 | ⬜ | 🤖 | |
 | 5.3 | Module tests, final exam, certificates | P1 | 🟡 | 🤖 | Per-lesson quizzes done |
-| 5.4 | Proctored coding environment | P2 | ⬜ | 🤖 | |
-| 5.5 | AI mock interviews | P2 | ⬜ | 🤖 | |
-| 5.6 | Communities, events, hackathons | P2 | ⬜ | 🤖 | |
-| 5.7 | XP, badges, streaks, leaderboard | P2 | ⬜ | 🤖 | |
-| 5.8 | Switch AI to Bedrock once AWS grants access | P2 | ⛔ | 👤 | G14 — AWS support case open |
+| 5.4–5.7 | Coding practice, mock interviews, communities, XP/streaks | P2 | ⬜ | 🤖 | |
+| 5.8 | Switch AI to Bedrock once AWS grants access | P2 | ⛔ | 👤 | G14 |
 
-## Phase 6 — Payments
+## Phase 6 — Payments (Razorpay)
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 6.1 | Razorpay subscriptions (Pro, Host) | P2 | ⬜ | 👤🤖 | After 3.1 |
-| 6.2 | Webhooks → plan status in Supabase; feature gating | P2 | ⬜ | 🤖 | |
-| 6.3 | Billing page | P2 | ⬜ | 🤖 | |
+| 6.1 | Plans, limits, credit ledger in Postgres; account page shows them | P1 | ✅ | | D21 |
+| 6.2 | Razorpay account + KYC; test-mode keys | P1 | ⬜ | 👤 | Needs 3.2 policy pages for activation |
+| 6.3 | Credit packs: server-created orders, Checkout, webhook (Supabase Edge Function) adds credits | P1 | ⬜ | 🤖 | Idempotent per payment ID |
+| 6.4 | Pro subscription (Razorpay Subscriptions) → `user_plans` | P1 | ⬜ | 🤖 | |
+| 6.5 | Payment history and receipts on `/account` | P2 | ⬜ | 🤖 | |
 
 ## Phase 7 — Quality
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 7.1 | Fix 20 TS errors; stop ignoring TS/ESLint in builds | P1 | ⬜ | 🤖 | G9 |
-| 7.2 | Next 16; drop `@supabase/auth-helpers-nextjs`; update `recharts`; clear audit highs | P1 | 🟡 | 🤖 | Next 15.5.28 done (D12); G12, G15 |
+| 7.1 | Fix remaining TS errors (all in `hero-animation.tsx`); stop ignoring TS/ESLint in builds | P1 | 🟡 | 🤖 | G9 — 19 left |
+| 7.2 | Next 16; drop `auth-helpers-nextjs`; update `recharts`; clear audit highs | P1 | 🟡 | 🤖 | G12, G15 |
 | 7.3 | Playwright e2e + visual regression tests | P1 | ⬜ | 🤖 | |
-| 7.4 | CI on pull requests (typecheck, lint, build, test) | P1 | ⬜ | 🤖 | |
+| 7.4 | CI on pull requests | P1 | ⬜ | 🤖 | |
+
+## Admin: give a learner credits or Pro (until payments exist)
+
+Run in the Supabase SQL editor (replace the email):
+
+```sql
+-- 100 credits
+insert into public.credit_ledger (user_id, delta, reason, note)
+select id, 100, 'grant', 'manual grant' from auth.users where email = 'learner@example.com';
+
+-- Pro for 30 days
+insert into public.user_plans (user_id, plan, status, current_period_end)
+select id, 'pro', 'active', now() + interval '30 days' from auth.users where email = 'learner@example.com'
+on conflict (user_id) do update set plan = 'pro', status = 'active',
+  current_period_end = excluded.current_period_end, updated_at = now();
+```

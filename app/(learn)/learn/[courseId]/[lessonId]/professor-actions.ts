@@ -79,7 +79,7 @@ export async function askProfessorAction(
       : t.kind === kind && t.section === section,
   )
   if (hit) {
-    return { ok: true, cached: true, turn: { ...hit, question: kind === "ask" ? question : hit.question }, usedToday: -1, usedLesson: -1 }
+    return { ok: true, cached: true, paid: false, turn: { ...hit, question: kind === "ask" ? question : hit.question }, usedToday: -1, usedLesson: -1 }
   }
 
   // Global safety net across all learners.
@@ -92,7 +92,14 @@ export async function askProfessorAction(
 
   const { data: credit, error: creditError } = await supabase
     .rpc("take_question_credit", { p_lesson: lessonId, p_section: section, p_kind: kind, p_question: question })
-    .single<{ question_id: string | null; reason: string | null; used_today: number; used_lesson: number }>()
+    .single<{
+      question_id: string | null
+      reason: string | null
+      used_today: number
+      used_lesson: number
+      paid: boolean
+      credits_left: number
+    }>()
   if (creditError || !credit) {
     console.error("take_question_credit failed:", creditError?.message)
     return { ok: false, message: "Something went wrong. Please try again." }
@@ -105,6 +112,7 @@ export async function askProfessorAction(
         "Please try again later.",
       usedToday: credit.used_today,
       usedLesson: kind === "ask" ? credit.used_lesson : undefined,
+      credits: credit.credits_left,
     }
   }
   const questionId = credit.question_id
@@ -155,13 +163,17 @@ export async function askProfessorAction(
       turn: { id: questionId, kind, section, question, reply: text, verdict: reply.verdict },
       usedToday: credit.used_today,
       usedLesson: credit.used_lesson,
+      paid: credit.paid,
+      credits: credit.credits_left,
     }
   } catch (e) {
     console.error("professor answer failed:", e instanceof Error ? e.message : e)
     await supabase.from("professor_questions").update({ status: "failed" }).eq("id", questionId).eq("status", "pending")
     return {
       ok: false,
-      message: e instanceof AIError ? e.userMessage : "Your professor couldn't answer just now. Please try again.",
+      message:
+        (e instanceof AIError ? e.userMessage : "Your professor couldn't answer just now. Please try again.") +
+        (credit.paid ? " Credits for failed answers are refunded (up to 2 a day)." : ""),
     }
   }
 }

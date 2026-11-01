@@ -3,8 +3,8 @@ import Link from "next/link"
 import { LearningForm, NameForm } from "@/components/learn/account-forms"
 import { AccountSection } from "@/components/learn/account-section"
 import { Button } from "@/components/site/ui/button"
-import { getAccountOverview } from "@/lib/learning/data"
-import { ASK_LIMITS } from "@/lib/learning/professor"
+import { getAccountOverview, getAccountSummary } from "@/lib/learning/data"
+import { CREDIT_COST, CREDIT_PACKS, PLANS, PRO_PRICE_INR } from "@/lib/learning/plans"
 import { getCurrentProfile, initialsFor } from "@/lib/supabase/profile"
 import { cn } from "@/lib/utils"
 
@@ -36,7 +36,15 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 export default async function AccountPage() {
-  const [{ user, profile }, { learning, usage }] = await Promise.all([getCurrentProfile(), getAccountOverview()])
+  const [{ user, profile }, { learning, usage }, account] = await Promise.all([
+    getCurrentProfile(),
+    getAccountOverview(),
+    getAccountSummary(),
+  ])
+  const planName = PLANS[account.plan].name
+  const renews = account.periodEnd
+    ? new Date(account.periodEnd).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+    : null
   const joined = new Date(user.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
 
   return (
@@ -55,47 +63,84 @@ export default async function AccountPage() {
           <p className="truncate text-sm text-muted-foreground">{user.email}</p>
           <p className="text-xs text-muted-foreground">Member since {joined}</p>
         </div>
-        <span className="shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium">Free plan</span>
+        <span
+          className={cn(
+            "shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium",
+            account.plan === "pro" && "border-primary bg-primary/10 text-primary",
+          )}
+        >
+          {planName} plan
+        </span>
       </section>
 
       <AccountSection title="Today's usage" description="Daily allowances reset at midnight (India time).">
         <div className="grid gap-3 sm:grid-cols-2">
           <Meter
-            label="Questions to your professors"
+            label="Free questions to your professors"
             used={usage.questionsToday}
-            limit={ASK_LIMITS.perDay}
-            hint={`Up to ${ASK_LIMITS.perLessonPerDay} per lesson each day.`}
+            limit={account.askDay}
+            hint={`Up to ${account.askLesson} per lesson each day. After that, each question uses ${CREDIT_COST.question} credit.`}
           />
           <Meter
             label="Quick answers"
             used={usage.quickToday}
-            limit={ASK_LIMITS.quickPerDay}
+            limit={account.quickDay}
             hint="Opening one you've already seen is free."
           />
-          <Stat label="Courses created this month" value={usage.coursesThisMonth} />
+          <Meter
+            label="Free courses this month"
+            used={account.coursesUsed}
+            limit={account.coursesMonth}
+            hint={`After that, each new course uses ${CREDIT_COST.course} credits. Up to 3 new courses a day.`}
+          />
           <Stat label="Lessons completed" value={usage.lessonsCompleted} />
         </div>
       </AccountSection>
 
       <AccountSection
         title="Plan & credits"
-        description="You're on the Free plan. Credit recharges and the Pro plan are coming soon."
+        description={
+          account.plan === "pro"
+            ? `You're on Pro${renews ? `, renewing on ${renews}` : ""}.`
+            : "Credits keep you going after the free allowance runs out. They never expire."
+        }
       >
-        <div className="flex flex-wrap items-center gap-3">
-          <p className="mr-auto text-sm">
-            Credits: <span className="font-semibold tabular-nums">0</span>
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+          <p className="text-sm">
+            Credits: <span className="text-2xl font-semibold tabular-nums">{account.credits}</span>
           </p>
-          <Button variant="outline" disabled>
-            Recharge credits
-          </Button>
-          <Button disabled>Upgrade to Pro</Button>
+          <p className="text-xs text-muted-foreground">
+            {CREDIT_COST.question} credit per extra question · {CREDIT_COST.course} credits per extra course
+          </p>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {CREDIT_PACKS.map((pack) => (
+            <div key={pack.id} className="rounded-lg border p-4">
+              <p className="font-semibold">{pack.credits} credits</p>
+              <p className="text-sm text-muted-foreground">₹{pack.priceInr}</p>
+              <Button variant="outline" size="sm" className="mt-3 w-full" disabled>
+                Coming soon
+              </Button>
+            </div>
+          ))}
+          {account.plan !== "pro" && (
+            <div className="rounded-lg border border-primary/40 bg-primary/5 p-4">
+              <p className="font-semibold">Pro</p>
+              <p className="text-sm text-muted-foreground">
+                ₹{PRO_PRICE_INR}/month · {PLANS.pro.askDay} questions a day, {PLANS.pro.coursesMonth} courses a month
+              </p>
+              <Button size="sm" className="mt-3 w-full" disabled>
+                Coming soon
+              </Button>
+            </div>
+          )}
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          See what&apos;s planned on the{" "}
+          Payments are being set up. See the{" "}
           <Link href="/pricing" className="underline hover:text-foreground">
             pricing page
-          </Link>
-          .
+          </Link>{" "}
+          for details.
         </p>
       </AccountSection>
 

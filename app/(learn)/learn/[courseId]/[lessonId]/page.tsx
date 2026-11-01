@@ -8,7 +8,7 @@ import { LessonGenerator } from "@/components/learn/lesson-generator"
 import { ProfessorCard } from "@/components/learn/professor"
 import { Quiz } from "@/components/learn/quiz"
 import { getCategory, getProfessor, professorForCategory } from "@/lib/learning/catalog"
-import { getCourse, getProfessorChat, isUnlocked, isUuid } from "@/lib/learning/data"
+import { getAccountSummary, getCourse, getProfessorChat, isUnlocked, isUuid } from "@/lib/learning/data"
 import { PASS_MARK, type LessonBlock, type QuizQuestion } from "@/lib/learning/schemas"
 import { sectionLabel, toSections } from "@/lib/learning/sections"
 import { createClient } from "@/lib/supabase/server"
@@ -48,7 +48,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   const blocks = (body?.blocks ?? null) as LessonBlock[] | null
   const sections = blocks?.length ? toSections(blocks) : []
   const hasContent = sections.length > 0 || Boolean(body?.content_md)
-  const chat = hasContent ? await getProfessorChat(lessonId) : null
+  const [chat, account] = hasContent ? await Promise.all([getProfessorChat(lessonId), getAccountSummary()]) : [null, null]
 
   const endOfLesson = (
     <>
@@ -141,7 +141,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
     </main>
   )
 
-  if (!chat) return page
+  if (!chat || !account) return page
   return (
     <ProfessorChat
       courseId={courseId}
@@ -152,6 +152,8 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
       initialUsedToday={chat.usedToday}
       initialUsedLesson={chat.usedLesson}
       initialUsedQuick={chat.usedQuick}
+      limits={{ askDay: account.askDay, askLesson: account.askLesson, quickDay: account.quickDay }}
+      initialCredits={account.credits}
     >
       {page}
     </ProfessorChat>

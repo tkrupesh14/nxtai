@@ -1,12 +1,7 @@
-// "Ask the professor" limits and labels. Safe to import from client components.
-// The limits are enforced by public.take_question_credit() in migration 005; keep both in sync.
+// "Ask the professor" labels and messages. Safe to import from client components.
+// Daily limits depend on the plan (lib/learning/plans.ts) and are enforced by take_question_credit().
 
-export const ASK_LIMITS = {
-  perDay: 5,
-  perLessonPerDay: 3,
-  maxQuestionChars: 300,
-  quickPerDay: 15,
-} as const
+export const ASK_LIMITS = { maxQuestionChars: 300 } as const
 
 export const QUICK_KINDS = {
   simpler: { label: "Explain it simpler", prompt: "Explain this section again in simpler words, as if I'm new to it." },
@@ -26,14 +21,14 @@ export type ChatTurn = {
 }
 
 export type AskResult =
-  | { ok: true; turn: ChatTurn; usedToday: number; usedLesson: number; cached: boolean }
-  | { ok: false; message: string; usedToday?: number; usedLesson?: number }
+  | { ok: true; turn: ChatTurn; usedToday: number; usedLesson: number; cached: boolean; paid: boolean; credits?: number }
+  | { ok: false; message: string; usedToday?: number; usedLesson?: number; credits?: number }
 
 export const LIMIT_MESSAGES: Record<string, string> = {
   slow_down: "One moment, please wait a few seconds between questions.",
-  daily_limit: `You've used today's ${ASK_LIMITS.perDay} questions. Your professor will be back tomorrow.`,
-  lesson_limit: `You've asked ${ASK_LIMITS.perLessonPerDay} questions on this lesson today. Try the quick buttons, or continue tomorrow.`,
-  quick_daily_limit: `You've used today's ${ASK_LIMITS.quickPerDay} quick answers. Ones you've already opened stay free.`,
+  daily_limit: "You've used today's free questions. Recharge credits to keep asking, or come back tomorrow.",
+  lesson_limit: "You've used today's free questions for this lesson. Try the quick buttons, use credits, or continue tomorrow.",
+  quick_daily_limit: "You've used today's quick answers. Ones you've already opened stay free.",
   busy: "Your professor is already answering that. Give it a moment.",
   not_found: "This lesson isn't available.",
   auth: "Please sign in again.",

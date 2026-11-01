@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useRef, useState, useTransition } from "react"
+import Link from "next/link"
 
 import { askProfessorAction } from "@/app/(learn)/learn/[courseId]/[lessonId]/professor-actions"
 import { Md } from "@/components/learn/lesson-blocks"
@@ -26,6 +27,8 @@ export function ProfessorChat({
   initialUsedToday,
   initialUsedLesson,
   initialUsedQuick,
+  limits,
+  initialCredits,
   children,
 }: {
   courseId: string
@@ -36,6 +39,8 @@ export function ProfessorChat({
   initialUsedToday: number
   initialUsedLesson: number
   initialUsedQuick: number
+  limits: { askDay: number; askLesson: number; quickDay: number }
+  initialCredits: number
   children: React.ReactNode
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -44,15 +49,18 @@ export function ProfessorChat({
   const [usedToday, setUsedToday] = useState(initialUsedToday)
   const [usedLesson, setUsedLesson] = useState(initialUsedLesson)
   const [usedQuick, setUsedQuick] = useState(initialUsedQuick)
+  const [credits, setCredits] = useState(initialCredits)
   const [text, setText] = useState("")
   const [pending, startTransition] = useTransition()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const endRef = useRef<HTMLDivElement>(null)
 
-  const leftToday = Math.max(ASK_LIMITS.perDay - usedToday, 0)
-  const leftLesson = Math.max(ASK_LIMITS.perLessonPerDay - usedLesson, 0)
-  const canAsk = leftToday > 0 && leftLesson > 0
-  const leftQuick = Math.max(ASK_LIMITS.quickPerDay - usedQuick, 0)
+  const leftToday = Math.max(limits.askDay - usedToday, 0)
+  const leftLesson = Math.max(limits.askLesson - usedLesson, 0)
+  const freeLeft = leftToday > 0 && leftLesson > 0
+  // Once the free allowance is used, each question costs 1 credit.
+  const canAsk = freeLeft || credits > 0
+  const leftQuick = Math.max(limits.quickDay - usedQuick, 0)
   const firstName = professor.name.replace(/^(Prof\.|Dr\.)\s*/, "").split(" ")[0]
 
   function open(s?: number) {
@@ -80,11 +88,12 @@ export function ProfessorChat({
     if (pending || (kind === "ask" && question.length < 3)) return
     startTransition(async () => {
       const res = await askProfessorAction(courseId, lessonId, { kind, section, question: kind === "ask" ? question : undefined })
+      if (typeof res.credits === "number") setCredits(res.credits)
       if (res.ok) {
         setEntries((prev) => [...prev, res.turn])
         if (kind === "ask") setText("")
         // usedToday is -1 for cached (free) answers. For quick buttons it counts quick answers.
-        if (res.usedToday >= 0 && kind === "ask") {
+        if (res.usedToday >= 0 && kind === "ask" && !res.paid) {
           setUsedToday(res.usedToday)
           setUsedLesson(res.usedLesson)
         } else if (res.usedToday >= 0) {
@@ -227,7 +236,7 @@ export function ProfessorChat({
                   maxLength={ASK_LIMITS.maxQuestionChars}
                   rows={2}
                   disabled={!canAsk}
-                  placeholder={canAsk ? "Ask about this lesson…" : "No questions left for now"}
+                  placeholder={canAsk ? (freeLeft ? "Ask about this lesson…" : "Ask (uses 1 credit)…") : "No free questions left today"}
                   aria-label="Your question"
                   className="min-w-0 flex-1 resize-none rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                 />
@@ -237,10 +246,25 @@ export function ProfessorChat({
               </form>
               <div className="flex justify-between gap-3 text-[11px] text-muted-foreground">
                 <p>
-                  Questions: {leftToday} of {ASK_LIMITS.perDay} left today
+                  Free questions: {leftToday} of {limits.askDay} left today
                   {leftToday > 0 ? ` · ${leftLesson} for this lesson` : ""}
+                  {(credits > 0 || !freeLeft) && (
+                    <>
+                      <br />
+                      Credits: {credits}
+                      {!freeLeft && credits > 0 ? " · 1 per question" : ""}
+                      {!freeLeft && credits === 0 ? (
+                        <>
+                          {" · "}
+                          <Link href="/account" className="underline hover:text-foreground">
+                            Get more
+                          </Link>
+                        </>
+                      ) : null}
+                    </>
+                  )}
                   <br />
-                  Quick answers: {leftQuick} of {ASK_LIMITS.quickPerDay} left · repeats are free
+                  Quick answers: {leftQuick} of {limits.quickDay} left · repeats are free
                 </p>
                 <span className="shrink-0">
                   {text.length}/{ASK_LIMITS.maxQuestionChars}
