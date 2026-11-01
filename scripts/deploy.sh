@@ -37,7 +37,7 @@ pm2 restart "$APP" >/dev/null
 
 ok=0
 for _ in $(seq 1 60); do
-  if curl -fsS -o /dev/null --max-time 5 "$HEALTH"; then ok=1; break; fi
+  if curl -fsS -o /dev/null --max-time 5 "$HEALTH" 2>/dev/null; then ok=1; break; fi
   sleep 1
 done
 

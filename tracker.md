@@ -46,7 +46,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 0.4 | Restart the Claude Code session | P0 | ⬜ | 👤 | Session token was in the dumped env |
 | 0.5 | Decide: keep patched instance or rebuild from repo | P1 | ⬜ | 👤 | No persistence found |
 | 0.6 | Enable Dependabot alerts + security updates | P1 | ⬜ | 👤 | Repo settings → Code security |
-| 0.7 | Nginx rate limiting on POST; block scanner paths; consider Cloudflare | P1 | ⬜ | 🤖 | |
+| 0.7 | Nginx rate limiting on POST; block scanner paths; consider Cloudflare | P1 | ✅ | | S1.5; config backup `nxtai.bak-20261101123932` |
 | 0.8 | Lock down direct writes to `courses` / `course_modules` / `lessons` | P1 | ✅ | | D22 |
 | 0.10 | Regenerate Razorpay test secrets before go-live (shared in chat) | P1 | ⬜ | 👤 | G24 |
 | 0.9 | AI keys out of `.env.local` (secret store / EC2 IAM role) | P2 | ⬜ | 🤖 | After Bedrock access |
@@ -71,7 +71,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 |----|------|-----|--------|-------|-------|
 | 2.1 | Elastic IP, DNS, HTTPS | P0 | ✅ | | D7 |
 | 2.3 | `pm2 startup` + `pm2 save`; `pm2-logrotate` | P0 | ⬜ | 👤 | Needs one sudo command |
-| 2.4 | Deploy script, then GitHub Actions deploy on push | P1 | ⬜ | 🤖 | |
+| 2.4 | Deploy script, then GitHub Actions deploy on push | P1 | 🟡 | 🤖 | `scripts/deploy.sh` ✅; Actions later. One build at a time (1.8 GB RAM) |
 | 2.5 | Uptime monitoring + alerts; Supabase backups | P1 | ⬜ | 👤🤖 | |
 | 2.6 | Decide long-term host (EC2 or Vercel) | P2 | ⬜ | 👤 | |
 
@@ -141,9 +141,9 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | S1.1 | Signed-in navbar on public pages ("My courses" + avatar) | P1 | ✅ | | G18; /login and /create-account redirect signed-in users |
 | S1.2 | Stream lesson text while it is generated | P1 | ✅ | | `/api/lessons/stream`; first text ~5 s instead of ~30 s |
 | S1.3 | Course delete/archive; regenerate a lesson (5 credits, 5/day); report a problem | P1 | ✅ | | Migrations 010–011 applied |
-| S1.4 | Admin page: users, usage, AI spend, payments, reports, grant credits/Pro | P1 | 🟡 | 👤 | `/admin`; run migration 012 |
-| S1.5 | Nginx rate limits + deploy script | P1 | ⬜ | 🤖 | 0.7, 2.4 |
-| S1.6 | Uptime monitoring + error tracking (Sentry) | P1 | ⬜ | 👤🤖 | 2.5, 3.6 |
+| S1.4 | Admin page: users, usage, AI spend, payments, reports, grant credits/Pro | P1 | ✅ | | `/admin` (migration 012) |
+| S1.5 | Nginx rate limits + deploy script | P1 | ✅ | | Limits + scanner blocking live; `scripts/deploy.sh` (build aside, swap, health check, rollback) used for the c9b4520 deploy |
+| S1.6 | Uptime monitoring + error tracking | P1 | 🟡 | 👤 | Error tracking built in (migration 013 pending); `/api/health` live; add UptimeRobot monitor |
 
 ## Admin: give a learner credits or Pro by SQL
 
