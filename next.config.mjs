@@ -13,6 +13,8 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // scripts/deploy.sh builds into a separate folder, then swaps it in only if the build succeeded.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   eslint: {
     ignoreDuringBuilds: true,
   },

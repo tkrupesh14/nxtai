@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 
+import { ErrorReporter } from "@/components/error-reporter"
 import { CursorTrail } from "@/components/site/cursor-trail"
 import { Footer } from "@/components/site/footer"
 import { Navbar } from "@/components/site/navbar"
@@ -22,6 +23,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Footer />
         <CursorTrail />
+        <ErrorReporter />
       </body>
     </html>
   )

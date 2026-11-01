@@ -25,6 +25,7 @@ type UserRow = {
   questions_7d: number
 }
 type Payment = { created_at: string; paid_at: string | null; email: string; product: string; amount_paise: number; status: string; razorpay_payment_id: string | null }
+type ErrorGroup = { source: string; message: string; count: number; last_seen: string; last_path: string | null; last_detail: string | null }
 type Report = { id: string; created_at: string; email: string; course_id: string; course_title: string; lesson_title: string; reason: string; details: string | null }
 
 const inr = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`
@@ -51,19 +52,21 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   if (!isAdmin) notFound()
   const { q = "" } = await searchParams
 
-  const [overview, daily, users, payments, reports] = await Promise.all([
+  const [overview, daily, users, payments, reports, errors] = await Promise.all([
     supabase.rpc("admin_overview"),
     supabase.rpc("admin_daily", { p_days: 14 }),
     supabase.rpc("admin_users", { p_search: q.slice(0, 100), p_limit: 50 }),
     supabase.rpc("admin_payments", { p_limit: 20 }),
     supabase.rpc("admin_reports", { p_status: "open" }),
+    supabase.rpc("admin_errors", { p_hours: 24 }),
   ])
   const o = (overview.data ?? {}) as Overview
   const days = (daily.data ?? []) as Day[]
   const userRows = (users.data ?? []) as UserRow[]
   const paymentRows = (payments.data ?? []) as Payment[]
   const reportRows = (reports.data ?? []) as Report[]
-  const failed = [overview, daily, users, payments, reports].find((r) => r.error)
+  const errorRows = (errors.data ?? []) as ErrorGroup[]
+  const failed = [overview, daily, users, payments, reports, errors].find((r) => r.error)
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 md:py-14">
@@ -135,6 +138,39 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     <ResolveButton id={r.id} />
                   </div>
                   {r.details ? <p className="mt-2 text-pretty">{r.details}</p> : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </AccountSection>
+
+        <AccountSection
+          title={`Errors, last 24 hours (${errorRows.reduce((n, e) => n + Number(e.count), 0)})`}
+          description="Server crashes and browser errors, grouped by message."
+        >
+          {errorRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No errors. 🎉</p>
+          ) : (
+            <ul className="grid gap-2">
+              {errorRows.map((e, i) => (
+                <li key={i} className="rounded-lg border text-sm">
+                  <details>
+                    <summary className="flex cursor-pointer flex-wrap items-baseline gap-x-2 gap-y-1 px-4 py-3">
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-xs">{e.source}</span>
+                      <span className="min-w-0 flex-1 break-words font-medium">{e.message}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        ×{e.count} · {when(e.last_seen)}
+                      </span>
+                    </summary>
+                    <div className="border-t px-4 py-3 text-xs">
+                      {e.last_path ? <p className="text-muted-foreground">Last at: {e.last_path}</p> : null}
+                      {e.last_detail ? (
+                        <pre className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap break-words rounded bg-muted p-2 font-mono">
+                          {e.last_detail}
+                        </pre>
+                      ) : null}
+                    </div>
+                  </details>
                 </li>
               ))}
             </ul>
