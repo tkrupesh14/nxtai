@@ -1,12 +1,12 @@
 import Link from "next/link"
 
-import { signOut } from "@/app/(learn)/actions"
+import { UserMenu } from "@/components/learn/user-menu"
 import { ThemeToggle } from "@/components/site/theme-toggle"
 import { Button } from "@/components/site/ui/button"
 import { getCurrentProfile, initialsFor } from "@/lib/supabase/profile"
 
 export async function LearnHeader() {
-  const { profile } = await getCurrentProfile()
+  const { user, profile } = await getCurrentProfile()
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
@@ -29,22 +29,12 @@ export async function LearnHeader() {
             <Link href="/onboarding">New course</Link>
           </Button>
           <ThemeToggle />
-          <div
-            className="flex size-9 items-center justify-center overflow-hidden rounded-full border bg-muted text-xs font-semibold"
-            title={profile.full_name}
-          >
-            {profile.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.avatar_url} alt="" className="size-full object-cover" />
-            ) : (
-              initialsFor(profile.full_name)
-            )}
-          </div>
-          <form action={signOut}>
-            <Button type="submit" variant="ghost" size="sm">
-              Sign out
-            </Button>
-          </form>
+          <UserMenu
+            name={profile.full_name}
+            email={user.email}
+            avatarUrl={profile.avatar_url}
+            initials={initialsFor(profile.full_name)}
+          />
         </div>
       </div>
     </header>

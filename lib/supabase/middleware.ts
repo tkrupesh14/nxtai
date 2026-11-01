@@ -17,7 +17,7 @@ type CookieItem = {
 }
 
 // Paths that need a signed-in user. Everything else is public.
-const PROTECTED_PREFIXES = ['/dashboard', '/learn', '/onboarding']
+const PROTECTED_PREFIXES = ['/dashboard', '/learn', '/onboarding', '/account']
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })

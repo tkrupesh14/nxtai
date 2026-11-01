@@ -124,3 +124,46 @@ export async function getProfessorChat(lessonId: string) {
     usedQuick: count(quick),
   }
 }
+
+/** Start of this month in India, for "courses this month". */
+function istMonthStart() {
+  const offset = 330 * 60 * 1000
+  const ist = new Date(Date.now() + offset)
+  ist.setUTCDate(1)
+  ist.setUTCHours(0, 0, 0, 0)
+  return new Date(ist.getTime() - offset).toISOString()
+}
+
+/** Everything the account page shows: learning profile, today's chat usage and course stats. */
+export async function getAccountOverview() {
+  const supabase = await createClient()
+  const [{ data: learning }, { data: today }, coursesMonth, coursesTotal, lessonsDone] = await Promise.all([
+    supabase
+      .from("learner_profiles")
+      .select("level, background, hours_per_week, learning_style, timeline")
+      .maybeSingle(),
+    supabase.from("professor_questions").select("status, kind").gte("created_at", istDayStart()),
+    supabase.from("courses").select("id", { count: "exact", head: true }).gte("created_at", istMonthStart()),
+    supabase.from("courses").select("id", { count: "exact", head: true }),
+    supabase.from("lessons").select("id", { count: "exact", head: true }).not("completed_at", "is", null),
+  ])
+  const rows = today ?? []
+  const count = (list: typeof rows) =>
+    list.filter((r) => r.status !== "failed").length + Math.max(list.filter((r) => r.status === "failed").length - 2, 0)
+  return {
+    learning: learning as {
+      level: string
+      background: string | null
+      hours_per_week: number | null
+      learning_style: string | null
+      timeline: string | null
+    } | null,
+    usage: {
+      questionsToday: count(rows.filter((r) => r.kind === "ask")),
+      quickToday: count(rows.filter((r) => r.kind !== "ask")),
+      coursesThisMonth: coursesMonth.count ?? 0,
+      coursesTotal: coursesTotal.count ?? 0,
+      lessonsCompleted: lessonsDone.count ?? 0,
+    },
+  }
+}

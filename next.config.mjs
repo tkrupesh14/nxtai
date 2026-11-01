@@ -30,6 +30,8 @@ const nextConfig = {
       { source: "/auth/forgot-password", destination: "/forgot-password", permanent: true },
       { source: "/auth/reset-password", destination: "/forgot-password", permanent: true },
       { source: "/auth/confirm-user", destination: "/login", permanent: true },
+      { source: "/dashboard/profile", destination: "/account", permanent: false },
+      { source: "/dashboard/settings", destination: "/account/settings", permanent: false },
     ]
   },
   experimental: {
