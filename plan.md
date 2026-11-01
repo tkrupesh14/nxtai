@@ -50,7 +50,7 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 | G21 | Supabase built-in email only reaches team addresses (a few per hour) | ⬜ Set up custom SMTP (Hostinger `info@krpex.in`, Resend or SES) |
 | G23 | Policy pages need the operator's legal name, address and jurisdiction; legal review | ⬜ Fill `lib/legal.ts` |
 | G24 | Razorpay test key secret and webhook secret were shared in chat | ⬜ Test mode only; use fresh live keys at go-live |
-| G25 | No admin view: usage, AI spend, payments, granting credits all need SQL | ⬜ |
+| G25 | No admin view: usage, AI spend, payments, granting credits all need SQL | 🟡 `/admin` built (migration 012); all AI calls now logged |
 | G22 | Email links (confirm / reset) must be opened in the same browser (PKCE) | ⬜ Optional: switch email templates to `token_hash` links via `/auth/confirm` |
 
 ## Phases

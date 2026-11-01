@@ -4,9 +4,12 @@ import { UserMenu } from "@/components/learn/user-menu"
 import { ThemeToggle } from "@/components/site/theme-toggle"
 import { Button } from "@/components/site/ui/button"
 import { getCurrentProfile, initialsFor } from "@/lib/supabase/profile"
+import { createClient } from "@/lib/supabase/server"
 
 export async function LearnHeader() {
   const { user, profile } = await getCurrentProfile()
+  const supabase = await createClient()
+  const { data: isAdmin } = await supabase.rpc("is_admin")
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
@@ -34,6 +37,7 @@ export async function LearnHeader() {
             email={user.email}
             avatarUrl={profile.avatar_url}
             initials={initialsFor(profile.full_name)}
+            isAdmin={isAdmin === true}
           />
         </div>
       </div>

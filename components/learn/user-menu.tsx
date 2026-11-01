@@ -8,7 +8,19 @@ import { signOut } from "@/app/(learn)/actions"
 
 const itemClass = "block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
 
-export function UserMenu({ name, email, avatarUrl, initials }: { name: string; email?: string; avatarUrl?: string; initials: string }) {
+export function UserMenu({
+  name,
+  email,
+  avatarUrl,
+  initials,
+  isAdmin = false,
+}: {
+  name: string
+  email?: string
+  avatarUrl?: string
+  initials: string
+  isAdmin?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
@@ -68,6 +80,11 @@ export function UserMenu({ name, email, avatarUrl, initials }: { name: string; e
           <Link role="menuitem" href="/account/settings" className={itemClass}>
             Settings
           </Link>
+          {isAdmin && (
+            <Link role="menuitem" href="/admin" className={itemClass}>
+              Admin
+            </Link>
+          )}
           <div className="my-1 h-px bg-border" />
           <form action={signOut}>
             <button role="menuitem" type="submit" className={itemClass}>

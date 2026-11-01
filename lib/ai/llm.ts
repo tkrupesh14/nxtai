@@ -4,6 +4,7 @@ import OpenAI from "openai"
 import { zodResponseFormat, zodTextFormat } from "openai/helpers/zod"
 import { bedrock } from "openai/providers/bedrock"
 
+import { logAiUsage } from "@/lib/ai/usage-log"
 import {
   CATEGORIES,
   getCategory,
@@ -159,7 +160,9 @@ async function viaResponses<T>(
 }
 
 async function callStructured<T>(schema: Schema, name: string, prompt: string, opts: CallOpts): Promise<T> {
-  return (await callStructuredWithUsage<T>(schema, name, prompt, opts)).parsed
+  const { parsed, usage } = await callStructuredWithUsage<T>(schema, name, prompt, opts)
+  logAiUsage(name, usage) // professor chat records its own usage in professor_questions
+  return parsed
 }
 
 async function callStructuredWithUsage<T>(
@@ -365,6 +368,7 @@ export async function streamLesson(args: LessonArgs, onBlocks: (blocks: LessonBl
       }
     })
     const completion = await stream.finalChatCompletion()
+    logAiUsage("lesson", { input: completion.usage?.prompt_tokens ?? 0, output: completion.usage?.completion_tokens ?? 0 })
     const choice = completion.choices[0]
     if (!choice) throw new AIError("no choices", "The AI returned an empty response. Please try again.")
     if (choice.finish_reason === "length") throw new AIError("finish_reason=length", "The AI response was cut short. Please try again.")

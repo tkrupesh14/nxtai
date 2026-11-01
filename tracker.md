@@ -118,7 +118,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 |----|------|-----|--------|-------|-------|
 | 6.1 | Plans, limits, credit ledger in Postgres; account page shows them | P1 | ✅ | | D21 |
 | 6.2 | Razorpay account + KYC; test-mode keys and webhook | P1 | 🟡 | 👤 | Test mode working (D24); KYC + live keys pending |
-| 6.6 | Run migration 010 (count courses created before 007) | P1 | ⬜ | 👤 | SQL in `supabase/migrations/…010…` |
+| 6.6 | Run migration 010 (count courses created before 007) | P1 | ✅ | | |
 | 6.7 | Go live: live keys, new webhook secret, test a ₹1 real payment | P1 | ⬜ | 👤🤖 | After KYC + G23 |
 | 6.8 | GST registration / invoice format decision | P2 | ⬜ | 👤 | Razorpay sends payment receipts |
 | 6.3 | Credit packs + Pro 30-day pass: server-created orders, Checkout, signature check, webhook `/api/razorpay/webhook` | P1 | ✅ | | Migration 009; server-key RPCs instead of an Edge Function; idempotent per order |
@@ -140,8 +140,8 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 |----|------|-----|--------|-------|-------|
 | S1.1 | Signed-in navbar on public pages ("My courses" + avatar) | P1 | ✅ | | G18; /login and /create-account redirect signed-in users |
 | S1.2 | Stream lesson text while it is generated | P1 | ✅ | | `/api/lessons/stream`; first text ~5 s instead of ~30 s |
-| S1.3 | Course delete/archive; regenerate a lesson (5 credits, 5/day); report a problem | P1 | 🟡 | 👤 | Code live; run migration 011 |
-| S1.4 | Admin page: users, usage, AI spend, payments, grant credits/Pro | P1 | ⬜ | 🤖 | G25 |
+| S1.3 | Course delete/archive; regenerate a lesson (5 credits, 5/day); report a problem | P1 | ✅ | | Migrations 010–011 applied |
+| S1.4 | Admin page: users, usage, AI spend, payments, reports, grant credits/Pro | P1 | 🟡 | 👤 | `/admin`; run migration 012 |
 | S1.5 | Nginx rate limits + deploy script | P1 | ⬜ | 🤖 | 0.7, 2.4 |
 | S1.6 | Uptime monitoring + error tracking (Sentry) | P1 | ⬜ | 👤🤖 | 2.5, 3.6 |
 
