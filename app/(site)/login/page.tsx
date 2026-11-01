@@ -1,13 +1,15 @@
 import Link from "next/link"
 
+import { AuthDivider } from "@/components/site/auth-divider"
+import { EmailLoginForm } from "@/components/site/email-auth"
 import { OAuthButtons } from "@/components/site/oauth-buttons"
+import { safeNext } from "@/lib/safe-next"
 
 const ERRORS: Record<string, string> = {
   oauth: "We couldn't finish signing you in. Please try again.",
-}
-
-function safeNext(next: string | undefined) {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/learn"
+  signup_link:
+    "That confirmation link couldn't sign you in here. If you've already clicked it, your email is confirmed: log in below.",
+  reset_link: "That reset link has expired or was opened in a different browser. Please request a new one.",
 }
 
 export default async function LoginPage({
@@ -35,12 +37,9 @@ export default async function LoginPage({
         </p>
       )}
       <section className="rounded-lg border bg-card p-6">
+        <EmailLoginForm next={safeNext(next)} />
+        <AuthDivider />
         <OAuthButtons next={safeNext(next)} />
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          <Link href="/auth/login" className="hover:text-foreground hover:underline">
-            Use email and password instead
-          </Link>
-        </p>
       </section>
       <p className="mt-6 text-center text-sm text-muted-foreground">
         New here?{" "}

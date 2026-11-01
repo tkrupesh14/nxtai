@@ -13,9 +13,9 @@ export function displayNameFor(user: User): string {
 }
 
 /**
- * Make sure the `public.users` profile row exists. Email sign-up inserts it in
- * `auth/signup/actions.ts`; OAuth sign-ups never did, which bounced them out of
- * the dashboard. Safe to call repeatedly: a duplicate insert (23505) is ignored.
+ * Make sure the `public.users` profile row exists. The on_auth_user_created trigger
+ * normally creates it (email and OAuth sign-ups); this is a fallback for older accounts.
+ * Safe to call repeatedly: a duplicate insert (23505) is ignored.
  */
 export async function ensureProfile(supabase: SupabaseClient, user: User) {
   const { data } = await supabase.from("users").select("id").eq("id", user.id).maybeSingle()

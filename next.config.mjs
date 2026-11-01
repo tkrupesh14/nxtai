@@ -22,6 +22,16 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Old auth pages, replaced by the pages in app/(site).
+  async redirects() {
+    return [
+      { source: "/auth/login", destination: "/login", permanent: true },
+      { source: "/auth/signup", destination: "/create-account", permanent: true },
+      { source: "/auth/forgot-password", destination: "/forgot-password", permanent: true },
+      { source: "/auth/reset-password", destination: "/forgot-password", permanent: true },
+      { source: "/auth/confirm-user", destination: "/login", permanent: true },
+    ]
+  },
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,

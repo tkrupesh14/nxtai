@@ -1,17 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { publicOrigin } from "@/lib/request-origin"
+import { safeNext } from "@/lib/safe-next"
 import { ensureProfile } from "@/lib/supabase/profile"
 import { createClient } from "@/lib/supabase/server"
 
-// OAuth (GitHub / Google) return URL: exchange the auth code for a session cookie.
+// Return URL for OAuth (GitHub / Google) and email links (sign-up confirmation, password reset):
+// exchange the auth code for a session cookie. `flow` picks the error message on failure.
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const origin = publicOrigin(request)
   const code = searchParams.get("code")
-  const nextParam = searchParams.get("next") ?? "/learn"
-  // Only allow same-site relative redirects.
-  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/learn"
+  const next = safeNext(searchParams.get("next"))
 
   if (code) {
     const supabase = await createClient()
@@ -23,5 +23,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=oauth`)
+  const flow = searchParams.get("flow")
+  const error = flow === "signup" ? "signup_link" : flow === "reset" ? "reset_link" : "oauth"
+  return NextResponse.redirect(`${origin}/login?error=${error}`)
 }

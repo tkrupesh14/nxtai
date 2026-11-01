@@ -1,5 +1,7 @@
 import Link from "next/link"
 
+import { AuthDivider } from "@/components/site/auth-divider"
+import { EmailSignupForm } from "@/components/site/email-auth"
 import { OAuthButtons } from "@/components/site/oauth-buttons"
 
 export default function CreateAccountPage() {
@@ -12,12 +14,9 @@ export default function CreateAccountPage() {
         </p>
       </div>
       <section className="rounded-lg border bg-card p-6">
-        <OAuthButtons />
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          <Link href="/auth/signup" className="hover:text-foreground hover:underline">
-            Sign up with email instead
-          </Link>
-        </p>
+        <OAuthButtons next="/onboarding" />
+        <AuthDivider />
+        <EmailSignupForm />
       </section>
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}

@@ -9,12 +9,12 @@ const REASONS: Record<string, { title: string; body: string; retry: { href: stri
   login: {
     title: "We couldn't log you in",
     body: "The email or password didn't match. Check them and try again.",
-    retry: { href: "/auth/login", label: "Try again" },
+    retry: { href: "/login", label: "Try again" },
   },
   signup: {
     title: "We couldn't create your account",
     body: "That email may already be registered, or the password is too short. Try again or log in instead.",
-    retry: { href: "/auth/signup", label: "Try again" },
+    retry: { href: "/create-account", label: "Try again" },
   },
   confirm: {
     title: "This link didn't work",
