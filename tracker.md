@@ -138,8 +138,8 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| S1.1 | Signed-in navbar on public pages ("My courses" + avatar) | P1 | ⬜ | 🤖 | G18 |
-| S1.2 | Stream lesson text while it is generated | P1 | ⬜ | 🤖 | 5.1c |
+| S1.1 | Signed-in navbar on public pages ("My courses" + avatar) | P1 | ✅ | | G18; /login and /create-account redirect signed-in users |
+| S1.2 | Stream lesson text while it is generated | P1 | ✅ | | `/api/lessons/stream`; first text ~5 s instead of ~30 s |
 | S1.3 | Course delete/archive; regenerate a lesson (uses credits); report a problem | P1 | ⬜ | 🤖 | 5.1b |
 | S1.4 | Admin page: users, usage, AI spend, payments, grant credits/Pro | P1 | ⬜ | 🤖 | G25 |
 | S1.5 | Nginx rate limits + deploy script | P1 | ⬜ | 🤖 | 0.7, 2.4 |

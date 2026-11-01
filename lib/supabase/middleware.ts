@@ -49,6 +49,15 @@ export async function updateSession(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 
+  // Signed-in visitors don't need the log-in / sign-up pages.
+  if (user && (pathname === '/login' || pathname === '/create-account') && !request.nextUrl.searchParams.has('error')) {
+    const next = request.nextUrl.searchParams.get('next')
+    const dest = next && /^\/(?![\/\\])/.test(next) ? next : '/learn'
+    const redirect = NextResponse.redirect(new URL(dest, publicOrigin(request)))
+    supabaseResponse.cookies.getAll().forEach((c) => redirect.cookies.set(c))
+    return redirect
+  }
+
   if (!user && isProtected) {
     const url = new URL(`/login?next=${encodeURIComponent(pathname + search)}`, publicOrigin(request))
     const redirect = NextResponse.redirect(url)

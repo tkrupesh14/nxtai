@@ -9,7 +9,7 @@ import { Button } from "@/components/site/ui/button"
 type NavLink = { href: string; label: string }
 
 // Phone-only navigation (the desktop links are hidden below `md`).
-export function MobileMenu({ links }: { links: NavLink[] }) {
+export function MobileMenu({ links, signedIn = false }: { links: NavLink[]; signedIn?: boolean }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
@@ -57,11 +57,11 @@ export function MobileMenu({ links }: { links: NavLink[] }) {
             ))}
             <li className="border-t">
               <Link
-                href="/login"
+                href={signedIn ? "/learn" : "/login"}
                 onClick={() => setOpen(false)}
                 className="block py-3 text-base font-medium text-foreground"
               >
-                Log in
+                {signedIn ? "My courses" : "Log in"}
               </Link>
             </li>
           </ul>

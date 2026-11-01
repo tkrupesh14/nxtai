@@ -119,7 +119,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
             <div className="mt-10">{endOfLesson}</div>
           </>
         ) : (
-          <LessonGenerator courseId={courseId} lessonId={lessonId} professorName={professor.name} />
+          <LessonGenerator courseId={courseId} lessonId={lessonId} professor={professor} />
         )}
       </div>
 

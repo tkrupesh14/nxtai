@@ -45,7 +45,7 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 | G15 | `pnpm audit`: PostCSS (build-time) and Zod highs | ⬜ |
 | G16 | AI cost controls | 🟡 Chat quotas, course limits, credits and a chat budget done; lesson generation has no per-user cap yet (see G20) |
 | G17 | Learning loop not yet verified end to end by a real user; no automated tests | 🟡 Partly tested on a phone |
-| G18 | Site navbar shows "Log in" when already signed in | ⬜ |
+| G18 | Site navbar shows "Log in" when already signed in | ✅ Avatar menu + "My courses" |
 | G20 | Learners could write `courses` / `course_modules` / `lessons` directly via the Supabase API | ✅ Migration 008: writes via server-key RPCs, quiz graded in DB, `lessons.quiz` unreadable |
 | G21 | Supabase built-in email only reaches team addresses (a few per hour) | ⬜ Set up custom SMTP (Hostinger `info@krpex.in`, Resend or SES) |
 | G23 | Policy pages need the operator's legal name, address and jurisdiction; legal review | ⬜ Fill `lib/legal.ts` |

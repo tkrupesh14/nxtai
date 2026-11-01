@@ -3,79 +3,24 @@
 import { revalidatePath } from "next/cache"
 
 import { AIError, generateLesson } from "@/lib/ai/llm"
-import { getCourse, isUnlocked, isUuid } from "@/lib/learning/data"
+import { isUuid } from "@/lib/learning/data"
+import { prepareLessonGeneration, releaseLesson, saveLesson } from "@/lib/learning/lesson-gen"
 import { createClient } from "@/lib/supabase/server"
-import { serverKey } from "@/lib/supabase/server-key"
 
 export type GenerateResult = { status: "ready" } | { status: "pending" } | { status: "error"; message: string }
 
-/** Generate the lesson body + quiz the first time it is opened. Safe against double clicks / two tabs. */
+/** Generate the lesson body + quiz the first time it is opened (non-streaming fallback; see /api/lessons/stream). */
 export async function generateLessonAction(courseId: string, lessonId: string): Promise<GenerateResult> {
-  if (!isUuid(courseId) || !isUuid(lessonId)) return { status: "error", message: "Lesson not found." }
-  const supabase = await createClient()
-  const data = await getCourse(courseId)
-  if (!data) return { status: "error", message: "Course not found." }
-  const index = data.lessons.findIndex((l) => l.id === lessonId)
-  if (index < 0) return { status: "error", message: "Lesson not found." }
-  if (!isUnlocked(data.lessons, index)) return { status: "error", message: "Finish the previous lesson first." }
-
-  // Claim the generation so only one request calls the AI (server-only function, migration 008).
-  const { data: claim, error: claimError } = await supabase
-    .rpc("app_claim_lesson", { p_key: serverKey(), p_lesson: lessonId })
-    .single<{ status: string; claimed_at: string | null }>()
-  if (claimError || !claim) {
-    console.error("app_claim_lesson failed:", claimError?.message)
-    return { status: "error", message: "We couldn't open this lesson. Please try again." }
-  }
-  if (claim.status === "ready") return { status: "ready" }
-  if (claim.status === "pending") return { status: "pending" }
-  if (claim.status === "locked") return { status: "error", message: "Finish the previous lesson first." }
-  if (claim.status !== "claimed" || !claim.claimed_at) return { status: "error", message: "Lesson not found." }
-  const claimedAt = claim.claimed_at
-
-  const lesson = data.lessons[index]
-  const mod = data.modules.find((m) => m.id === lesson.module_id)
-  const outline = data.modules
-    .map((m) => {
-      const items = data.lessons
-        .filter((l) => l.module_id === m.id)
-        .map((l) => `${l.id === lessonId ? "  » " : "  - "}${l.title}`)
-        .join("\n")
-      return `Module ${m.position + 1}: ${m.title}\n${items}`
-    })
-    .join("\n")
-  const { data: profile } = await supabase.from("learner_profiles").select("learning_style, background").maybeSingle()
-
+  const prep = await prepareLessonGeneration(courseId, lessonId)
+  if (prep.status !== "claimed") return prep
   try {
-    const content = await generateLesson({
-      categoryId: data.course.category,
-      background: profile?.background,
-      previousLessonTitle: index > 0 ? data.lessons[index - 1].title : null,
-      courseTitle: data.course.title,
-      courseLevel: data.course.level,
-      goal: data.course.goal,
-      outline,
-      moduleTitle: mod?.title ?? "",
-      lessonTitle: lesson.title,
-      objective: lesson.objective,
-      estMinutes: lesson.est_minutes,
-      learningStyle: profile?.learning_style,
-    })
-    const { data: saved, error } = await supabase.rpc("app_save_lesson", {
-      p_key: serverKey(),
-      p_lesson: lessonId,
-      p_claimed_at: claimedAt,
-      p_blocks: content.blocks,
-      p_takeaways: content.key_takeaways,
-      p_quiz: content.quiz,
-    })
-    if (error) throw error
-    if (!saved) throw new Error("lesson claim was lost before saving")
+    const content = await generateLesson(prep.args)
+    await saveLesson(prep.supabase, lessonId, prep.claimedAt, content)
     revalidatePath(`/learn/${courseId}/${lessonId}`)
     return { status: "ready" }
   } catch (e) {
     console.error("lesson generation failed:", e instanceof Error ? e.message : e)
-    await supabase.rpc("app_release_lesson", { p_key: serverKey(), p_lesson: lessonId, p_claimed_at: claimedAt })
+    await releaseLesson(prep.supabase, lessonId, prep.claimedAt)
     return { status: "error", message: e instanceof AIError ? e.userMessage : "We couldn't create this lesson. Please try again." }
   }
 }

@@ -23,6 +23,7 @@ import {
   STYLE_LABELS,
   TIMELINE_LABELS,
   type CoursePlan,
+  type LessonBlock,
   type LessonContent,
   type Onboarding,
 } from "@/lib/learning/schemas"
@@ -172,18 +173,22 @@ async function callStructuredWithUsage<T>(
       ? await viaChatCompletions<T>(schema, name, prompt, opts)
       : await viaResponses<T>(schema, name, prompt, opts)
   } catch (error) {
-    if (error instanceof AIError) throw error
-    if (error instanceof OpenAI.RateLimitError) {
-      throw new AIError(error.message, "Our AI is busy right now. Please try again in a minute.")
-    }
-    if (error instanceof OpenAI.AuthenticationError || error instanceof OpenAI.PermissionDeniedError) {
-      throw new AIError(`${error.status}: ${error.message}`, "AI course generation isn't configured correctly. Please contact support.")
-    }
-    if (error instanceof OpenAI.APIError) {
-      throw new AIError(`API ${error.status}: ${error.message}`, "The AI service had a problem. Please try again.")
-    }
-    throw new AIError(String(error), "Couldn't reach the AI service. Please try again.")
+    throw toAIError(error)
   }
+}
+
+function toAIError(error: unknown): AIError {
+  if (error instanceof AIError) return error
+  if (error instanceof OpenAI.RateLimitError) {
+    return new AIError(error.message, "Our AI is busy right now. Please try again in a minute.")
+  }
+  if (error instanceof OpenAI.AuthenticationError || error instanceof OpenAI.PermissionDeniedError) {
+    return new AIError(`${error.status}: ${error.message}`, "AI course generation isn't configured correctly. Please contact support.")
+  }
+  if (error instanceof OpenAI.APIError) {
+    return new AIError(`API ${error.status}: ${error.message}`, "The AI service had a problem. Please try again.")
+  }
+  return new AIError(String(error), "Couldn't reach the AI service. Please try again.")
 }
 
 function professorPreamble(professor: Professor, category: Category | null) {
@@ -250,7 +255,7 @@ Requirements:
   return plan
 }
 
-export async function generateLesson(args: {
+export type LessonArgs = {
   categoryId: string | null
   courseTitle: string
   courseLevel: string
@@ -263,7 +268,9 @@ export async function generateLesson(args: {
   previousLessonTitle: string | null
   estMinutes: number | null
   learningStyle?: string | null
-}): Promise<LessonContent> {
+}
+
+function lessonPrompt(args: LessonArgs): string {
   const category = getCategory(args.categoryId)
   const professor = professorForCategory(args.categoryId)
   const style = args.learningStyle && args.learningStyle in STYLE_LABELS
@@ -305,7 +312,11 @@ Voice and rules:
 - checkpoint: keep checkpoint.question to one sentence and put any code it refers to in that block's body_markdown as a fenced block; options are short (inline code with backticks is fine).
 - Then a 4-5 question end-of-lesson quiz with exactly 4 options each, testing understanding and application. Vary which option is correct.`
 
-  const lesson = await callStructured<LessonContent>(LessonContentSchema, "lesson", prompt, { maxOutputTokens: 24000, effort: "low" })
+  return prompt
+}
+
+/** Drop malformed checkpoints/quiz questions and reject lessons that came back too thin. */
+function finishLesson(lesson: LessonContent): LessonContent {
   const validQuestion = (q: { options: string[]; answer_index: number }) =>
     q.options.length >= 2 && q.answer_index >= 0 && q.answer_index < q.options.length
   lesson.quiz = lesson.quiz.filter(validQuestion)
@@ -316,6 +327,67 @@ Voice and rules:
     throw new AIError("incomplete lesson", "The AI returned an incomplete lesson. Please try again.")
   }
   return lesson
+}
+
+const LESSON_OPTS = { maxOutputTokens: 24000, effort: "low" as const }
+
+export async function generateLesson(args: LessonArgs): Promise<LessonContent> {
+  const lesson = await callStructured<LessonContent>(LessonContentSchema, "lesson", lessonPrompt(args), LESSON_OPTS)
+  return finishLesson(lesson)
+}
+
+/**
+ * Same as generateLesson, but calls onBlocks with every block that is complete so far, so the page can show
+ * the lesson while it is being written. Falls back to a single call on Bedrock.
+ */
+export async function streamLesson(args: LessonArgs, onBlocks: (blocks: LessonBlock[]) => void): Promise<LessonContent> {
+  if (PROVIDER !== "openrouter") return generateLesson(args)
+  let sent = 0
+  try {
+    const stream = getClient().chat.completions.stream({
+      model: MODEL,
+      messages: [
+        { role: "system", content: TUTOR_INSTRUCTIONS },
+        { role: "user", content: lessonPrompt(args) },
+      ],
+      response_format: zodResponseFormat(LessonContentSchema, "lesson"),
+      max_tokens: LESSON_OPTS.maxOutputTokens,
+      ...({ reasoning: { effort: LESSON_OPTS.effort }, provider: { require_parameters: true } } as object),
+    })
+    stream.on("content.delta", ({ parsed }) => {
+      const blocks = (parsed as { blocks?: unknown } | null)?.blocks
+      if (!Array.isArray(blocks)) return
+      // The last block may still be half-written; everything before it is complete.
+      const done = blocks.slice(0, -1).map(normalizeBlock).filter((b): b is LessonBlock => b !== null)
+      if (done.length > sent) {
+        sent = done.length
+        onBlocks(done)
+      }
+    })
+    const completion = await stream.finalChatCompletion()
+    const choice = completion.choices[0]
+    if (!choice) throw new AIError("no choices", "The AI returned an empty response. Please try again.")
+    if (choice.finish_reason === "length") throw new AIError("finish_reason=length", "The AI response was cut short. Please try again.")
+    if (choice.message.refusal) throw new AIError(`refusal: ${choice.message.refusal}`, "We couldn't create this content. Please try again.")
+    if (!choice.message.parsed) throw new AIError("no parsed output", "The AI returned an unexpected response. Please try again.")
+    return finishLesson(choice.message.parsed as LessonContent)
+  } catch (error) {
+    throw toAIError(error)
+  }
+}
+
+/** Shape a partially parsed block for display; null if it isn't usable yet. */
+function normalizeBlock(raw: unknown): LessonBlock | null {
+  if (!raw || typeof raw !== "object") return null
+  const b = raw as Partial<LessonBlock>
+  if (typeof b.type !== "string") return null
+  return {
+    type: b.type,
+    title: typeof b.title === "string" ? b.title : "",
+    body_markdown: typeof b.body_markdown === "string" ? b.body_markdown : "",
+    items: Array.isArray(b.items) ? b.items.filter((i): i is string => typeof i === "string") : [],
+    checkpoint: null, // practice questions appear once the lesson is saved
+  } as LessonBlock
 }
 
 const PROFESSOR_SYSTEM = `You answer learners' questions inside one lesson of their Krpex course.
