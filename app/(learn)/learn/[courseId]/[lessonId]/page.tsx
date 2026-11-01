@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { AskAboutSection, ProfessorChat } from "@/components/learn/ask-professor"
 import { LectureStepper } from "@/components/learn/lecture"
 import { LessonBlockView, Md } from "@/components/learn/lesson-blocks"
+import { LessonTools } from "@/components/learn/course-tools"
 import { LessonGenerator } from "@/components/learn/lesson-generator"
 import { ProfessorCard } from "@/components/learn/professor"
 import { Quiz } from "@/components/learn/quiz"
@@ -122,6 +123,8 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
           <LessonGenerator courseId={courseId} lessonId={lessonId} professor={professor} />
         )}
       </div>
+
+      {hasContent && account ? <LessonTools courseId={courseId} lessonId={lessonId} credits={account.credits} /> : null}
 
       <div className="mt-10 flex justify-between gap-4 border-t pt-6 text-sm">
         {prev ? (

@@ -9,23 +9,12 @@ import { listCourses } from "@/lib/learning/data"
 
 export const metadata = { title: "My courses — Krpex" }
 
-export default async function MyCoursesPage() {
-  const courses = await listCourses()
-  if (courses.length === 0) redirect("/onboarding")
-
+function CourseGrid({ courses }: { courses: Awaited<ReturnType<typeof listCourses>> }) {
+  if (courses.length === 0) {
+    return <p className="rounded-xl border p-6 text-sm text-muted-foreground">No active courses. Restore one below or start a new one.</p>
+  }
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10 md:py-14">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">My courses</h1>
-          <p className="mt-1 text-muted-foreground">Pick up where you left off.</p>
-        </div>
-        <Button asChild>
-          <Link href="/onboarding">New course</Link>
-        </Button>
-      </div>
-
-      <ul className="grid gap-4 md:grid-cols-2">
+    <ul className="grid gap-4 md:grid-cols-2">
         {courses.map((c) => {
           const category = getCategory(c.category)
           const professor = c.professor ? getProfessor(c.professor) : professorForCategory(c.category)
@@ -82,7 +71,39 @@ export default async function MyCoursesPage() {
           </li>
           )
         })}
-      </ul>
+    </ul>
+  )
+}
+
+export default async function MyCoursesPage() {
+  const courses = await listCourses()
+  if (courses.length === 0) redirect("/onboarding")
+  const active = courses.filter((c) => c.status !== "archived")
+  const archived = courses.filter((c) => c.status === "archived")
+
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-10 md:py-14">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">My courses</h1>
+          <p className="mt-1 text-muted-foreground">Pick up where you left off.</p>
+        </div>
+        <Button asChild>
+          <Link href="/onboarding">New course</Link>
+        </Button>
+      </div>
+
+      <CourseGrid courses={active} />
+      {archived.length > 0 && (
+        <details className="mt-10">
+          <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
+            Archived ({archived.length})
+          </summary>
+          <div className="mt-4 opacity-80">
+            <CourseGrid courses={archived} />
+          </div>
+        </details>
+      )}
     </main>
   )
 }

@@ -105,7 +105,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 5.D | Illustrations: GPT-5 Image Mini (max 2/lesson, cached in Storage) + photos | P1 | ⬜ | 🤖 | |
 | 5.E | Ask the professor | P1 | ✅ | | D18 |
 | 5.F | Catalog courses + narration | P2 | ⬜ | 🤖 | |
-| 5.1b | Regenerate lesson / report a problem; course archive & delete | P1 | ⬜ | 🤖 | |
+| 5.1b | Regenerate lesson / report a problem; course archive & delete | P1 | 🟡 | 👤 | S1.3 — needs migration 011 |
 | 5.1c | Stream lesson text while it is written | P2 | ⬜ | 🤖 | |
 | 5.2 | Doc upload → lessons from the learner's docs | P1 | ⬜ | 🤖 | |
 | 5.3 | Module tests, final exam, certificates | P1 | 🟡 | 🤖 | Per-lesson quizzes done |
@@ -140,7 +140,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 |----|------|-----|--------|-------|-------|
 | S1.1 | Signed-in navbar on public pages ("My courses" + avatar) | P1 | ✅ | | G18; /login and /create-account redirect signed-in users |
 | S1.2 | Stream lesson text while it is generated | P1 | ✅ | | `/api/lessons/stream`; first text ~5 s instead of ~30 s |
-| S1.3 | Course delete/archive; regenerate a lesson (uses credits); report a problem | P1 | ⬜ | 🤖 | 5.1b |
+| S1.3 | Course delete/archive; regenerate a lesson (5 credits, 5/day); report a problem | P1 | 🟡 | 👤 | Code live; run migration 011 |
 | S1.4 | Admin page: users, usage, AI spend, payments, grant credits/Pro | P1 | ⬜ | 🤖 | G25 |
 | S1.5 | Nginx rate limits + deploy script | P1 | ⬜ | 🤖 | 0.7, 2.4 |
 | S1.6 | Uptime monitoring + error tracking (Sentry) | P1 | ⬜ | 👤🤖 | 2.5, 3.6 |

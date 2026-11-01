@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import { Badge } from "@/components/site/ui/badge"
 import { Button } from "@/components/site/ui/button"
+import { CourseOptions } from "@/components/learn/course-tools"
 import { ProfessorCard } from "@/components/learn/professor"
 import { getCategory, getProfessor, getSubcategory, professorForCategory } from "@/lib/learning/catalog"
 import { getCourse, isUnlocked, isUuid, progressOf } from "@/lib/learning/data"
@@ -36,6 +37,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           {course.level}
         </Badge>
         {course.estimated_weeks ? <span className="text-xs text-muted-foreground">~{course.estimated_weeks} weeks</span> : null}
+        {course.status === "archived" ? <Badge variant="secondary">Archived</Badge> : null}
       </div>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance">{course.title}</h1>
       <p className="mt-2 text-muted-foreground text-pretty">{course.summary}</p>
@@ -115,6 +117,8 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           )
         })}
       </ol>
+
+      <CourseOptions courseId={course.id} archived={course.status === "archived"} />
     </main>
   )
 }
