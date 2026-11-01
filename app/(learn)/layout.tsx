@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 
 import { ErrorReporter } from "@/components/error-reporter"
 import { LearnHeader } from "@/components/learn/learn-header"
+import "katex/dist/katex.min.css"
 import "../(site)/site.css"
 import "./learn.css"
 

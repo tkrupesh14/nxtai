@@ -1,5 +1,11 @@
 import ReactMarkdown from "react-markdown"
+import rehypeHighlight from "rehype-highlight"
+import rehypeKatex from "rehype-katex"
 import remarkGfm from "remark-gfm"
+import remarkMath from "remark-math"
+
+import { CodeBlock } from "@/components/learn/code-block"
+import { DiagramView } from "@/components/learn/diagram-view"
 
 import { Checkpoint } from "@/components/learn/lecture"
 import { ProfessorAvatar } from "@/components/learn/professor"
@@ -7,10 +13,28 @@ import type { Professor } from "@/lib/learning/catalog"
 import type { LessonBlock } from "@/lib/learning/schemas"
 import { cn } from "@/lib/utils"
 
+// Math is written as $$...$$ (inline or on its own line). Single $ stays a currency sign ("$5").
+const REMARK = [remarkGfm, [remarkMath, { singleDollarTextMath: false }]] as React.ComponentProps<typeof ReactMarkdown>["remarkPlugins"]
+const REHYPE = [
+  [rehypeKatex, { throwOnError: false, strict: "ignore" }],
+  [rehypeHighlight, { detect: false }],
+] as React.ComponentProps<typeof ReactMarkdown>["rehypePlugins"]
+
+/** A line that is only "$$...$$" is meant as a displayed equation; remark-math needs the $$ on their own lines for that. */
+function displayMath(md: string) {
+  return md.replace(/^[ \t]*\$\$([^\n$]+?)\$\$[ \t]*$/gm, (_, tex: string) => `$$\n${tex.trim()}\n$$`)
+}
+
 export function Md({ children, className, compact }: { children: string; className?: string; compact?: boolean }) {
   return (
     <div className={cn("lesson-prose", compact && "lesson-prose-compact", className)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={REMARK}
+        rehypePlugins={REHYPE}
+        components={{ pre: (props) => <CodeBlock {...props} /> }}
+      >
+        {displayMath(children)}
+      </ReactMarkdown>
     </div>
   )
 }
@@ -138,6 +162,19 @@ export function LessonBlockView({ block, id, professor }: { block: LessonBlock; 
         <Callout icon="📌" label="Summary" tone="primary" title={block.title}>
           {body && <Md>{body}</Md>}
           <Items items={block.items} marker="check" />
+        </Callout>
+      )
+    case "diagram":
+      return (
+        <Callout icon="🗺️" label="Diagram" tone="muted" title={block.title}>
+          <figure className="grid gap-3">
+            <DiagramView diagram={block.diagram} />
+            {body ? (
+              <figcaption>
+                <Md compact>{body}</Md>
+              </figcaption>
+            ) : null}
+          </figure>
         </Callout>
       )
     case "homework":

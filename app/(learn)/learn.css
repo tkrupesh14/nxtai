@@ -33,3 +33,25 @@
 .lesson-prose-compact { font-size: inherit; line-height: 1.55; }
 .lesson-prose-compact > * + * { margin-top: 0.5rem; }
 .lesson-prose-compact pre { padding: 0.6rem 0.8rem; margin: 0.4rem 0; }
+
+/* Math (KaTeX): long equations scroll instead of widening the page. */
+.lesson-prose .katex-display { overflow-x: auto; overflow-y: hidden; padding: 0.25rem 0; }
+.lesson-prose .katex { font-size: 1.05em; }
+
+/* Code highlighting (highlight.js classes), tuned for light and dark. */
+.code-block pre { padding-right: 3.5rem; }
+.lesson-prose .hljs-comment, .lesson-prose .hljs-quote { color: #6b7280; font-style: italic; }
+.lesson-prose .hljs-keyword, .lesson-prose .hljs-selector-tag, .lesson-prose .hljs-built_in, .lesson-prose .hljs-type { color: #7c3aed; }
+.lesson-prose .hljs-string, .lesson-prose .hljs-regexp, .lesson-prose .hljs-addition { color: #15803d; }
+.lesson-prose .hljs-number, .lesson-prose .hljs-literal, .lesson-prose .hljs-symbol { color: #c2410c; }
+.lesson-prose .hljs-title, .lesson-prose .hljs-section, .lesson-prose .hljs-function .hljs-title { color: #1d4ed8; }
+.lesson-prose .hljs-attr, .lesson-prose .hljs-attribute, .lesson-prose .hljs-variable, .lesson-prose .hljs-template-variable { color: #b45309; }
+.lesson-prose .hljs-meta, .lesson-prose .hljs-tag { color: #0e7490; }
+.lesson-prose .hljs-deletion { color: #b91c1c; }
+.dark .lesson-prose .hljs-keyword, .dark .lesson-prose .hljs-selector-tag, .dark .lesson-prose .hljs-built_in, .dark .lesson-prose .hljs-type { color: #c4b5fd; }
+.dark .lesson-prose .hljs-string, .dark .lesson-prose .hljs-regexp, .dark .lesson-prose .hljs-addition { color: #86efac; }
+.dark .lesson-prose .hljs-number, .dark .lesson-prose .hljs-literal, .dark .lesson-prose .hljs-symbol { color: #fdba74; }
+.dark .lesson-prose .hljs-title, .dark .lesson-prose .hljs-section, .dark .lesson-prose .hljs-function .hljs-title { color: #93c5fd; }
+.dark .lesson-prose .hljs-attr, .dark .lesson-prose .hljs-attribute, .dark .lesson-prose .hljs-variable, .dark .lesson-prose .hljs-template-variable { color: #fcd34d; }
+.dark .lesson-prose .hljs-meta, .dark .lesson-prose .hljs-tag { color: #67e8f9; }
+.dark .lesson-prose .hljs-comment, .dark .lesson-prose .hljs-quote { color: #9ca3af; }

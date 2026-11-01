@@ -1,3 +1,4 @@
+import { diagramText } from "@/lib/learning/diagram"
 import type { LessonBlock } from "@/lib/learning/schemas"
 
 export type LessonSection = { blocks: { block: LessonBlock; index: number }[]; gated: boolean }
@@ -26,6 +27,7 @@ export function sectionText(section: LessonSection, maxChars = 2500) {
         block.body_markdown,
         ...block.items.map((i) => `- ${i}`),
         block.checkpoint ? `Practice question: ${block.checkpoint.question}` : "",
+        block.diagram ? diagramText(block.diagram) : "",
       ]
         .filter(Boolean)
         .join("\n"),

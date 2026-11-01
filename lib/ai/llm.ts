@@ -5,6 +5,7 @@ import { zodResponseFormat, zodTextFormat } from "openai/helpers/zod"
 import { bedrock } from "openai/providers/bedrock"
 
 import { logAiUsage } from "@/lib/ai/usage-log"
+import { cleanDiagram } from "@/lib/learning/diagram"
 import {
   CATEGORIES,
   getCategory,
@@ -301,6 +302,7 @@ Write the lecture as 8-14 blocks, in this order:
 1. opening — greet the learner, briefly recap the previous lesson (if any), and say why today matters for their goal.
 2. objectives — "By the end of this lesson you'll be able to…"; put 2-3 objectives in items.
 3. Then teach with explanation blocks (one idea each), plus at least one analogy, one worked_example (step by step, with your commentary), and 1-2 checkpoint blocks ("pause and think": a multiple-choice question with 4 options, answer and explanation in checkpoint).
+   Add 0-2 diagram blocks where a picture genuinely helps (a process → flow, a repeating process → cycle, parts of a whole or a classification → hierarchy, options side by side → comparison, events over time → timeline). Put the data in diagram; body_markdown is a one- or two-sentence caption in your voice. Keep labels to 2-4 words.
 4. common_mistakes — what students usually get wrong; put them in items.
 5. real_world — where this is used in practice.
 6. summary — wrap up; put the key points in items.
@@ -310,8 +312,9 @@ Voice and rules:
 - Speak in first person directly to the learner ("you", "let's", "I want you to notice…"); sound like an experienced professor in a small class, not a textbook.
 - Connect examples to the learner's goal and background where natural.
 - Assume earlier lessons in the outline were completed; don't re-teach them, and don't teach later lessons.
-- body_markdown: no headings; fenced code blocks only when they help. Keep each block focused (roughly 60-250 words).
-- items is empty and checkpoint is null for blocks that don't use them.
+- body_markdown: no headings; fenced code blocks only when they help, always with a language tag (\`\`\`python, \`\`\`sql, \`\`\`js…). Keep each block focused (roughly 60-250 words).
+- Math: write formulas in LaTeX between double dollar signs, e.g. $$a^2 + b^2 = c^2$$ inline, or on its own line for a displayed equation. Never use a single $ for math (a single $ is a currency sign). Use math only when the topic needs it.
+- items is empty, and checkpoint and diagram are null, for blocks that don't use them.
 - checkpoint: keep checkpoint.question to one sentence and put any code it refers to in that block's body_markdown as a fenced block; options are short (inline code with backticks is fine).
 - Then a 4-5 question end-of-lesson quiz with exactly 4 options each, testing understanding and application. Vary which option is correct.`
 
@@ -325,7 +328,12 @@ function finishLesson(lesson: LessonContent): LessonContent {
   lesson.quiz = lesson.quiz.filter(validQuestion)
   lesson.blocks = lesson.blocks
     .map((b) => (b.type === "checkpoint" && (!b.checkpoint || !validQuestion(b.checkpoint)) ? { ...b, type: "explanation" as const, checkpoint: null } : b))
-    .filter((b) => b.body_markdown.trim() || b.items.length || b.checkpoint)
+    .map((b) => {
+      if (b.type !== "diagram") return { ...b, diagram: null }
+      const diagram = cleanDiagram(b.diagram)
+      return diagram ? { ...b, diagram } : { ...b, type: "explanation" as const, diagram: null }
+    })
+    .filter((b) => b.body_markdown.trim() || b.items.length || b.checkpoint || b.diagram)
   if (lesson.blocks.length < 3 || lesson.quiz.length === 0) {
     throw new AIError("incomplete lesson", "The AI returned an incomplete lesson. Please try again.")
   }
@@ -391,6 +399,7 @@ function normalizeBlock(raw: unknown): LessonBlock | null {
     body_markdown: typeof b.body_markdown === "string" ? b.body_markdown : "",
     items: Array.isArray(b.items) ? b.items.filter((i): i is string => typeof i === "string") : [],
     checkpoint: null, // practice questions appear once the lesson is saved
+    diagram: b.type === "diagram" ? cleanDiagram(b.diagram) : null,
   } as LessonBlock
 }
 
@@ -402,7 +411,8 @@ const PROFESSOR_SYSTEM = `You answer learners' questions inside one lesson of th
 - not_allowed: harmful, illegal, abusive or sexual requests, or asking you to do graded work for them.
   Reply in one short sentence.
 - For quiz-style questions, guide their reasoning instead of just giving the letter.
-- answer: clear and accurate, under 180 words, Markdown allowed; at most one short code block when it helps.
+- answer: clear and accurate, under 180 words, Markdown allowed; at most one short code block (with a language tag) when it helps.
+  Math in LaTeX between double dollar signs ($$x^2$$); never a single $ for math.
   End with a one-line check question only if it helps them learn.`
 
 /** One professor-chat answer. Small context and a hard output cap keep each call around ₹0.05. */

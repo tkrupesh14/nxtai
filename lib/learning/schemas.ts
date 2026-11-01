@@ -66,8 +66,35 @@ export const LESSON_BLOCK_TYPES = [
   "real_world",
   "summary",
   "homework",
+  "diagram",
 ] as const
 export type LessonBlockType = (typeof LESSON_BLOCK_TYPES)[number]
+
+export const DIAGRAM_KINDS = ["flow", "cycle", "hierarchy", "comparison", "timeline"] as const
+export type DiagramKind = (typeof DIAGRAM_KINDS)[number]
+
+/** A diagram described as data; the app draws it (no image generation, can't render broken). */
+export const DiagramSchema = z.object({
+  kind: z
+    .enum(DIAGRAM_KINDS)
+    .describe(
+      "flow: steps of a process in order; cycle: a process that repeats; hierarchy: parts of a whole or a classification; comparison: options side by side; timeline: events in time order",
+    ),
+  items: z
+    .array(
+      z.object({
+        label: z.string().describe("2-4 words (timeline: the date or period)"),
+        detail: z.string().describe("At most 15 words; may be empty"),
+        parent: z.number().int().nullable().describe("hierarchy only: index of the parent item, null for the root; otherwise null"),
+      }),
+    )
+    .describe("flow/cycle: 3-7 items; hierarchy: 3-10 items with item 0 as the root; timeline: 3-8 items; comparison: empty"),
+  columns: z.array(z.string()).describe("comparison only: 2-4 option names; otherwise empty"),
+  rows: z
+    .array(z.object({ label: z.string().describe("What is being compared"), cells: z.array(z.string()).describe("One short value per column") }))
+    .describe("comparison only: 2-8 rows; otherwise empty"),
+})
+export type Diagram = z.infer<typeof DiagramSchema>
 
 export const LessonBlockSchema = z.object({
   type: z.enum(LESSON_BLOCK_TYPES),
@@ -77,6 +104,7 @@ export const LessonBlockSchema = z.object({
     .describe("The professor speaking in first person to the learner. GitHub Markdown; fenced code blocks allowed; no headings"),
   items: z.array(z.string()).describe("Bullet items for objectives, common_mistakes and summary; otherwise empty"),
   checkpoint: QuizQuestionSchema.nullable().describe("Only for type=checkpoint; otherwise null"),
+  diagram: DiagramSchema.nullable().describe("Only for type=diagram; otherwise null"),
 })
 export type LessonBlock = z.infer<typeof LessonBlockSchema>
 

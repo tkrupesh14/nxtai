@@ -101,7 +101,8 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 5.1a | Verify the learning loop end to end on a phone | P0 | 🟡 | 👤 | Lessons + chat used; full course not yet |
 | 5.A | Categories + AI professors | P1 | ✅ | | D15 |
 | 5.B | Class-style lessons | P1 | ✅ | | D16 |
-| 5.C | Diagrams as code in lessons (Mermaid / SVG) | P1 | ⬜ | 🤖 | |
+| 5.C | Diagrams in lessons (flow, cycle, hierarchy, comparison, timeline) | P1 | ✅ | | S2.2 — drawn by our own components from AI data |
+| 5.C2 | Math formulas (KaTeX) + code highlighting with Copy | P1 | ✅ | | S2.1 |
 | 5.D | Illustrations: GPT-5 Image Mini (max 2/lesson, cached in Storage) + photos | P1 | ⬜ | 🤖 | |
 | 5.E | Ask the professor | P1 | ✅ | | D18 |
 | 5.F | Catalog courses + narration | P2 | ⬜ | 🤖 | |
