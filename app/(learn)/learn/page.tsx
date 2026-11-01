@@ -3,6 +3,8 @@ import { redirect } from "next/navigation"
 
 import { Badge } from "@/components/site/ui/badge"
 import { Button } from "@/components/site/ui/button"
+import { ProfessorAvatar } from "@/components/learn/professor"
+import { getCategory, getProfessor, professorForCategory } from "@/lib/learning/catalog"
 import { listCourses } from "@/lib/learning/data"
 
 export const metadata = { title: "My courses — NxtAI" }
@@ -24,9 +26,17 @@ export default async function MyCoursesPage() {
       </div>
 
       <ul className="grid gap-4 md:grid-cols-2">
-        {courses.map((c) => (
+        {courses.map((c) => {
+          const category = getCategory(c.category)
+          const professor = c.professor ? getProfessor(c.professor) : professorForCategory(c.category)
+          return (
           <li key={c.id} className="flex flex-col rounded-xl border bg-card p-6">
-            <div className="mb-3 flex items-center gap-2">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              {category && (
+                <Badge variant="outline">
+                  {category.icon} {category.name}
+                </Badge>
+              )}
               <Badge variant="secondary" className="capitalize">
                 {c.level}
               </Badge>
@@ -38,6 +48,10 @@ export default async function MyCoursesPage() {
               </Link>
             </h2>
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.summary}</p>
+            <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <ProfessorAvatar professor={professor} size="sm" />
+              <span>with {professor.name}</span>
+            </div>
             <div className="mt-5">
               <div className="mb-1.5 flex justify-between text-xs text-muted-foreground">
                 <span>
@@ -66,7 +80,8 @@ export default async function MyCoursesPage() {
               )}
             </div>
           </li>
-        ))}
+          )
+        })}
       </ul>
     </main>
   )

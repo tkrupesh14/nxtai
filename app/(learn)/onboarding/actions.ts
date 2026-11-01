@@ -2,11 +2,18 @@
 
 import { redirect } from "next/navigation"
 
-import { AIError, generateCoursePlan } from "@/lib/ai/llm"
+import { AIError, checkGoal, generateCoursePlan } from "@/lib/ai/llm"
+import { professorForCategory } from "@/lib/learning/catalog"
 import { OnboardingSchema } from "@/lib/learning/schemas"
 import { createClient } from "@/lib/supabase/server"
 
-export type OnboardingState = { error?: string }
+export type OnboardingState = {
+  error?: string
+  /** Goal check: the goal fits another category better. */
+  betterCategory?: string
+  /** Goal check: the goal is unclear or not allowed; send the learner back to edit it. */
+  reviseGoal?: boolean
+}
 
 const MAX_COURSES_PER_DAY = 3
 
@@ -47,6 +54,16 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
 
   let plan
   try {
+    const check = await checkGoal(input)
+    if (check.verdict === "wrong_category") {
+      return {
+        error: check.message || "That goal fits a different category better.",
+        betterCategory: check.better_category || undefined,
+      }
+    }
+    if (check.verdict !== "ok") {
+      return { error: check.message || "Please describe a clear learning goal.", reviseGoal: true }
+    }
     plan = await generateCoursePlan(input)
   } catch (e) {
     console.error("generateCoursePlan failed:", e instanceof Error ? e.message : e)
@@ -62,6 +79,10 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
       level: plan.level,
       estimated_weeks: plan.estimated_weeks,
       goal: input.goal,
+      category: input.category,
+      subcategory: input.subcategory,
+      professor: professorForCategory(input.category).id,
+      welcome: plan.welcome_message,
     })
     .select("id")
     .single()

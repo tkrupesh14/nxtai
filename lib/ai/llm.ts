@@ -5,7 +5,17 @@ import { zodResponseFormat, zodTextFormat } from "openai/helpers/zod"
 import { bedrock } from "openai/providers/bedrock"
 
 import {
+  CATEGORIES,
+  getCategory,
+  getSubcategory,
+  professorForCategory,
+  type Category,
+  type Professor,
+} from "@/lib/learning/catalog"
+import {
   CoursePlanSchema,
+  GoalCheckSchema,
+  type GoalCheck,
   LessonContentSchema,
   LEVEL_LABELS,
   STYLE_LABELS,
@@ -163,8 +173,44 @@ async function callStructured<T>(
   }
 }
 
+function professorPreamble(professor: Professor, category: Category | null) {
+  return `<professor>
+You are ${professor.name}, an AI professor${category ? ` for ${category.name}` : ""} on NxtAI.
+Teaching style: ${professor.style}
+You are an AI tutor persona: never claim to be human or to have real-world credentials, employers or experiences.
+</professor>${category ? `\n<track name="${category.name}">\n${category.blueprint}\n</track>` : ""}`
+}
+
+const CATEGORY_LIST = CATEGORIES.map((c) => `- ${c.id}: ${c.name} (${c.description})`).join("\n")
+
+/** Quick check that a typed goal fits the chosen subject and is something we should teach. */
+export async function checkGoal(input: Onboarding): Promise<GoalCheck> {
+  const category = getCategory(input.category)
+  const sub = getSubcategory(input.category, input.subcategory)
+  const prompt = `A learner chose a subject and typed a learning goal. Decide if we should build a course for it.
+
+<choice category="${category?.name}" subject="${sub?.name}" />
+<goal>${input.goal}</goal>
+
+Categories:
+${CATEGORY_LIST}
+
+Verdicts:
+- ok: the goal is a learnable topic that fits the chosen category (a close neighbour is fine).
+- wrong_category: a fine topic, but clearly belongs to another category; set better_category.
+- unclear: too vague or not a learning goal (e.g. "hi", "stuff"); ask them to be specific.
+- not_allowed: harmful or unethical (e.g. hacking accounts they don't own, cheating, weapons, self-harm).
+Be generous: when in doubt, choose ok.`
+  return callStructured<GoalCheck>(GoalCheckSchema, "goal_check", prompt, { maxOutputTokens: 2000, effort: "low" })
+}
+
 export async function generateCoursePlan(input: Onboarding): Promise<CoursePlan> {
-  const prompt = `Design a personal course for this learner.
+  const category = getCategory(input.category)
+  const sub = getSubcategory(input.category, input.subcategory)
+  const professor = professorForCategory(input.category)
+  const prompt = `${professorPreamble(professor, category)}
+
+Design a personal course in ${category?.name} › ${sub?.name} for this learner.
 
 <learner>
 Goal: ${input.goal}
@@ -179,7 +225,8 @@ Requirements:
 - 4-6 modules, each with 3-5 lessons. Lessons are 15-60 minutes each.
 - Skip what the learner already knows given their level and background; spend time where they need it.
 - The final module should apply the skills to a realistic project or scenario tied to their goal.
-- Size the plan so it fits their weekly hours and timeline.`
+- Size the plan so it fits their weekly hours and timeline.
+- welcome_message: you, the professor, greeting the learner by addressing them directly ("you"), mentioning their goal.`
 
   const plan = await callStructured<CoursePlan>(CoursePlanSchema, "course_plan", prompt, { maxOutputTokens: 16000, effort: "medium" })
   // Structured outputs guarantee the shape, not the counts; trim anything excessive.
@@ -191,44 +238,68 @@ Requirements:
 }
 
 export async function generateLesson(args: {
+  categoryId: string | null
   courseTitle: string
   courseLevel: string
   goal: string
+  background?: string | null
   outline: string
   moduleTitle: string
   lessonTitle: string
   objective: string
+  previousLessonTitle: string | null
   estMinutes: number | null
   learningStyle?: string | null
 }): Promise<LessonContent> {
+  const category = getCategory(args.categoryId)
+  const professor = professorForCategory(args.categoryId)
   const style = args.learningStyle && args.learningStyle in STYLE_LABELS
     ? STYLE_LABELS[args.learningStyle as keyof typeof STYLE_LABELS]
     : "A mix of everything"
 
-  const prompt = `Write one lesson of a personal course.
+  const prompt = `${professorPreamble(professor, category)}
+
+Teach one lesson of this learner's personal course, as a live lecture from you to them.
 
 <course title="${args.courseTitle}" level="${args.courseLevel}">
 Learner's goal: ${args.goal}
+Learner's background: ${args.background || "(not provided)"}
 Learner prefers: ${style}
-Outline (the lesson to write is marked with »):
+Outline (today's lesson is marked with »):
 ${args.outline}
 </course>
 
-Lesson to write: "${args.lessonTitle}" (module: "${args.moduleTitle}")
+Today's lesson: "${args.lessonTitle}" (module: "${args.moduleTitle}")
 Objective: ${args.objective}
+Previous lesson: ${args.previousLessonTitle ? `"${args.previousLessonTitle}"` : "none — this is the first lesson"}
 Target length: about ${args.estMinutes ?? 30} minutes of study.
 
-Requirements:
-- Assume the earlier lessons in the outline were completed; don't re-teach them, and don't teach later lessons.
-- Structure: a short hook, the core explanation with examples, a worked example or mini exercise, and a recap.
-- Then a 4-5 question multiple-choice quiz with exactly 4 options each, testing understanding and application.
-- Vary which option position is correct.`
+Write the lecture as 8-14 blocks, in this order:
+1. opening — greet the learner, briefly recap the previous lesson (if any), and say why today matters for their goal.
+2. objectives — "By the end of this lesson you'll be able to…"; put 2-3 objectives in items.
+3. Then teach with explanation blocks (one idea each), plus at least one analogy, one worked_example (step by step, with your commentary), and 1-2 checkpoint blocks ("pause and think": a multiple-choice question with 4 options, answer and explanation in checkpoint).
+4. common_mistakes — what students usually get wrong; put them in items.
+5. real_world — where this is used in practice.
+6. summary — wrap up; put the key points in items.
+7. homework — one small practice task to do before the next lesson.
+
+Voice and rules:
+- Speak in first person directly to the learner ("you", "let's", "I want you to notice…"); sound like an experienced professor in a small class, not a textbook.
+- Connect examples to the learner's goal and background where natural.
+- Assume earlier lessons in the outline were completed; don't re-teach them, and don't teach later lessons.
+- body_markdown: no headings; fenced code blocks only when they help. Keep each block focused (roughly 60-250 words).
+- items is empty and checkpoint is null for blocks that don't use them.
+- checkpoint: keep checkpoint.question to one sentence and put any code it refers to in that block's body_markdown as a fenced block; options are short (inline code with backticks is fine).
+- Then a 4-5 question end-of-lesson quiz with exactly 4 options each, testing understanding and application. Vary which option is correct.`
 
   const lesson = await callStructured<LessonContent>(LessonContentSchema, "lesson", prompt, { maxOutputTokens: 24000, effort: "low" })
-  lesson.quiz = lesson.quiz.filter(
-    (q) => q.options.length >= 2 && q.answer_index >= 0 && q.answer_index < q.options.length,
-  )
-  if (!lesson.content_markdown.trim() || lesson.quiz.length === 0) {
+  const validQuestion = (q: { options: string[]; answer_index: number }) =>
+    q.options.length >= 2 && q.answer_index >= 0 && q.answer_index < q.options.length
+  lesson.quiz = lesson.quiz.filter(validQuestion)
+  lesson.blocks = lesson.blocks
+    .map((b) => (b.type === "checkpoint" && (!b.checkpoint || !validQuestion(b.checkpoint)) ? { ...b, type: "explanation" as const, checkpoint: null } : b))
+    .filter((b) => b.body_markdown.trim() || b.items.length || b.checkpoint)
+  if (lesson.blocks.length < 3 || lesson.quiz.length === 0) {
     throw new AIError("incomplete lesson", "The AI returned an incomplete lesson. Please try again.")
   }
   return lesson

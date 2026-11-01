@@ -3,6 +3,8 @@ import { notFound } from "next/navigation"
 
 import { Badge } from "@/components/site/ui/badge"
 import { Button } from "@/components/site/ui/button"
+import { ProfessorCard } from "@/components/learn/professor"
+import { getCategory, getProfessor, getSubcategory, professorForCategory } from "@/lib/learning/catalog"
 import { getCourse, isUnlocked, isUuid, progressOf } from "@/lib/learning/data"
 import { cn } from "@/lib/utils"
 
@@ -14,6 +16,9 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   const { course, modules, lessons } = data
   const progress = progressOf(lessons)
   const nextIndex = lessons.findIndex((l) => !l.completed_at)
+  const category = getCategory(course.category)
+  const subcategory = getSubcategory(course.category, course.subcategory)
+  const professor = course.professor ? getProfessor(course.professor) : professorForCategory(course.category)
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 md:py-14">
@@ -21,6 +26,12 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
         ← My courses
       </Link>
       <div className="mt-4 flex flex-wrap items-center gap-2">
+        {category && (
+          <Badge variant="outline">
+            {category.icon} {category.name}
+            {subcategory ? ` › ${subcategory.name}` : ""}
+          </Badge>
+        )}
         <Badge variant="secondary" className="capitalize">
           {course.level}
         </Badge>
@@ -28,6 +39,11 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
       </div>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance">{course.title}</h1>
       <p className="mt-2 text-muted-foreground text-pretty">{course.summary}</p>
+      <ProfessorCard
+        professor={professor}
+        className="mt-6"
+        note={course.welcome ? <p className="italic">&ldquo;{course.welcome}&rdquo;</p> : undefined}
+      />
 
       <div className="mt-6 rounded-xl border bg-card p-5">
         <div className="mb-2 flex justify-between text-sm">

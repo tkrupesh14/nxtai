@@ -8,7 +8,24 @@ import { submitQuiz, type QuizResult } from "@/app/(learn)/learn/[courseId]/[les
 import { Button } from "@/components/site/ui/button"
 import { cn } from "@/lib/utils"
 
-type Question = { question: string; options: string[] }
+type Question = { question: React.ReactNode; options: React.ReactNode[] }
+
+/** Explanations arrive as plain text from the grading action; show `code` spans as code. */
+function InlineCode({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(`[^`]+`)/g).map((part, i) =>
+        part.startsWith("`") && part.endsWith("`") && part.length > 2 ? (
+          <code key={i} className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]">
+            {part.slice(1, -1)}
+          </code>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
+  )
+}
 
 export function Quiz({
   courseId,
@@ -60,9 +77,11 @@ export function Quiz({
           return (
             <li key={qi}>
               <fieldset disabled={Boolean(result) || pending}>
-                <legend className="font-medium">
-                  {qi + 1}. {q.question}
-                </legend>
+                <legend className="sr-only">Question {qi + 1}</legend>
+                <div className="flex gap-2 font-medium">
+                  <span>{qi + 1}.</span>
+                  <div className="min-w-0 flex-1">{q.question}</div>
+                </div>
                 <div className="mt-3 grid gap-2">
                   {q.options.map((opt, oi) => {
                     const chosen = answers[qi] === oi
@@ -86,7 +105,7 @@ export function Quiz({
                           onChange={() => setAnswers((a) => a.map((v, i) => (i === qi ? oi : v)))}
                           className="mt-0.5 accent-[var(--primary)]"
                         />
-                        <span>{opt}</span>
+                        <div className="min-w-0 flex-1">{opt}</div>
                       </label>
                     )
                   })}
@@ -94,7 +113,9 @@ export function Quiz({
                 {r && (
                   <p className={cn("mt-3 text-sm", r.correct ? "text-green-700 dark:text-green-400" : "text-destructive-foreground")}>
                     <span className="font-medium">{r.correct ? "Correct. " : "Not quite. "}</span>
-                    <span className="text-muted-foreground">{r.explanation}</span>
+                    <span className="text-muted-foreground">
+                      <InlineCode text={r.explanation} />
+                    </span>
                   </p>
                 )}
               </fieldset>

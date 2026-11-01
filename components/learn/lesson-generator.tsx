@@ -7,14 +7,22 @@ import { generateLessonAction } from "@/app/(learn)/learn/[courseId]/[lessonId]/
 import { Button } from "@/components/site/ui/button"
 
 const MESSAGES = [
-  "Writing your lesson…",
+  "Preparing today's class…",
   "Adding examples that fit your goal…",
   "Preparing a short exercise…",
   "Writing quiz questions…",
   "Polishing the final draft…",
 ]
 
-export function LessonGenerator({ courseId, lessonId }: { courseId: string; lessonId: string }) {
+export function LessonGenerator({
+  courseId,
+  lessonId,
+  professorName,
+}: {
+  courseId: string
+  lessonId: string
+  professorName: string
+}) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [msg, setMsg] = useState(0)
@@ -57,8 +65,9 @@ export function LessonGenerator({ courseId, lessonId }: { courseId: string; less
       <div className="flex items-center gap-4">
         <div className="size-8 shrink-0 animate-spin rounded-full border-4 border-muted border-t-primary" aria-hidden />
         <div>
-          <p className="font-medium">{MESSAGES[msg]}</p>
-          <p className="text-sm text-muted-foreground">Your lesson is written for you the first time you open it. This takes about a minute.</p>
+          <p className="font-medium">{professorName} is preparing your class</p>
+          <p className="text-sm">{MESSAGES[msg]}</p>
+          <p className="text-sm text-muted-foreground">Each lesson is written for you the first time you open it. This takes about 30 seconds.</p>
         </div>
       </div>
       <div className="mt-8 grid gap-3" aria-hidden>

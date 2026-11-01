@@ -25,6 +25,10 @@ export type CourseRow = {
   goal: string
   status: string
   created_at: string
+  category: string | null
+  subcategory: string | null
+  professor: string | null
+  welcome: string | null
 }
 
 const LESSON_COLUMNS =
@@ -44,7 +48,7 @@ export async function listCourses() {
   const supabase = await createClient()
   const { data: courses, error } = await supabase
     .from("courses")
-    .select("id, title, summary, level, estimated_weeks, goal, status, created_at")
+    .select("id, title, summary, level, estimated_weeks, goal, status, created_at, category, subcategory, professor, welcome")
     .order("created_at", { ascending: false })
   if (error) throw error
   if (!courses?.length) return []
@@ -67,7 +71,7 @@ export async function getCourse(courseId: string) {
   const supabase = await createClient()
   const { data: course } = await supabase
     .from("courses")
-    .select("id, title, summary, level, estimated_weeks, goal, status, created_at")
+    .select("id, title, summary, level, estimated_weeks, goal, status, created_at, category, subcategory, professor, welcome")
     .eq("id", courseId)
     .maybeSingle()
   if (!course) return null

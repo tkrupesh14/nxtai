@@ -22,12 +22,17 @@ export async function generateLessonAction(courseId: string, lessonId: string): 
   if (index < 0) return { status: "error", message: "Lesson not found." }
   if (!isUnlocked(data.lessons, index)) return { status: "error", message: "Finish the previous lesson first." }
 
-  const { data: current } = await supabase.from("lessons").select("content_md, generated_at").eq("id", lessonId).single()
-  if (current?.content_md) return { status: "ready" }
+  const { data: current } = await supabase.from("lessons").select("content_md, blocks, generated_at").eq("id", lessonId).single()
+  if (current?.content_md || current?.blocks) return { status: "ready" }
 
   // Claim the generation so only one request calls the AI.
   const claimedAt = new Date().toISOString()
-  let claim = supabase.from("lessons").update({ generated_at: claimedAt }).eq("id", lessonId).is("content_md", null)
+  let claim = supabase
+    .from("lessons")
+    .update({ generated_at: claimedAt })
+    .eq("id", lessonId)
+    .is("content_md", null)
+    .is("blocks", null)
   if (current?.generated_at) {
     if (Date.now() - new Date(current.generated_at).getTime() < STALE_CLAIM_MS) return { status: "pending" }
     claim = claim.eq("generated_at", current.generated_at) // take over a stale claim
@@ -48,10 +53,13 @@ export async function generateLessonAction(courseId: string, lessonId: string): 
       return `Module ${m.position + 1}: ${m.title}\n${items}`
     })
     .join("\n")
-  const { data: profile } = await supabase.from("learner_profiles").select("learning_style").maybeSingle()
+  const { data: profile } = await supabase.from("learner_profiles").select("learning_style, background").maybeSingle()
 
   try {
     const content = await generateLesson({
+      categoryId: data.course.category,
+      background: profile?.background,
+      previousLessonTitle: index > 0 ? data.lessons[index - 1].title : null,
       courseTitle: data.course.title,
       courseLevel: data.course.level,
       goal: data.course.goal,
@@ -65,7 +73,7 @@ export async function generateLessonAction(courseId: string, lessonId: string): 
     const { error } = await supabase
       .from("lessons")
       .update({
-        content_md: content.content_markdown,
+        blocks: content.blocks,
         key_takeaways: content.key_takeaways,
         quiz: content.quiz,
         generated_at: new Date().toISOString(),

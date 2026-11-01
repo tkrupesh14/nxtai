@@ -18,3 +18,18 @@
 .lesson-prose th, .lesson-prose td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
 .lesson-prose th { background: var(--muted); font-weight: 600; }
 .lesson-prose hr { border-color: var(--border); margin: 2rem 0; }
+
+/* Lecture sections appear as the learner continues. */
+@keyframes lecture-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.lecture-enter { animation: lecture-enter 0.5s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .lecture-enter { animation: none; } }
+
+/* Grid/flex children default to min-width:auto, so a long code line would widen the page on phones. */
+.lesson-prose { min-width: 0; overflow-wrap: anywhere; }
+.lesson-prose pre { max-width: 100%; }
+.lesson-prose pre code { overflow-wrap: normal; }
+
+/* Markdown inside questions and options: same formatting, tighter spacing. */
+.lesson-prose-compact { font-size: inherit; line-height: 1.55; }
+.lesson-prose-compact > * + * { margin-top: 0.5rem; }
+.lesson-prose-compact pre { padding: 0.6rem 0.8rem; margin: 0.4rem 0; }
