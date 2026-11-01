@@ -30,7 +30,11 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | D18 | Ask the professor: lesson chat, quick buttons, quotas in Postgres, cache, $2/day budget | 2026-11-01 | `f97ddab`, `b715e49`, migration 005 |
 | D19 | Email/password sign-up, login, forgot/reset password; old `/auth/*` pages retired; open-redirect fix | 2026-11-01 | `5225046` |
 | D20 | Account page, settings (password, sign-in methods, sign out everywhere, delete account), avatar menu | 2026-11-01 | `b91e899`, migration 006 |
-| D21 | Plans (Free/Pro), credit ledger, course limits, credits for extra questions/courses | 2026-11-01 | migration 007 |
+| D21 | Plans (Free/Pro), credit ledger, course limits, credits for extra questions/courses | 2026-11-01 | `37e57e1`, migration 007 |
+| D22 | G20 lockdown: server-key RPCs for course/lesson writes, quiz graded in DB, quiz answers hidden | 2026-11-01 | `d151f31`, migration 008 |
+| D23 | Policy page drafts (Terms, Privacy, Refund); one price list for home + /pricing | 2026-11-01 | `d151f31` |
+| D24 | Razorpay payments (test mode): credit packs + Pro 30-day pass, webhook, payment history; test payment verified | 2026-11-01 | `6d1420d`, migration 009 |
+| D25 | Usage meters show credit headroom; course-count backfill | 2026-11-01 | `9b95e8b`, migration 010 |
 
 ## Phase 0 — Security follow-up
 
@@ -43,7 +47,8 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 0.5 | Decide: keep patched instance or rebuild from repo | P1 | ⬜ | 👤 | No persistence found |
 | 0.6 | Enable Dependabot alerts + security updates | P1 | ⬜ | 👤 | Repo settings → Code security |
 | 0.7 | Nginx rate limiting on POST; block scanner paths; consider Cloudflare | P1 | ⬜ | 🤖 | |
-| 0.8 | Lock down direct writes to `courses` / `course_modules` / `lessons` | P1 | 🟡 | 👤 | G20 — code + migration 008 done; run 008 and set the key hash |
+| 0.8 | Lock down direct writes to `courses` / `course_modules` / `lessons` | P1 | ✅ | | D22 |
+| 0.10 | Regenerate Razorpay test secrets before go-live (shared in chat) | P1 | ⬜ | 👤 | G24 |
 | 0.9 | AI keys out of `.env.local` (secret store / EC2 IAM role) | P2 | ⬜ | 🤖 | After Bedrock access |
 
 ## Phase 1 — Sign-in
@@ -75,7 +80,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
 | 3.1 | One price list for home and `/pricing`, matching plans + credit packs | P0 | ✅ | | G5 — `lib/pricing.ts`; only features that exist |
-| 3.2 | Terms, Privacy, Refund & Cancellation pages (Razorpay requirement) | P0 | 🟡 | 👤 | Drafts live at /terms, /privacy, /refund-policy; fill `lib/legal.ts` (legal name, address, city) and review |
+| 3.2 | Terms, Privacy, Refund & Cancellation pages (Razorpay requirement) | P0 | 🟡 | 👤 | D23 — fill `lib/legal.ts` (legal name, address, city) and review (G23) |
 | 3.4 | Contact form email notification | P1 | 🟡 | 🤖 | Saving ✅ |
 | 3.5 | Favicon, OG image, metadata, sitemap, robots | P1 | ⬜ | 🤖 | |
 | 3.6 | Analytics + Sentry | P2 | ⬜ | 👤🤖 | |
@@ -112,7 +117,10 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
 | 6.1 | Plans, limits, credit ledger in Postgres; account page shows them | P1 | ✅ | | D21 |
-| 6.2 | Razorpay account + KYC; test-mode keys | P1 | 🟡 | 👤 | Test mode enabled; add keys + webhook to `.env.local` / dashboard |
+| 6.2 | Razorpay account + KYC; test-mode keys and webhook | P1 | 🟡 | 👤 | Test mode working (D24); KYC + live keys pending |
+| 6.6 | Run migration 010 (count courses created before 007) | P1 | ⬜ | 👤 | SQL in `supabase/migrations/…010…` |
+| 6.7 | Go live: live keys, new webhook secret, test a ₹1 real payment | P1 | ⬜ | 👤🤖 | After KYC + G23 |
+| 6.8 | GST registration / invoice format decision | P2 | ⬜ | 👤 | Razorpay sends payment receipts |
 | 6.3 | Credit packs + Pro 30-day pass: server-created orders, Checkout, signature check, webhook `/api/razorpay/webhook` | P1 | ✅ | | Migration 009; server-key RPCs instead of an Edge Function; idempotent per order |
 | 6.4 | Auto-renewing Pro (Razorpay Subscriptions + UPI autopay) | P2 | ⬜ | 🤖 | v1 sells a 30-day pass |
 | 6.5 | Payment history and receipts on `/account` | P2 | 🟡 | 🤖 | History ✅; receipts via Razorpay emails |
@@ -126,7 +134,18 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 7.3 | Playwright e2e + visual regression tests | P1 | ⬜ | 🤖 | |
 | 7.4 | CI on pull requests | P1 | ⬜ | 🤖 | |
 
-## Admin: give a learner credits or Pro (until payments exist)
+## Next up — Sprint 1: ready for real users (proposed)
+
+| ID | Task | Pri | Status | Owner | Notes |
+|----|------|-----|--------|-------|-------|
+| S1.1 | Signed-in navbar on public pages ("My courses" + avatar) | P1 | ⬜ | 🤖 | G18 |
+| S1.2 | Stream lesson text while it is generated | P1 | ⬜ | 🤖 | 5.1c |
+| S1.3 | Course delete/archive; regenerate a lesson (uses credits); report a problem | P1 | ⬜ | 🤖 | 5.1b |
+| S1.4 | Admin page: users, usage, AI spend, payments, grant credits/Pro | P1 | ⬜ | 🤖 | G25 |
+| S1.5 | Nginx rate limits + deploy script | P1 | ⬜ | 🤖 | 0.7, 2.4 |
+| S1.6 | Uptime monitoring + error tracking (Sentry) | P1 | ⬜ | 👤🤖 | 2.5, 3.6 |
+
+## Admin: give a learner credits or Pro by SQL
 
 Run in the Supabase SQL editor (replace the email):
 

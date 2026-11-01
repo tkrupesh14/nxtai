@@ -4,7 +4,7 @@ _Last updated: 2026-11-01 · Branch: `dev` · Live: https://krpex.in · Task sta
 
 ## Where we are
 
-- **Public site** (`app/(site)`): `/`, `/about`, `/pricing`, `/contact`, `/login`, `/create-account`, `/forgot-password`, `/reset-password` in the nxtai.in design (light/dark, desktop/mobile). Contact form saves to Supabase.
+- **Public site** (`app/(site)`): `/`, `/about`, `/pricing`, `/contact`, `/login`, `/create-account`, `/forgot-password`, `/reset-password`, and policy drafts `/terms`, `/privacy`, `/refund-policy` (business details in `lib/legal.ts`, still to fill in). One price list (`lib/pricing.ts`) for home and `/pricing`. Contact form saves to Supabase.
 - **Sign-in:** Supabase. GitHub OAuth, and **email + password** (sign-up with email confirmation, forgot/reset password) in the new design; auth calls run in the browser so Supabase's per-IP limits apply per learner. Google OAuth not set up yet. The old `/auth/*` pages are gone (old URLs redirect).
 - **AI learning loop** (`app/(learn)`):
   - **Onboarding:** pick 1 of **9 categories** (tech / non-tech) → subject → goal (a quick AI goal check catches wrong-category, vague or harmful goals) → about you → schedule.
@@ -15,10 +15,11 @@ _Last updated: 2026-11-01 · Branch: `dev` · Live: https://krpex.in · Task sta
   - Free: 5 questions/day (3 per lesson), 15 quick answers/day, 2 new courses/month. Pro: 40 / 10 / 100 / 10.
   - Credits are used after the free allowance: 1 per question, 20 per extra course. Max 3 new courses a day.
   - Global AI chat budget `PROFESSOR_DAILY_BUDGET_USD` (default $2/day) and `PROFESSOR_CHAT=off` kill switch.
-  - Planned prices: ₹49 → 100 credits, ₹99 → 250 credits, Pro ₹499/month. **Payments not built yet**: credits/Pro can only be granted by SQL for now.
-- **Account** (`/account`, `/account/settings`): profile, today's usage, plan & credits, learning preferences; change/add password, sign-in methods, sign out of all devices, delete account. Avatar menu in the header.
+  - Prices: ₹49 → 100 credits, ₹99 → 250 credits, Pro ₹499 per 30-day pass (no auto-renewal).
+- **Payments (Razorpay, test mode):** buy buttons on `/account`; server-created orders (price from the server), Checkout (UPI/cards/netbanking), signature + captured-amount check, webhook `/api/razorpay/webhook` (`payment.captured`, `order.paid`). Credits/Pro are applied once per order by a server-key function. Verified with a real test payment on 2026-11-01.
+- **Account** (`/account`, `/account/settings`): profile, today's usage (free allowance + credit headroom), plan & credits with buy buttons and payment history, learning preferences; change/add password, sign-in methods, sign out of all devices, delete account. Avatar menu in the header.
 - **AI provider:** GPT-6 Luna ($0.10 / $0.50 per 1M tokens) through **OpenRouter** (`lib/ai/llm.ts`). Bedrock path built but blocked by AWS account access (support case open). Course plan ~15–20 s, lesson ~30–35 s.
-- **Database (Supabase `dkdkokkzbptjbgjyjkpz`):** migrations 001–007 applied by hand in the SQL editor (`supabase/migrations/`). Tables: `users`, `contact_messages`, `learner_profiles`, `courses`, `course_modules`, `lessons`, `professor_questions`, `user_plans`, `credit_ledger`, `course_creations`, all with RLS. Learners can only read plan/credit/question rows; writes go through security-definer functions and triggers.
+- **Database (Supabase `dkdkokkzbptjbgjyjkpz`):** migrations 001–009 applied by hand in the SQL editor (`supabase/migrations/`); 010 (course-count backfill) pending. Tables: `users`, `contact_messages`, `learner_profiles`, `courses`, `course_modules`, `lessons`, `professor_questions`, `user_plans`, `credit_ledger`, `course_creations`, `payment_orders`, all with RLS. Learners only read their rows (not `lessons.quiz`); writes go through security-definer functions, and server-only ones require `SERVER_RPC_KEY` (SHA-256 hash in `private.server_keys`).
 - **Dashboard** (`app/(app)/dashboard`): still the old purple theme with sample data (profile/settings now redirect to `/account`).
 - **Stack:** Next.js 15.5.28, React 19.3, Tailwind v4, Supabase, OpenAI SDK (OpenRouter/Bedrock), pnpm.
 - **Hosting:** one EC2 instance (Sydney), Elastic IP `54.79.194.65`, **krpex.in** (DNS at Hostinger), Let's Encrypt HTTPS, Nginx → pm2 (`nxtai`, port 3000, clean environment). Pushes via a repo-scoped deploy key.
@@ -45,17 +46,20 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 | G16 | AI cost controls | 🟡 Chat quotas, course limits, credits and a chat budget done; lesson generation has no per-user cap yet (see G20) |
 | G17 | Learning loop not yet verified end to end by a real user; no automated tests | 🟡 Partly tested on a phone |
 | G18 | Site navbar shows "Log in" when already signed in | ⬜ |
-| G20 | Learners could write `courses` / `course_modules` / `lessons` directly via the Supabase API (add lessons, mark complete, reset content → AI cost; read quiz answers) | 🟡 Migration 008: writes via server-key RPCs, quiz graded in DB, `lessons.quiz` unreadable. Needs SQL run + key hash |
+| G20 | Learners could write `courses` / `course_modules` / `lessons` directly via the Supabase API | ✅ Migration 008: writes via server-key RPCs, quiz graded in DB, `lessons.quiz` unreadable |
 | G21 | Supabase built-in email only reaches team addresses (a few per hour) | ⬜ Set up custom SMTP (Hostinger `info@krpex.in`, Resend or SES) |
+| G23 | Policy pages need the operator's legal name, address and jurisdiction; legal review | ⬜ Fill `lib/legal.ts` |
+| G24 | Razorpay test key secret and webhook secret were shared in chat | ⬜ Test mode only; use fresh live keys at go-live |
+| G25 | No admin view: usage, AI spend, payments, granting credits all need SQL | ⬜ |
 | G22 | Email links (confirm / reset) must be opened in the same browser (PKCE) | ⬜ Optional: switch email templates to `token_hash` links via `/auth/confirm` |
 
 ## Phases
 
-### Phase 0 — Security follow-up (P0, now)
+### Phase 0 — Security follow-up (P0)
 1. Rotate the OpenRouter key and set a spending limit; delete the Bedrock key and IAM user; revoke the old GitHub PAT; restart the Claude Code session. **(G13)**
 2. Decide: keep this instance or rebuild from the repo.
 3. Dependabot alerts; Nginx rate limits on `POST` and scanner paths; consider Cloudflare/WAF.
-4. **Lock down direct table writes for learning data. (G20)**
+4. ✅ Lock down direct table writes for learning data. **(G20)**
 
 ### Phase 1 — Sign-in (mostly done)
 1. ✅ GitHub OAuth, profile rows, protected routes, `/error`.
@@ -70,8 +74,8 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 4. Uptime monitoring; Supabase backups.
 
 ### Phase 3 — Public site
-1. One price list everywhere, matching the plans and credit packs. **(G5)**
-2. **Policy pages required by Razorpay:** Terms, Privacy, Refund & Cancellation (Contact and Pricing exist).
+1. ✅ One price list everywhere, matching the plans and credit packs. **(G5)**
+2. 🟡 Policy pages (Terms, Privacy, Refund & Cancellation) drafted; fill business details and review. **(G23)**
 3. Contact form email notification. **(G8)**
 4. SEO basics (favicon, OG image, metadata, sitemap, robots); analytics and Sentry.
 
@@ -115,6 +119,11 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 | 2026-11-01 | Email/password auth runs in the browser (per-learner rate limits) |
 | 2026-11-01 | Free / Pro plans + one-time credit packs (₹49/100, ₹99/250, Pro ₹499/month); limits enforced in Postgres |
 
-## Suggested order
+## Next up (proposed 2026-11-01)
 
-Phase 0 (incl. G20) → SMTP (G21) → Phase 3.1–3.2 (prices + policy pages) → Phase 6 (Razorpay) → Phase 5 C/D → Phase 2 items 2–4 → Phase 4 → Phase 7.
+1. **Sprint 1 — Ready for real users:** signed-in navbar (G18); stream lesson text (cut the ~35 s wait); course delete/archive, regenerate lesson, report a problem; admin page (users, usage, AI spend, payments, grant credits) (G25); Nginx rate limits + deploy script; uptime + error tracking.
+2. **Sprint 2 — Richer lessons:** diagrams as code (C), illustrations with GPT-5 Image Mini cached in Storage (D).
+3. **Sprint 3 — Payments live:** KYC, live keys + new webhook secret, legal details (G23, G24), GST/invoice decision.
+4. **Sprint 4 — Progress & retention:** dashboard on real data with streaks (G10), catalog courses and narration (F), e2e tests + CI (Phase 7).
+
+👤 in parallel: SMTP (G21), legal details (G23), `pm2 startup` (G11), rotate exposed keys (G13), Google OAuth (G1).
