@@ -256,7 +256,7 @@ export function ProfessorChat({
                       {!freeLeft && credits === 0 ? (
                         <>
                           {" · "}
-                          <Link href="/account" className="underline hover:text-foreground">
+                          <Link href="/account#credits" className="underline hover:text-foreground">
                             Get more
                           </Link>
                         </>

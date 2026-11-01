@@ -91,9 +91,10 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 ### Phase 6 — Payments (Razorpay)
 1. ✅ Plans, limits and credit ledger in the database (migration 007); account page shows plan, limits and credits.
 2. Razorpay account + KYC 👤; policy pages (Phase 3.2).
-3. Credit packs: server-created orders (price from the server), Checkout on the phone, **webhook in a Supabase Edge Function** verifies the signature and adds credits (idempotent per payment).
-4. Pro subscription via Razorpay Subscriptions (renewals and cancellations through the same webhook).
-5. Payment history and receipts on `/account`.
+3. ✅ Credit packs and a **Pro 30-day pass** (no auto-renewal): server-created orders (price from the server), Razorpay Checkout, signature + amount check, webhook at `/api/razorpay/webhook`; credits/Pro added by a server-key RPC (migration 009), idempotent per order.
+4. Auto-renewing Pro via Razorpay Subscriptions (later).
+5. ✅ Payment history on `/account`.
+6. Go live: switch to live keys and a new webhook secret after KYC.
 
 ### Phase 7 — Quality
 1. Fix the remaining TS errors (`hero-animation.tsx`) and stop ignoring TS/ESLint in builds. **(G9)**

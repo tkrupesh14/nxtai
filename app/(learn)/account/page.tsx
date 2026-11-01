@@ -4,7 +4,18 @@ import { LearningForm, NameForm } from "@/components/learn/account-forms"
 import { AccountSection } from "@/components/learn/account-section"
 import { Button } from "@/components/site/ui/button"
 import { getAccountOverview, getAccountSummary } from "@/lib/learning/data"
-import { CREDIT_COST, CREDIT_PACKS, PLANS, PRO_PRICE_INR } from "@/lib/learning/plans"
+import { BuyButton } from "@/components/learn/buy-button"
+import {
+  CREDIT_COST,
+  CREDIT_PACKS,
+  PLANS,
+  PRO_DAYS,
+  PRO_PRICE_INR,
+  PRODUCTS,
+  type ProductId,
+} from "@/lib/learning/plans"
+import { razorpayConfigured } from "@/lib/payments/razorpay"
+import { createClient } from "@/lib/supabase/server"
 import { getCurrentProfile, initialsFor } from "@/lib/supabase/profile"
 import { cn } from "@/lib/utils"
 
@@ -26,6 +37,14 @@ function Meter({ label, used, limit, hint }: { label: string; used: number; limi
   )
 }
 
+function ComingSoon() {
+  return (
+    <Button variant="outline" size="sm" className="w-full" disabled>
+      Coming soon
+    </Button>
+  )
+}
+
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border p-4">
@@ -42,6 +61,15 @@ export default async function AccountPage() {
     getAccountSummary(),
   ])
   const planName = PLANS[account.plan].name
+  const payments = razorpayConfigured()
+  const supabase = await createClient()
+  const { data: paidOrders } = await supabase
+    .from("payment_orders")
+    .select("razorpay_order_id, razorpay_payment_id, product, amount_paise, created_at, paid_at")
+    .eq("status", "paid")
+    .order("paid_at", { ascending: false })
+    .limit(10)
+  const orders = paidOrders ?? []
   const renews = account.periodEnd
     ? new Date(account.periodEnd).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : null
@@ -97,52 +125,84 @@ export default async function AccountPage() {
         </div>
       </AccountSection>
 
-      <AccountSection
-        title="Plan & credits"
-        description={
-          account.plan === "pro"
-            ? `You're on Pro${renews ? `, renewing on ${renews}` : ""}.`
-            : "Credits keep you going after the free allowance runs out. They never expire."
-        }
-      >
-        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
-          <p className="text-sm">
-            Credits: <span className="text-2xl font-semibold tabular-nums">{account.credits}</span>
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {CREDIT_COST.question} credit per extra question · {CREDIT_COST.course} credits per extra course
-          </p>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          {CREDIT_PACKS.map((pack) => (
-            <div key={pack.id} className="rounded-lg border p-4">
-              <p className="font-semibold">{pack.credits} credits</p>
-              <p className="text-sm text-muted-foreground">₹{pack.priceInr}</p>
-              <Button variant="outline" size="sm" className="mt-3 w-full" disabled>
-                Coming soon
-              </Button>
-            </div>
-          ))}
-          {account.plan !== "pro" && (
-            <div className="rounded-lg border border-primary/40 bg-primary/5 p-4">
-              <p className="font-semibold">Pro</p>
-              <p className="text-sm text-muted-foreground">
-                ₹{PRO_PRICE_INR}/month · {PLANS.pro.askDay} questions a day, {PLANS.pro.coursesMonth} courses a month
+      <section id="credits" className="scroll-mt-24">
+        <AccountSection
+          title="Plan & credits"
+          description={
+            account.plan === "pro"
+              ? `You're on Pro${renews ? ` until ${renews}` : ""}. Buying another Pro pass adds ${PRO_DAYS} days.`
+              : "Credits keep you going after the free allowance runs out. They never expire."
+          }
+        >
+          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+            <p className="text-sm">
+              Credits: <span className="text-2xl font-semibold tabular-nums">{account.credits}</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {CREDIT_COST.question} credit per extra question · {CREDIT_COST.course} credits per extra course
+            </p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {CREDIT_PACKS.map((pack) => (
+              <div key={pack.id} className="flex flex-col rounded-lg border p-4">
+                <p className="font-semibold">{pack.credits} credits</p>
+                <p className="mb-3 text-sm text-muted-foreground">₹{pack.priceInr} · one-time</p>
+                <div className="mt-auto">
+                  {payments ? <BuyButton productId={pack.id} label={`Buy for ₹${pack.priceInr}`} /> : <ComingSoon />}
+                </div>
+              </div>
+            ))}
+            <div className="flex flex-col rounded-lg border border-primary/40 bg-primary/5 p-4">
+              <p className="font-semibold">Pro · {PRO_DAYS} days</p>
+              <p className="mb-3 text-sm text-muted-foreground">
+                ₹{PRO_PRICE_INR} · {PLANS.pro.askDay} questions a day, {PLANS.pro.coursesMonth} courses a month. No
+                auto-renewal.
               </p>
-              <Button size="sm" className="mt-3 w-full" disabled>
-                Coming soon
-              </Button>
+              <div className="mt-auto">
+                {payments ? (
+                  <BuyButton
+                    productId="pro30"
+                    label={account.plan === "pro" ? `Add ${PRO_DAYS} days · ₹${PRO_PRICE_INR}` : `Get Pro · ₹${PRO_PRICE_INR}`}
+                    variant="default"
+                  />
+                ) : (
+                  <ComingSoon />
+                )}
+              </div>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Secure payment by Razorpay (UPI, cards, netbanking). Prices include taxes. See our{" "}
+            <Link href="/refund-policy" className="underline hover:text-foreground">
+              refund policy
+            </Link>
+            .
+          </p>
+          {orders.length > 0 && (
+            <div className="mt-6">
+              <p className="text-sm font-medium">Payment history</p>
+              <ul className="mt-2 divide-y rounded-lg border text-sm">
+                {orders.map((o) => (
+                  <li key={o.razorpay_order_id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
+                    <span>
+                      {PRODUCTS[o.product as ProductId]?.label ?? o.product}
+                      <span className="block text-xs text-muted-foreground">
+                        {new Date(o.paid_at ?? o.created_at).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                        {o.razorpay_payment_id ? ` · ${o.razorpay_payment_id}` : ""}
+                      </span>
+                    </span>
+                    <span className="tabular-nums">₹{(o.amount_paise / 100).toFixed(0)}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
-        </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Payments are being set up. See the{" "}
-          <Link href="/pricing" className="underline hover:text-foreground">
-            pricing page
-          </Link>{" "}
-          for details.
-        </p>
-      </AccountSection>
+        </AccountSection>
+      </section>
 
       <AccountSection title="Profile">
         <NameForm name={profile.full_name} />

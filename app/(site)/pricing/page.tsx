@@ -35,12 +35,12 @@ const FAQ = [
     a: "Credits let you keep going after your daily or monthly allowance runs out: 1 credit for an extra question to your professor, 20 credits for an extra course. They never expire.",
   },
   {
-    q: "When can I buy Pro or credits?",
-    a: "Payments are being set up now. Everyone can use the Free plan today, and you'll be able to upgrade from your account page as soon as payments go live.",
+    q: "How do I pay?",
+    a: "From your account page, securely through Razorpay: UPI, cards or netbanking. Credits and Pro are added as soon as the payment goes through.",
   },
   {
-    q: "Can I cancel or get a refund?",
-    a: "Cancel Pro anytime and keep it until the end of the period you paid for. Unused credit packs can be refunded within 7 days.",
+    q: "Does Pro renew automatically?",
+    a: "No. Pro is a 30-day pass; buy another one when you want more time. Unused credit packs can be refunded within 7 days.",
   },
   {
     q: "Are the professors real people?",

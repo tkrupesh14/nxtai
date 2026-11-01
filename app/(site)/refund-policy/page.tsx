@@ -9,8 +9,8 @@ export default function RefundPolicyPage() {
       title="Refund & Cancellation Policy"
       summary={
         <p>
-          Cancel Pro anytime; you keep it until the end of the period you paid for. Unused credit packs can be refunded
-          within 7 days of purchase. Failed or duplicate charges are always refunded. Approved refunds reach your original
+          Pro is a 30-day pass with no auto-renewal, so there&apos;s nothing to cancel. Unused credit packs, and Pro passes
+          you haven&apos;t used, can be refunded within 7 days of purchase. Failed or duplicate charges are always refunded. Approved refunds reach your original
           payment method within 5–7 working days.
         </p>
       }
@@ -18,7 +18,8 @@ export default function RefundPolicyPage() {
       <Section title="1. What we sell">
         <List>
           <li>
-            <strong>Pro plan</strong>: a monthly subscription with higher daily and monthly limits.
+            <strong>Pro pass</strong>: 30 days of higher daily and monthly limits. It doesn&apos;t renew automatically;
+            buying another pass adds 30 days.
           </li>
           <li>
             <strong>Credit packs</strong>: one-time purchases of credits, used after your free or plan allowance runs out.
@@ -35,15 +36,14 @@ export default function RefundPolicyPage() {
         </p>
       </Section>
 
-      <Section title="3. Cancelling Pro">
+      <Section title="3. Pro passes">
         <List>
-          <li>You can cancel at any time from your Account page, or by emailing us.</li>
-          <li>Cancelling stops the next renewal. You keep Pro until the end of the period you already paid for.</li>
-          <li>We don&apos;t give partial refunds for unused days in a billing period, except as described below.</li>
+          <li>Pro doesn&apos;t renew automatically, so you never need to cancel it. It simply ends after 30 days.</li>
           <li>
-            If you were charged for a renewal you didn&apos;t want, contact us within 7 days of the charge and haven&apos;t
-            used Pro features since: we&apos;ll refund that renewal.
+            If you change your mind, contact us within 7 days of buying a Pro pass. We&apos;ll refund it if you haven&apos;t
+            used more than the Free plan&apos;s allowance since buying it.
           </li>
+          <li>We don&apos;t give partial refunds for the unused days of a pass that has been used.</li>
         </List>
       </Section>
 
@@ -77,7 +77,7 @@ export default function RefundPolicyPage() {
 
       <Section title="7. Account deletion">
         <p>
-          Deleting your account ends any Pro plan and removes unused credits. If you want a refund for an eligible credit
+          Deleting your account ends any Pro pass and removes unused credits. If you want a refund for an eligible credit
           pack, ask for it before deleting your account.
         </p>
       </Section>

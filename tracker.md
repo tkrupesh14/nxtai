@@ -112,10 +112,10 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
 | 6.1 | Plans, limits, credit ledger in Postgres; account page shows them | P1 | ✅ | | D21 |
-| 6.2 | Razorpay account + KYC; test-mode keys | P1 | ⬜ | 👤 | Needs 3.2 policy pages for activation |
-| 6.3 | Credit packs: server-created orders, Checkout, webhook (Supabase Edge Function) adds credits | P1 | ⬜ | 🤖 | Idempotent per payment ID |
-| 6.4 | Pro subscription (Razorpay Subscriptions) → `user_plans` | P1 | ⬜ | 🤖 | |
-| 6.5 | Payment history and receipts on `/account` | P2 | ⬜ | 🤖 | |
+| 6.2 | Razorpay account + KYC; test-mode keys | P1 | 🟡 | 👤 | Test mode enabled; add keys + webhook to `.env.local` / dashboard |
+| 6.3 | Credit packs + Pro 30-day pass: server-created orders, Checkout, signature check, webhook `/api/razorpay/webhook` | P1 | ✅ | | Migration 009; server-key RPCs instead of an Edge Function; idempotent per order |
+| 6.4 | Auto-renewing Pro (Razorpay Subscriptions + UPI autopay) | P2 | ⬜ | 🤖 | v1 sells a 30-day pass |
+| 6.5 | Payment history and receipts on `/account` | P2 | 🟡 | 🤖 | History ✅; receipts via Razorpay emails |
 
 ## Phase 7 — Quality
 

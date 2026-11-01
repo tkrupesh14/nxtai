@@ -1,5 +1,5 @@
 // One price list for the home page and /pricing, built from the real plan limits (lib/learning/plans.ts).
-import { CREDIT_COST, CREDIT_PACKS, PLANS, PRO_PRICE_INR } from "@/lib/learning/plans"
+import { CREDIT_COST, CREDIT_PACKS, PLANS, PRO_DAYS, PRO_PRICE_INR } from "@/lib/learning/plans"
 
 export type PriceCard = {
   id: "free" | "pro" | "credits"
@@ -36,7 +36,7 @@ export const PRICE_CARDS: PriceCard[] = [
     id: "pro",
     name: "Pro",
     price: `₹${PRO_PRICE_INR}`,
-    period: "/month",
+    period: ` / ${PRO_DAYS} days`,
     description: "For serious learners who ask a lot of questions.",
     features: [
       "Everything in Free",
@@ -44,10 +44,10 @@ export const PRICE_CARDS: PriceCard[] = [
       `${PLANS.pro.quickDay} quick answers a day`,
       `${PLANS.pro.coursesMonth} new courses a month`,
       "Priority email support",
-      "Cancel anytime",
+      "No auto-renewal: buy again when you need it",
     ],
-    cta: { label: "Start free, upgrade anytime", href: "/create-account" },
-    badge: "Coming soon",
+    cta: { label: "Get Pro", href: "/account#credits" },
+    badge: "Best value",
     highlighted: true,
   },
   {
@@ -63,8 +63,7 @@ export const PRICE_CARDS: PriceCard[] = [
       "Credits never expire",
       "Unused packs refundable within 7 days",
     ],
-    cta: { label: "Start free", href: "/create-account" },
-    badge: "Coming soon",
+    cta: { label: "Buy credits", href: "/account#credits" },
   },
 ]
 

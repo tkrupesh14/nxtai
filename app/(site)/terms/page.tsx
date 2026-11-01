@@ -92,7 +92,7 @@ export default function TermsPage() {
             {CREDIT_COST.course} credits per extra course. Credits have no cash value, can&apos;t be transferred, and are
             lost if you delete your account.
           </li>
-          <li>Subscriptions renew automatically each billing period until you cancel.</li>
+          <li>Pro is sold as a 30-day pass. It doesn&apos;t renew automatically; buying another pass adds 30 days.</li>
           <li>
             Payments are processed by our payment partner (Razorpay). We don&apos;t store your card or bank details.
           </li>
