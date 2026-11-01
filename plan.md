@@ -37,7 +37,7 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 | G5 | Home pricing ≠ `/pricing` | ✅ One list (`lib/pricing.ts`): Free, Pro ₹499/month, credits from ₹49 |
 | G8 | Contact form has no email notification | 🟡 Saves to Supabase |
 | G9 | TS/ESLint errors ignored in builds | 🟡 19 TS errors left, all in `components/hero-animation.tsx` |
-| G10 | Dashboard on old theme with sample data | ⬜ |
+| G10 | Dashboard on old theme with sample data | ✅ |
 | G11 | pm2 not started on boot; no log rotation | ⬜ |
 | G12 | Outdated packages | 🟡 Next patched; `auth-helpers-nextjs`, `recharts` 2.x, Next 16 pending |
 | G13 | Secrets pasted in chat / possibly exposed | ⬜ Rotate OpenRouter key, delete Bedrock key, revoke old GitHub PAT, restart Claude Code session |

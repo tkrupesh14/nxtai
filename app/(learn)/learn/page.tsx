@@ -4,8 +4,10 @@ import { redirect } from "next/navigation"
 import { Badge } from "@/components/site/ui/badge"
 import { Button } from "@/components/site/ui/button"
 import { ProfessorAvatar } from "@/components/learn/professor"
+import { ProgressSummary } from "@/components/learn/progress-summary"
 import { getCategory, getProfessor, professorForCategory } from "@/lib/learning/catalog"
-import { listCourses } from "@/lib/learning/data"
+import { getQuestionTimes, listCourses } from "@/lib/learning/data"
+import { learningStats } from "@/lib/learning/stats"
 
 export const metadata = { title: "My courses — Krpex" }
 
@@ -76,9 +78,13 @@ function CourseGrid({ courses }: { courses: Awaited<ReturnType<typeof listCourse
 }
 
 export default async function MyCoursesPage() {
-  const courses = await listCourses()
+  const [courses, questionTimes] = await Promise.all([listCourses(), getQuestionTimes()])
   if (courses.length === 0) redirect("/onboarding")
+  const stats = learningStats(courses.flatMap((c) => c.lessons), questionTimes)
   const active = courses.filter((c) => c.status !== "archived")
+  // Most recently studied unfinished course (or the newest one) for the "Continue" card.
+  const resume =
+    [...active].filter((c) => c.nextLesson).sort((a, b) => (b.lastActive ?? b.created_at).localeCompare(a.lastActive ?? a.created_at))[0] ?? null
   const archived = courses.filter((c) => c.status === "archived")
 
   return (
@@ -93,6 +99,24 @@ export default async function MyCoursesPage() {
         </Button>
       </div>
 
+      <ProgressSummary stats={stats} />
+
+      {resume?.nextLesson && (
+        <section className="mb-10 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-5">
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Continue learning</p>
+            <p className="mt-1 font-semibold">{resume.nextLesson.title}</p>
+            <p className="text-sm text-muted-foreground">
+              {resume.title} · {resume.progress.done} of {resume.progress.total} lessons done
+            </p>
+          </div>
+          <Button asChild>
+            <Link href={`/learn/${resume.id}/${resume.nextLesson.id}`}>Continue</Link>
+          </Button>
+        </section>
+      )}
+
+      <h2 className="mb-4 text-lg font-semibold tracking-tight">Your courses</h2>
       <CourseGrid courses={active} />
       {archived.length > 0 && (
         <details className="mt-10">

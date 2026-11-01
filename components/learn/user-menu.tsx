@@ -69,9 +69,6 @@ export function UserMenu({
             <Link role="menuitem" href="/onboarding" className={itemClass}>
               New course
             </Link>
-            <Link role="menuitem" href="/dashboard" className={itemClass}>
-              Dashboard
-            </Link>
             <div className="my-1 h-px bg-border" />
           </div>
           <Link role="menuitem" href="/account" className={itemClass}>

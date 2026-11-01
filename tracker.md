@@ -89,7 +89,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 4.1 | Dashboard on the site design system; merge with `/learn` | P1 | ⬜ | 🤖 | G10 (profile/settings already moved to `/account`) |
+| 4.1 | Dashboard on the site design system; merge with `/learn` | P1 | ✅ | | S4.1: streak, lessons, study time, quiz average, last-7-days chart and "Continue learning" on `/learn`; sample-data `/dashboard` removed (redirects to `/learn`) |
 | 4.2 | Real progress, scores, streaks | P1 | ⬜ | 🤖 | |
 | 4.3 | Delete legacy components, CSS, compat shim | P2 | ⬜ | 🤖 | |
 
@@ -103,7 +103,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 5.B | Class-style lessons | P1 | ✅ | | D16 |
 | 5.C | Diagrams in lessons (flow, cycle, hierarchy, comparison, timeline) | P1 | ✅ | | S2.2 — drawn by our own components from AI data |
 | 5.C2 | Math formulas (KaTeX) + code highlighting with Copy | P1 | ✅ | | S2.1 |
-| 5.D | Illustrations: GPT-5 Image Mini (max 2/lesson, cached in Storage) + photos | P1 | ⬜ | 🤖 | |
+| 5.D | Illustrations (max 2/lesson, cached) + photos | P1 | ⏸️ | 🤖 | Paused 2026-11-01. Tested: Cloudflare Workers AI works (keys in .env.local). Free → flux-2-klein-4b (~104 neurons, ₹0.10), Pro → flux-2-klein-9b (~1,364 neurons, ₹1.30); free plan = 10k neurons/day. OpenRouter image models need ≥$1 balance |
 | 5.E | Ask the professor | P1 | ✅ | | D18 |
 | 5.F | Catalog courses + narration | P2 | ⬜ | 🤖 | |
 | 5.1b | Regenerate lesson / report a problem; course archive & delete | P1 | 🟡 | 👤 | S1.3 — needs migration 011 |
@@ -144,7 +144,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | S1.3 | Course delete/archive; regenerate a lesson (5 credits, 5/day); report a problem | P1 | ✅ | | Migrations 010–011 applied |
 | S1.4 | Admin page: users, usage, AI spend, payments, reports, grant credits/Pro | P1 | ✅ | | `/admin` (migration 012) |
 | S1.5 | Nginx rate limits + deploy script | P1 | ✅ | | Limits + scanner blocking live; `scripts/deploy.sh` (build aside, swap, health check, rollback) used for the c9b4520 deploy |
-| S1.6 | Uptime monitoring + error tracking | P1 | 🟡 | 👤 | Error tracking built in (migration 013 pending); `/api/health` live; add UptimeRobot monitor |
+| S1.6 | Uptime monitoring + error tracking | P1 | ✅ | | Migration 013 applied; `/api/health` + UptimeRobot monitor |
 
 ## Admin: give a learner credits or Pro by SQL
 

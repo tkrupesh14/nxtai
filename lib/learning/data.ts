@@ -57,7 +57,7 @@ export async function listCourses() {
 
   const { data: lessons, error: lessonsError } = await supabase
     .from("lessons")
-    .select("id, course_id, position, title, completed_at")
+    .select("id, course_id, position, title, completed_at, best_score, est_minutes")
     .in("course_id", courses.map((c) => c.id))
     .order("position")
   if (lessonsError) throw lessonsError
@@ -65,8 +65,29 @@ export async function listCourses() {
   return (courses as CourseRow[]).map((course) => {
     const own = (lessons ?? []).filter((l) => l.course_id === course.id)
     const next = own.find((l) => !l.completed_at)
-    return { ...course, progress: progressOf(own), nextLesson: next ? { id: next.id, title: next.title } : null }
+    const lastActive = own.reduce<string | null>((m, l) => (l.completed_at && (!m || l.completed_at > m) ? l.completed_at : m), null)
+    return {
+      ...course,
+      lessons: own,
+      lastActive,
+      progress: progressOf(own),
+      nextLesson: next ? { id: next.id, title: next.title } : null,
+    }
   })
+}
+
+/** When the learner asked the professor questions (for streaks); most recent first, up to a year. */
+export async function getQuestionTimes() {
+  const supabase = await createClient()
+  const since = new Date(Date.now() - 400 * 24 * 60 * 60 * 1000).toISOString()
+  const { data } = await supabase
+    .from("professor_questions")
+    .select("created_at")
+    .eq("status", "answered")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(3000)
+  return (data ?? []).map((r) => r.created_at as string)
 }
 
 export async function getCourse(courseId: string) {

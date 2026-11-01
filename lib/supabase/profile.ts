@@ -40,7 +40,7 @@ export const getCurrentProfile = cache(async () => {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect("/login?next=/dashboard")
+  if (!user) redirect("/login?next=/learn")
 
   let { data: profile } = await supabase.from("users").select("full_name").eq("id", user.id).maybeSingle()
   if (!profile) {

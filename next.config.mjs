@@ -34,6 +34,9 @@ const nextConfig = {
       { source: "/auth/confirm-user", destination: "/login", permanent: true },
       { source: "/dashboard/profile", destination: "/account", permanent: false },
       { source: "/dashboard/settings", destination: "/account/settings", permanent: false },
+      // The old sample-data dashboard; progress now lives on "My courses".
+      { source: "/dashboard", destination: "/learn", permanent: false },
+      { source: "/dashboard/:path*", destination: "/learn", permanent: false },
     ]
   },
   experimental: {

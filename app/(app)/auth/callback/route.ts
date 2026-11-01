@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      // First OAuth sign-in: create the profile row the dashboard reads.
+      // First OAuth sign-in: create the profile row the app reads.
       if (data.user) await ensureProfile(supabase, data.user)
       return NextResponse.redirect(`${origin}${next}`)
     }
