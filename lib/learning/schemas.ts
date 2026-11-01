@@ -39,6 +39,14 @@ export const CoursePlanSchema = z.object({
 })
 export type CoursePlan = z.infer<typeof CoursePlanSchema>
 
+export const ProfessorReplySchema = z.object({
+  verdict: z
+    .enum(["answer", "off_topic", "not_allowed"])
+    .describe("answer: about this lesson or course; off_topic: unrelated; not_allowed: harmful, cheating or abusive"),
+  reply: z.string().describe("Markdown. answer: under 180 words. off_topic / not_allowed: one or two short sentences"),
+})
+export type ProfessorReply = z.infer<typeof ProfessorReplySchema>
+
 export const QuizQuestionSchema = z.object({
   question: z.string(),
   options: z.array(z.string()).describe("Exactly 4 plausible options"),

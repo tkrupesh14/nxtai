@@ -1,30 +1,17 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 
+import { AskAboutSection, ProfessorChat } from "@/components/learn/ask-professor"
 import { LectureStepper } from "@/components/learn/lecture"
 import { LessonBlockView, Md } from "@/components/learn/lesson-blocks"
 import { LessonGenerator } from "@/components/learn/lesson-generator"
 import { ProfessorCard } from "@/components/learn/professor"
 import { Quiz } from "@/components/learn/quiz"
 import { getCategory, getProfessor, professorForCategory } from "@/lib/learning/catalog"
-import { getCourse, isUnlocked, isUuid } from "@/lib/learning/data"
+import { getCourse, getProfessorChat, isUnlocked, isUuid } from "@/lib/learning/data"
 import { PASS_MARK, type LessonBlock, type QuizQuestion } from "@/lib/learning/schemas"
+import { sectionLabel, toSections } from "@/lib/learning/sections"
 import { createClient } from "@/lib/supabase/server"
-
-/** Group blocks into lecture sections: at most two blocks each, and a checkpoint always ends a section. */
-function toSections(blocks: LessonBlock[]) {
-  const sections: { blocks: { block: LessonBlock; index: number }[]; gated: boolean }[] = []
-  let current: { block: LessonBlock; index: number }[] = []
-  blocks.forEach((block, index) => {
-    current.push({ block, index })
-    if (block.type === "checkpoint" || current.length === 2) {
-      sections.push({ blocks: current, gated: block.type === "checkpoint" })
-      current = []
-    }
-  })
-  if (current.length) sections.push({ blocks: current, gated: false })
-  return sections
-}
 
 export default async function LessonPage({ params }: { params: Promise<{ courseId: string; lessonId: string }> }) {
   const { courseId, lessonId } = await params
@@ -59,6 +46,9 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   }))
   const takeaways = (body?.key_takeaways ?? []) as string[]
   const blocks = (body?.blocks ?? null) as LessonBlock[] | null
+  const sections = blocks?.length ? toSections(blocks) : []
+  const hasContent = sections.length > 0 || Boolean(body?.content_md)
+  const chat = hasContent ? await getProfessorChat(lessonId) : null
 
   const endOfLesson = (
     <>
@@ -87,8 +77,8 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
     </>
   )
 
-  return (
-    <main className="mx-auto max-w-3xl px-4 py-10 md:py-14">
+  const page = (
+    <main className="mx-auto max-w-3xl px-4 pt-10 pb-28 md:pt-14">
       <nav className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
         <Link href={`/learn/${courseId}`} className="hover:text-foreground">
           {data.course.title}
@@ -109,7 +99,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
           <LectureStepper
             lessonId={lessonId}
             startComplete={Boolean(lesson.completed_at)}
-            sections={toSections(blocks).map((section, si) => ({
+            sections={sections.map((section, si) => ({
               key: `s${si}`,
               gated: section.gated,
               node: (
@@ -118,6 +108,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
                     // The checkpoint id must match the section key so answering it unlocks "Continue".
                     <LessonBlockView key={bi} block={block} professor={professor} id={`s${si}`} />
                   ))}
+                  <AskAboutSection section={si} />
                 </div>
               ),
             }))}
@@ -148,5 +139,20 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
         ) : null}
       </div>
     </main>
+  )
+
+  if (!chat) return page
+  return (
+    <ProfessorChat
+      courseId={courseId}
+      lessonId={lessonId}
+      professor={professor}
+      sectionLabels={sections.map(sectionLabel)}
+      initialTurns={chat.turns}
+      initialUsedToday={chat.usedToday}
+      initialUsedLesson={chat.usedLesson}
+    >
+      {page}
+    </ProfessorChat>
   )
 }

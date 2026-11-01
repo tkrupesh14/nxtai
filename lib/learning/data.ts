@@ -1,5 +1,6 @@
 import "server-only"
 
+import type { ChatTurn } from "@/lib/learning/professor"
 import { createClient } from "@/lib/supabase/server"
 
 export type LessonRow = {
@@ -85,3 +86,39 @@ export async function getCourse(courseId: string) {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export const isUuid = (v: string) => UUID_RE.test(v)
+
+/** Start of "today" for chat limits: midnight in India (matches take_question_credit). */
+function istDayStart() {
+  const offset = 330 * 60 * 1000
+  const ist = new Date(Date.now() + offset)
+  ist.setUTCHours(0, 0, 0, 0)
+  return new Date(ist.getTime() - offset).toISOString()
+}
+
+/** This lesson's professor chat and how many questions the learner has used today. */
+export async function getProfessorChat(lessonId: string) {
+  const supabase = await createClient()
+  const [{ data: turns }, { data: today }] = await Promise.all([
+    supabase
+      .from("professor_questions")
+      .select("id, kind, section, question, reply, verdict")
+      .eq("lesson_id", lessonId)
+      .eq("status", "answered")
+      .order("created_at")
+      .limit(60),
+    supabase
+      .from("professor_questions")
+      .select("lesson_id, status")
+      .eq("kind", "ask")
+      .gte("created_at", istDayStart()),
+  ])
+  const rows = today ?? []
+  // Same counting as the database: up to 2 failed answers a day are refunded.
+  const count = (list: typeof rows) =>
+    list.filter((r) => r.status !== "failed").length + Math.max(list.filter((r) => r.status === "failed").length - 2, 0)
+  return {
+    turns: (turns ?? []) as ChatTurn[],
+    usedToday: count(rows),
+    usedLesson: count(rows.filter((r) => r.lesson_id === lessonId)),
+  }
+}
