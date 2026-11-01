@@ -7,7 +7,13 @@ export default function ContactPage() {
       <Card>
         <CardHeader>
           <CardTitle>Contact us</CardTitle>
-          <CardDescription>Have questions about NxtAI or need support? Send us a message.</CardDescription>
+          <CardDescription>
+            Have questions about NxtAI or need support? Send us a message, or email{" "}
+            <a href="mailto:info@krpex.in" className="text-primary hover:underline">
+              info@krpex.in
+            </a>
+            .
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ContactForm />

@@ -33,7 +33,7 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 | # | Gap | Status |
 |---|-----|--------|
 | G1 | OAuth providers | 🟡 GitHub done; Google pending |
-| G5 | Home pricing (₹699/₹2499) ≠ `/pricing` (₹499/₹1,999) ≠ planned (₹499 Pro + credit packs) | ⬜ Decide and update both pages |
+| G5 | Home pricing ≠ `/pricing` | ✅ One list (`lib/pricing.ts`): Free, Pro ₹499/month, credits from ₹49 |
 | G8 | Contact form has no email notification | 🟡 Saves to Supabase |
 | G9 | TS/ESLint errors ignored in builds | 🟡 19 TS errors left, all in `components/hero-animation.tsx` |
 | G10 | Dashboard on old theme with sample data | ⬜ |
@@ -45,7 +45,7 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 | G16 | AI cost controls | 🟡 Chat quotas, course limits, credits and a chat budget done; lesson generation has no per-user cap yet (see G20) |
 | G17 | Learning loop not yet verified end to end by a real user; no automated tests | 🟡 Partly tested on a phone |
 | G18 | Site navbar shows "Log in" when already signed in | ⬜ |
-| G20 | **Learners can write `courses` / `course_modules` / `lessons` directly via the Supabase API** (owner "full access" RLS). A script could add lessons or mark lessons complete to unlock and generate many lessons (AI cost). Course *creation* is already charged by a trigger. | ⬜ P1: restrict to safe columns / move writes into RPCs |
+| G20 | Learners could write `courses` / `course_modules` / `lessons` directly via the Supabase API (add lessons, mark complete, reset content → AI cost; read quiz answers) | 🟡 Migration 008: writes via server-key RPCs, quiz graded in DB, `lessons.quiz` unreadable. Needs SQL run + key hash |
 | G21 | Supabase built-in email only reaches team addresses (a few per hour) | ⬜ Set up custom SMTP (Hostinger `info@krpex.in`, Resend or SES) |
 | G22 | Email links (confirm / reset) must be opened in the same browser (PKCE) | ⬜ Optional: switch email templates to `token_hash` links via `/auth/confirm` |
 

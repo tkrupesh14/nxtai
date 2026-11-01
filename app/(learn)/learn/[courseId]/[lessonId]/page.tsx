@@ -30,13 +30,12 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   const professor = data.course.professor ? getProfessor(data.course.professor) : professorForCategory(data.course.category)
 
   const supabase = await createClient()
-  const { data: body } = await supabase
-    .from("lessons")
-    .select("content_md, blocks, key_takeaways, quiz")
-    .eq("id", lessonId)
-    .single()
-  // Never send the final-quiz answers to the browser; grading happens on the server.
-  const questions = ((body?.quiz ?? []) as QuizQuestion[]).map(({ question, options }) => ({
+  const [{ data: body }, { data: quiz }] = await Promise.all([
+    supabase.from("lessons").select("content_md, blocks, key_takeaways").eq("id", lessonId).single(),
+    // Questions and options only: answers stay in the database, which grades the quiz.
+    supabase.rpc("lesson_quiz_questions", { p_lesson: lessonId }),
+  ])
+  const questions = ((quiz ?? []) as Pick<QuizQuestion, "question" | "options">[]).map(({ question, options }) => ({
     question: <Md compact>{question}</Md>,
     options: options.map((o, i) => (
       <Md key={i} compact>

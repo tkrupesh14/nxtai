@@ -14,6 +14,7 @@ import {
 import { Reveal } from "@/components/site/reveal"
 import { Button } from "@/components/site/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/site/ui/card"
+import { PRICE_CARDS } from "@/lib/pricing"
 import { cn } from "@/lib/utils"
 
 type Feature = { title: string; description: string; icon: ComponentType<SVGProps<SVGSVGElement>> }
@@ -58,58 +59,6 @@ const features: Feature[] = [
     title: "Rewards & streaks",
     description: "Stay motivated with badges, XP, and weekly streaks for consistent progress.",
     icon: AwardIcon,
-  },
-]
-
-type Plan = {
-  name: string
-  price: string
-  description: string
-  features: string[]
-  cta: string
-  highlighted?: boolean
-}
-
-const plans: Plan[] = [
-  {
-    name: "Student Free",
-    price: "₹0",
-    description: "Everything you need to start learning with AI.",
-    features: [
-      "Adaptive course builder",
-      "Onboarding quiz",
-      "Upload 5 docs (50MB total)",
-      "Basic assessments",
-      "Join communities & events",
-    ],
-    cta: "Get started free",
-  },
-  {
-    name: "Student Pro",
-    price: "₹699",
-    description: "More AI power, bigger uploads, and advanced tools.",
-    features: [
-      "Adaptive course builder + progress tuning",
-      "Upload 50 docs (1GB total)",
-      "Assessment builder + analytics",
-      "Proctored coding sessions",
-      "Mock interview drills",
-    ],
-    cta: "Upgrade to Pro",
-    highlighted: true,
-  },
-  {
-    name: "Community Host",
-    price: "₹2499",
-    description: "Run meetups and hackathons with signups and tools.",
-    features: [
-      "Event pages & RSVPs",
-      "Judging templates & scoring",
-      "Advanced proctoring for challenges",
-      "Team tools and messaging",
-      "Priority support",
-    ],
-    cta: "Become a Host",
   },
 ]
 
@@ -186,15 +135,15 @@ export default function HomePage() {
       <section id="pricing" className="py-14 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-pretty text-3xl font-semibold tracking-tight md:text-4xl">
-            Pricing made for students and hosts
+            Simple pricing for learners
           </h2>
           <p className="mt-3 text-pretty text-muted-foreground">
-            Start free, go Pro for more AI power, or host events when you&apos;re ready.
+            Start free. Go Pro for more questions and courses, or top up with credits when you need them.
           </p>
         </div>
         <div className="mx-auto mt-10 grid max-w-6xl grid-cols-1 gap-6 px-4 md:grid-cols-3">
-          {plans.map((plan, i) => (
-            <Reveal key={plan.name} delay={i * 90}>
+          {PRICE_CARDS.map((plan, i) => (
+            <Reveal key={plan.id} delay={i * 90}>
               <Card
                 className={cn(
                   "h-full transition-transform duration-300 hover:-translate-y-1",
@@ -204,13 +153,13 @@ export default function HomePage() {
                 <CardHeader>
                   <div className="flex items-baseline justify-between">
                     <CardTitle className="text-base">{plan.name}</CardTitle>
-                    {plan.highlighted && (
-                      <span className="rounded-full bg-primary/10 px-2 py-1 text-xs text-primary">Most popular</span>
+                    {plan.badge && (
+                      <span className="rounded-full bg-primary/10 px-2 py-1 text-xs text-primary">{plan.badge}</span>
                     )}
                   </div>
                   <div className="mt-2 flex items-end gap-1">
                     <span className="text-3xl font-semibold">{plan.price}</span>
-                    <span className="text-sm text-muted-foreground">/mo</span>
+                    <span className="text-sm text-muted-foreground">{plan.period}</span>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
                 </CardHeader>
@@ -224,7 +173,7 @@ export default function HomePage() {
                     ))}
                   </ul>
                   <Button className="w-full" asChild>
-                    <Link href="/create-account">{plan.cta}</Link>
+                    <Link href={plan.cta.href}>{plan.cta.label}</Link>
                   </Button>
                 </CardContent>
               </Card>

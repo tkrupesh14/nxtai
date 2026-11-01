@@ -6,6 +6,7 @@ import { AIError, checkGoal, generateCoursePlan } from "@/lib/ai/llm"
 import { professorForCategory } from "@/lib/learning/catalog"
 import { OnboardingSchema } from "@/lib/learning/schemas"
 import { createClient } from "@/lib/supabase/server"
+import { serverKey } from "@/lib/supabase/server-key"
 
 export type OnboardingState = {
   error?: string
@@ -80,10 +81,10 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
     return { error: e instanceof AIError ? e.userMessage : "Something went wrong creating your course." }
   }
 
-  const { data: course, error: courseError } = await supabase
-    .from("courses")
-    .insert({
-      user_id: user.id,
+  // Course, modules and lessons are written in one transaction by a server-only function (migration 008).
+  const { data: courseId, error: courseError } = await supabase.rpc("app_create_course", {
+    p_key: serverKey(),
+    p_course: {
       title: plan.title,
       summary: plan.summary,
       level: plan.level,
@@ -93,45 +94,19 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
       subcategory: input.subcategory,
       professor: professorForCategory(input.category).id,
       welcome: plan.welcome_message,
-    })
-    .select("id")
-    .single()
-  if (courseError || !course) {
-    console.error("courses insert failed:", courseError?.message)
+    },
+    p_modules: plan.modules.map((m) => ({
+      title: m.title,
+      summary: m.summary,
+      lessons: m.lessons.map((l) => ({ title: l.title, objective: l.objective, est_minutes: l.est_minutes })),
+    })),
+  })
+  if (courseError || !courseId) {
+    console.error("app_create_course failed:", courseError?.message)
     if (courseError?.message === "course_daily_limit") return { error: COURSE_LIMIT_MESSAGES.daily_limit }
     if (courseError?.message === "course_monthly_limit") return { error: COURSE_LIMIT_MESSAGES.monthly_limit }
     return { error: "We couldn't save your course. Please try again." }
   }
 
-  try {
-    const { data: modules, error: modulesError } = await supabase
-      .from("course_modules")
-      .insert(
-        plan.modules.map((m, i) => ({ course_id: course.id, user_id: user.id, position: i, title: m.title, summary: m.summary })),
-      )
-      .select("id, position")
-    if (modulesError || !modules) throw modulesError ?? new Error("no modules returned")
-
-    const moduleIdByPosition = new Map(modules.map((m) => [m.position, m.id]))
-    let position = 0
-    const lessons = plan.modules.flatMap((m, mi) =>
-      m.lessons.map((l) => ({
-        course_id: course.id,
-        module_id: moduleIdByPosition.get(mi)!,
-        user_id: user.id,
-        position: position++,
-        title: l.title,
-        objective: l.objective,
-        est_minutes: Math.min(Math.max(l.est_minutes || 30, 10), 90),
-      })),
-    )
-    const { error: lessonsError } = await supabase.from("lessons").insert(lessons)
-    if (lessonsError) throw lessonsError
-  } catch (e) {
-    console.error("saving course outline failed:", e)
-    await supabase.from("courses").delete().eq("id", course.id) // cascades to modules/lessons
-    return { error: "We couldn't save your course. Please try again." }
-  }
-
-  redirect(`/learn/${course.id}`)
+  redirect(`/learn/${courseId as string}`)
 }

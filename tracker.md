@@ -43,7 +43,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 0.5 | Decide: keep patched instance or rebuild from repo | P1 | ⬜ | 👤 | No persistence found |
 | 0.6 | Enable Dependabot alerts + security updates | P1 | ⬜ | 👤 | Repo settings → Code security |
 | 0.7 | Nginx rate limiting on POST; block scanner paths; consider Cloudflare | P1 | ⬜ | 🤖 | |
-| 0.8 | Lock down direct writes to `courses` / `course_modules` / `lessons` | P1 | ⬜ | 🤖 | G20 — prevents AI-cost abuse via the API |
+| 0.8 | Lock down direct writes to `courses` / `course_modules` / `lessons` | P1 | 🟡 | 👤 | G20 — code + migration 008 done; run 008 and set the key hash |
 | 0.9 | AI keys out of `.env.local` (secret store / EC2 IAM role) | P2 | ⬜ | 🤖 | After Bedrock access |
 
 ## Phase 1 — Sign-in
@@ -74,8 +74,8 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 3.1 | One price list for home and `/pricing`, matching plans + credit packs | P0 | ⬜ | 👤🤖 | G5 |
-| 3.2 | Terms, Privacy, Refund & Cancellation pages (Razorpay requirement) | P0 | ⬜ | 🤖👤 | Claude drafts; you review |
+| 3.1 | One price list for home and `/pricing`, matching plans + credit packs | P0 | ✅ | | G5 — `lib/pricing.ts`; only features that exist |
+| 3.2 | Terms, Privacy, Refund & Cancellation pages (Razorpay requirement) | P0 | 🟡 | 👤 | Drafts live at /terms, /privacy, /refund-policy; fill `lib/legal.ts` (legal name, address, city) and review |
 | 3.4 | Contact form email notification | P1 | 🟡 | 🤖 | Saving ✅ |
 | 3.5 | Favicon, OG image, metadata, sitemap, robots | P1 | ⬜ | 🤖 | |
 | 3.6 | Analytics + Sentry | P2 | ⬜ | 👤🤖 | |

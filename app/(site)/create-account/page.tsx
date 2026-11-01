@@ -18,6 +18,17 @@ export default function CreateAccountPage() {
         <AuthDivider />
         <EmailSignupForm />
       </section>
+      <p className="mt-4 text-center text-xs text-muted-foreground text-pretty">
+        By creating an account you agree to our{" "}
+        <Link href="/terms" className="underline hover:text-foreground">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline hover:text-foreground">
+          Privacy Policy
+        </Link>
+        .
+      </p>
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-primary hover:underline">
