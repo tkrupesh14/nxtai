@@ -25,6 +25,7 @@ export function ProfessorChat({
   initialTurns,
   initialUsedToday,
   initialUsedLesson,
+  initialUsedQuick,
   children,
 }: {
   courseId: string
@@ -34,6 +35,7 @@ export function ProfessorChat({
   initialTurns: ChatTurn[]
   initialUsedToday: number
   initialUsedLesson: number
+  initialUsedQuick: number
   children: React.ReactNode
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -41,6 +43,7 @@ export function ProfessorChat({
   const [entries, setEntries] = useState<Entry[]>(initialTurns)
   const [usedToday, setUsedToday] = useState(initialUsedToday)
   const [usedLesson, setUsedLesson] = useState(initialUsedLesson)
+  const [usedQuick, setUsedQuick] = useState(initialUsedQuick)
   const [text, setText] = useState("")
   const [pending, startTransition] = useTransition()
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -49,6 +52,7 @@ export function ProfessorChat({
   const leftToday = Math.max(ASK_LIMITS.perDay - usedToday, 0)
   const leftLesson = Math.max(ASK_LIMITS.perLessonPerDay - usedLesson, 0)
   const canAsk = leftToday > 0 && leftLesson > 0
+  const leftQuick = Math.max(ASK_LIMITS.quickPerDay - usedQuick, 0)
   const firstName = professor.name.replace(/^(Prof\.|Dr\.)\s*/, "").split(" ")[0]
 
   function open(s?: number) {
@@ -79,14 +83,18 @@ export function ProfessorChat({
       if (res.ok) {
         setEntries((prev) => [...prev, res.turn])
         if (kind === "ask") setText("")
+        // usedToday is -1 for cached (free) answers. For quick buttons it counts quick answers.
         if (res.usedToday >= 0 && kind === "ask") {
           setUsedToday(res.usedToday)
           setUsedLesson(res.usedLesson)
+        } else if (res.usedToday >= 0) {
+          setUsedQuick(res.usedToday)
         }
       } else {
         setEntries((prev) => [...prev, { id: `n${Date.now()}`, note: res.message }])
-        if (typeof res.usedToday === "number") setUsedToday(res.usedToday)
-        if (typeof res.usedLesson === "number") setUsedLesson(res.usedLesson)
+        if (kind === "ask" && typeof res.usedToday === "number") setUsedToday(res.usedToday)
+        if (kind === "ask" && typeof res.usedLesson === "number") setUsedLesson(res.usedLesson)
+        if (kind !== "ask" && typeof res.usedToday === "number") setUsedQuick(res.usedToday)
       }
     })
   }
@@ -227,15 +235,17 @@ export function ProfessorChat({
                   Ask
                 </Button>
               </form>
-              <p className="flex justify-between text-[11px] text-muted-foreground">
-                <span>
-                  {leftToday} of {ASK_LIMITS.perDay} questions left today
+              <div className="flex justify-between gap-3 text-[11px] text-muted-foreground">
+                <p>
+                  Questions: {leftToday} of {ASK_LIMITS.perDay} left today
                   {leftToday > 0 ? ` · ${leftLesson} for this lesson` : ""}
-                </span>
-                <span>
+                  <br />
+                  Quick answers: {leftQuick} of {ASK_LIMITS.quickPerDay} left · repeats are free
+                </p>
+                <span className="shrink-0">
                   {text.length}/{ASK_LIMITS.maxQuestionChars}
                 </span>
-              </p>
+              </div>
             </div>
           </section>
         </>

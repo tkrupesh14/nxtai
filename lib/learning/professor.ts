@@ -33,6 +33,7 @@ export const LIMIT_MESSAGES: Record<string, string> = {
   slow_down: "One moment, please wait a few seconds between questions.",
   daily_limit: `You've used today's ${ASK_LIMITS.perDay} questions. Your professor will be back tomorrow.`,
   lesson_limit: `You've asked ${ASK_LIMITS.perLessonPerDay} questions on this lesson today. Try the quick buttons, or continue tomorrow.`,
+  quick_daily_limit: `You've used today's ${ASK_LIMITS.quickPerDay} quick answers. Ones you've already opened stay free.`,
   busy: "Your professor is already answering that. Give it a moment.",
   not_found: "This lesson isn't available.",
   auth: "Please sign in again.",

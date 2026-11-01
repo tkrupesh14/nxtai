@@ -151,6 +151,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
       initialTurns={chat.turns}
       initialUsedToday={chat.usedToday}
       initialUsedLesson={chat.usedLesson}
+      initialUsedQuick={chat.usedQuick}
     >
       {page}
     </ProfessorChat>

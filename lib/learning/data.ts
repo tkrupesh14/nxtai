@@ -108,11 +108,12 @@ export async function getProfessorChat(lessonId: string) {
       .limit(60),
     supabase
       .from("professor_questions")
-      .select("lesson_id, status")
-      .eq("kind", "ask")
+      .select("lesson_id, status, kind")
       .gte("created_at", istDayStart()),
   ])
-  const rows = today ?? []
+  const all = today ?? []
+  const rows = all.filter((r) => r.kind === "ask")
+  const quick = all.filter((r) => r.kind !== "ask")
   // Same counting as the database: up to 2 failed answers a day are refunded.
   const count = (list: typeof rows) =>
     list.filter((r) => r.status !== "failed").length + Math.max(list.filter((r) => r.status === "failed").length - 2, 0)
@@ -120,5 +121,6 @@ export async function getProfessorChat(lessonId: string) {
     turns: (turns ?? []) as ChatTurn[],
     usedToday: count(rows),
     usedLesson: count(rows.filter((r) => r.lesson_id === lessonId)),
+    usedQuick: count(quick),
   }
 }

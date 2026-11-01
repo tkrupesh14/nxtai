@@ -100,8 +100,10 @@ export async function askProfessorAction(
   if (!credit.question_id) {
     return {
       ok: false,
-      message: LIMIT_MESSAGES[credit.reason ?? ""] ?? "Please try again later.",
-      usedToday: kind === "ask" ? credit.used_today : undefined,
+      message:
+        LIMIT_MESSAGES[kind !== "ask" && credit.reason === "daily_limit" ? "quick_daily_limit" : (credit.reason ?? "")] ??
+        "Please try again later.",
+      usedToday: credit.used_today,
       usedLesson: kind === "ask" ? credit.used_lesson : undefined,
     }
   }
