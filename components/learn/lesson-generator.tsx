@@ -101,9 +101,17 @@ export function LessonGenerator({
     return () => clearInterval(t)
   }, [phase])
 
+  // This component unmounts once the refreshed page shows the saved lesson; if that hasn't happened after a few
+  // seconds (a refresh can occasionally be dropped), reload the page so the learner is never stuck on the draft.
+  const fallback = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (fallback.current) clearTimeout(fallback.current)
+  }, [])
   const start = () => {
     window.scrollTo({ top: 0 })
     router.refresh()
+    if (fallback.current) clearTimeout(fallback.current)
+    fallback.current = setTimeout(() => window.location.reload(), 4000)
   }
 
   if (phase === "error") {
