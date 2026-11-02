@@ -53,10 +53,17 @@ async function teachAndPassLesson(page: Page) {
 
 /** Answer every question of a module test or final exam with the right (or a wrong) option. */
 async function answerAll(page: Page, text: "The right answer" | "A wrong answer") {
-  const options = page.getByText(text, { exact: true })
+  const options = page.getByRole("radio", { name: text, exact: true })
   await expect(options.first()).toBeVisible({ timeout: 60_000 }) // the test is written on first open
   const n = await options.count()
-  for (let i = 0; i < n; i++) await options.nth(i).click()
+  // Click again if a click landed before the page was ready (e.g. while hydrating) and didn't register.
+  for (let i = 0; i < n; i++) {
+    await expect(async () => {
+      await options.nth(i).click()
+      await expect(options.nth(i)).toBeChecked({ timeout: 1000 })
+    }).toPass({ timeout: 15_000 })
+  }
+  await expect(page.getByText(`${n} of ${n} answered`)).toBeVisible()
   return n
 }
 
