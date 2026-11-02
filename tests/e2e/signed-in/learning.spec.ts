@@ -136,7 +136,8 @@ test("catalog courses start in one tap and count toward the free allowance", asy
   await page.getByRole("button", { name: "Yes, delete it" }).click()
   await expect(page).toHaveURL(/\/learn$/)
   await expect(page.getByRole("link", { name: "Test Course From Fake AI" }).first()).toBeVisible()
-  await expect(page.getByRole("link", { name: /Python Fundamentals/i })).toHaveCount(0)
+  // (Python Fundamentals may still be offered as a suggestion; the learner's copy is gone.)
+  await expect(page.locator(`a[href^="${catalogPath}"]`)).toHaveCount(0)
 })
 
 test("account page shows the plan and credits", async ({ page }) => {
