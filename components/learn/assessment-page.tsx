@@ -90,7 +90,7 @@ export async function AssessmentPage({ courseId, moduleId }: { courseId: string;
       <div className="mt-8">
         {qs ? (
           <AssessmentQuiz
-            key={`${row!.id}-${qs.attempts}`}
+            key={row!.id} // not the try count: the refresh after submitting must not wipe the result
             courseId={courseId}
             assessmentId={row!.id}
             kind={kind}

@@ -126,7 +126,7 @@ export function AssessmentQuiz({
         return setError(res.error)
       }
       setResult(res)
-      window.scrollTo({ top: 0, behavior: "smooth" })
+      window.scrollTo({ top: 0 })
       router.refresh()
     })
   }
