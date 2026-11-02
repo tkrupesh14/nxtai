@@ -2,7 +2,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 
 import { AskAboutSection, ProfessorChat } from "@/components/learn/ask-professor"
-import { LectureStepper } from "@/components/learn/lecture"
+import { LectureStepper, ListenToSection } from "@/components/learn/lecture"
 import { LessonBlockView, Md } from "@/components/learn/lesson-blocks"
 import { LessonTools } from "@/components/learn/course-tools"
 import { LessonGenerator } from "@/components/learn/lesson-generator"
@@ -11,6 +11,7 @@ import { Quiz } from "@/components/learn/quiz"
 import { getCategory, getProfessor, professorForCategory } from "@/lib/learning/catalog"
 import { getAccountSummary, getCourse, getProfessorChat, isUnlocked, isUuid } from "@/lib/learning/data"
 import { PASS_MARK, type LessonBlock, type QuizQuestion } from "@/lib/learning/schemas"
+import { chunkSpeech, sectionSpeech, speakMarkdown } from "@/lib/learning/narration"
 import { sectionLabel, toSections } from "@/lib/learning/sections"
 import { createClient } from "@/lib/supabase/server"
 
@@ -102,17 +103,26 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
             sections={sections.map((section, si) => ({
               key: `s${si}`,
               gated: section.gated,
+              speech: sectionSpeech(section.blocks.map(({ block }) => block)),
               node: (
                 <div className="grid min-w-0 gap-8 [&>*]:min-w-0">
                   {section.blocks.map(({ block, index: bi }) => (
                     // The checkpoint id must match the section key so answering it unlocks "Continue".
                     <LessonBlockView key={bi} block={block} professor={professor} id={`s${si}`} />
                   ))}
-                  <AskAboutSection section={si} />
+                  <div className="flex flex-wrap gap-x-5 gap-y-1">
+                    <ListenToSection section={si} />
+                    <AskAboutSection section={si} />
+                  </div>
                 </div>
               ),
             }))}
             after={endOfLesson}
+            afterSpeech={
+              takeaways.length
+                ? chunkSpeech(`Key takeaways. ${takeaways.map(speakMarkdown).join(" ")} That's the lesson. Try the quiz when you're ready.`)
+                : []
+            }
           />
         ) : body?.content_md ? (
           <>

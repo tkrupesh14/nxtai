@@ -90,7 +90,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
 | 4.1 | Dashboard on the site design system; merge with `/learn` | P1 | ✅ | | S4.1: streak, lessons, study time, quiz average, last-7-days chart and "Continue learning" on `/learn`; sample-data `/dashboard` removed (redirects to `/learn`) |
-| 4.2 | Real progress, scores, streaks | P1 | ⬜ | 🤖 | |
+| 4.2 | Real progress, scores, streaks | P1 | ✅ | 🤖 | Progress panel on `/learn` (S4.1) |
 | 4.3 | Delete legacy components, CSS, compat shim | P2 | ⬜ | 🤖 | |
 
 ## Phase 5 — Core product
@@ -105,7 +105,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 5.C2 | Math formulas (KaTeX) + code highlighting with Copy | P1 | ✅ | | S2.1 |
 | 5.D | Illustrations (max 2/lesson, cached) + photos | P1 | ⏸️ | 🤖 | Paused 2026-11-01. Tested: Cloudflare Workers AI works (keys in .env.local). Free → flux-2-klein-4b (~104 neurons, ₹0.10), Pro → flux-2-klein-9b (~1,364 neurons, ₹1.30); free plan = 10k neurons/day. OpenRouter image models need ≥$1 balance |
 | 5.E | Ask the professor | P1 | ✅ | | D18 |
-| 5.F | Catalog courses + narration | P2 | 🟡 | | Catalog ✅: 15 hand-written courses (all 9 subjects) at `/courses` + `/courses/[slug]`, one-tap start via `app_create_course` (counts toward the monthly allowance), suggestions on `/learn`, sitemap + robots. Narration still to do |
+| 5.F | Catalog courses + narration | P2 | ✅ | | Catalog ✅: 15 hand-written courses (all 9 subjects) at `/courses` + `/courses/[slug]`, one-tap start via `app_create_course` (counts toward the monthly allowance), suggestions on `/learn`, sitemap + robots. Narration ✅: "Listen" in lessons uses the browser's speech engine (free, no server); reads section by section, waits at practice questions, then reads the takeaways; speed 0.8–1.5×. Natural cloud voices later (Cloudflare TTS) |
 | 5.1b | Regenerate lesson / report a problem; course archive & delete | P1 | 🟡 | 👤 | S1.3 — needs migration 011 |
 | 5.1c | Stream lesson text while it is written | P2 | ⬜ | 🤖 | |
 | 5.2 | Doc upload → lessons from the learner's docs | P1 | ⬜ | 🤖 | |
