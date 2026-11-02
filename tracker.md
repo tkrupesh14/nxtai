@@ -132,7 +132,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 |----|------|-----|--------|-------|-------|
 | 7.1 | Fix remaining TS errors (all in `hero-animation.tsx`); stop ignoring TS/ESLint in builds | P1 | ✅ | | 0 errors; `pnpm typecheck` runs in CI (the server build still skips it to save memory) |
 | 7.2 | Next 16; drop `auth-helpers-nextjs`; update `recharts`; clear audit highs | P1 | 🟡 | 🤖 | G12, G15 |
-| 7.3 | Playwright e2e + visual regression tests | P1 | 🟡 | | Unit (Vitest), database (PGlite: RLS, server key, limits, payments) and Playwright smoke tests: `pnpm test`, `pnpm test:e2e`. Visual regression + signed-in flows still to do |
+| 7.3 | Playwright e2e + visual regression tests | P1 | ✅ | | Unit (Vitest), database (PGlite: RLS, server key, limits, payments), Playwright smoke tests, and signed-in browser tests (onboarding → course, lesson taught + quiz passed, AI professor, My courses progress, catalog limits/delete, account) against a local Supabase + fake AI in CI: `pnpm test`, `pnpm test:e2e`, `pnpm test:e2e:signed-in`. Supabase CLI pinned to 2.122.1 in CI. Visual regression optional, not done |
 | 7.4 | CI on pull requests | P1 | ✅ | | `.github/workflows/ci.yml`: typecheck → tests → build → smoke tests, on push to dev/main and PRs |
 
 ## Next up — Sprint 1: ready for real users (proposed)
