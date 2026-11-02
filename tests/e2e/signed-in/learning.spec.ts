@@ -52,8 +52,11 @@ async function teachAndPassLesson(page: Page) {
 }
 
 /** Answer every question of a module test or final exam with the right (or a wrong) option. */
-async function answerAll(page: Page, text: "The right answer" | "A wrong answer") {
-  const options = page.getByRole("radio", { name: text, exact: true })
+async function answerAll(page: Page, kind: "module test" | "final exam", text: "The right answer" | "A wrong answer") {
+  // Only inside the test itself: right after a link click the previous page (e.g. the lesson, with its own
+  // quiz) can still be on screen.
+  const region = page.getByRole("region", { name: kind, exact: true })
+  const options = region.getByRole("radio", { name: text, exact: true })
   await expect(options.first()).toBeVisible({ timeout: 60_000 }) // the test is written on first open
   const n = await options.count()
   // Click again if a click landed before the page was ready (e.g. while hydrating) and didn't register.
@@ -63,7 +66,7 @@ async function answerAll(page: Page, text: "The right answer" | "A wrong answer"
       await expect(options.nth(i)).toBeChecked({ timeout: 1000 })
     }).toPass({ timeout: 15_000 })
   }
-  await expect(page.getByText(`${n} of ${n} answered`)).toBeVisible()
+  await expect(region.getByText(`${n} of ${n} answered`)).toBeVisible()
   return n
 }
 
@@ -176,7 +179,7 @@ test("module tests and the final exam lead to a certificate (Pro)", async ({ pag
   await teachAndPassLesson(page)
   await page.getByRole("link", { name: "Take the module test" }).click()
   await expect(page.getByRole("heading", { name: "Module test: Getting started" })).toBeVisible()
-  expect(await answerAll(page, "The right answer")).toBe(8)
+  expect(await answerAll(page, "module test", "The right answer")).toBe(8)
   await page.getByRole("button", { name: "Submit answers" }).click()
   await expect(page.getByText(/You scored 100% \(8 of 8\)\. Module test passed!/)).toBeVisible()
   await expect(page.getByText("The first option is right in every fake question.").first()).toBeVisible()
@@ -186,18 +189,20 @@ test("module tests and the final exam lead to a certificate (Pro)", async ({ pag
   await page.getByRole("link", { name: /A small project/ }).click()
   await teachAndPassLesson(page)
   await page.getByRole("link", { name: "Take the module test" }).click()
-  await answerAll(page, "The right answer")
+  await expect(page.getByRole("heading", { name: "Module test: Going further" })).toBeVisible()
+  expect(await answerAll(page, "module test", "The right answer")).toBe(8)
   await page.getByRole("button", { name: "Submit answers" }).click()
   await page.getByRole("link", { name: "Take the final exam →" }).click()
 
   // Final exam: a failed try shows only right/wrong (no answers); a second try today is allowed.
   await expect(page.getByRole("heading", { name: /^Final exam:/ })).toBeVisible()
-  expect(await answerAll(page, "A wrong answer")).toBe(20)
+  expect(await answerAll(page, "final exam", "A wrong answer")).toBe(20)
   await page.getByRole("button", { name: "Submit answers" }).click()
   await expect(page.getByText("You need 70% to pass.")).toBeVisible()
   await expect(page.getByText("The first option is right in every fake question.")).toHaveCount(0)
   await page.getByRole("button", { name: "Try again" }).click()
-  await answerAll(page, "The right answer")
+  await expect(page.getByText("0 of 20 answered")).toBeVisible()
+  expect(await answerAll(page, "final exam", "The right answer")).toBe(20)
   await page.getByRole("button", { name: "Submit answers" }).click()
   await expect(page.getByText("You passed the final exam!")).toBeVisible()
 
