@@ -16,7 +16,8 @@ export default defineConfig({
   testDir: "tests/e2e/signed-in",
   timeout: 60_000,
   expect: { timeout: 15_000 },
-  retries: process.env.CI ? 1 : 0,
+  // One learner's journey in order: a retry would start from a half-finished state, so no retries.
+  retries: 0,
   workers: 1,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
   use: { baseURL, trace: "retain-on-failure", screenshot: "only-on-failure" },

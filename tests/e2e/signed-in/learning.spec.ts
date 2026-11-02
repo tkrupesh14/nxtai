@@ -45,28 +45,31 @@ test("a lesson is written, taught and passed", async ({ page }) => {
   await expect(page).toHaveURL(new RegExp(`/learn/${UUID}/${UUID}$`))
 
   // The lesson streams in, then the class starts.
-  await page.getByRole("button", { name: "Start the class" }).click()
+  await page.getByRole("button", { name: "Start the class" }).first().click() // shown above and below the draft
   await expect(page.getByText(/^Section 1 of \d+$/)).toBeVisible()
 
   // Work through the lecture; the practice question must be answered before "Continue" works again.
+  const submit = page.getByRole("button", { name: "Submit answers" })
+  const next = page.getByRole("button", { name: "Continue", exact: true })
   for (let i = 0; i < 20; i++) {
-    if (await page.getByRole("button", { name: "Submit answers" }).isVisible()) break
+    await expect(submit.or(next).first()).toBeVisible()
+    if (await submit.isVisible()) break
     const check = page.getByRole("button", { name: "Check my answer" })
     if (await check.isVisible()) {
       await page.getByRole("group", { name: "Practice question" }).getByText("The right answer").click()
       await check.click()
       await expect(page.getByText("Exactly right.")).toBeVisible()
     }
-    await page.getByRole("button", { name: "Continue" }).click()
+    await next.click()
   }
   await expect(page.getByText("Key takeaways")).toBeVisible()
   await expect(page.getByText("Fake takeaway one")).toBeVisible()
 
   // Quiz: graded in the database. The fake AI's answers are always the first option.
-  const quiz = page.locator("section").filter({ has: page.getByRole("button", { name: "Submit answers" }) })
+  const quiz = page.locator("section").filter({ has: submit }).last()
   const right = quiz.getByText("The right answer")
   for (let i = 0; i < (await right.count()); i++) await right.nth(i).click()
-  await quiz.getByRole("button", { name: "Submit answers" }).click()
+  await submit.click()
   await expect(page.getByText("You scored 100%. Lesson complete!")).toBeVisible()
   await expect(page.getByRole("link", { name: "Next lesson →" })).toBeVisible()
 
@@ -84,7 +87,7 @@ test("the AI professor answers a question about the lesson", async ({ page }) =>
   await page.getByRole("button", { name: "Ask", exact: true }).click()
   await expect(page.getByText("Fake professor answer to: What is a list?")).toBeVisible()
   // Labelled as an AI professor, never as a human.
-  await expect(page.getByText(/AI professor · answers about this lesson/)).toBeVisible()
+  await expect(page.getByText(/AI professor · answers about this lesson/).first()).toBeVisible()
   expect(errors).toEqual([])
 })
 
@@ -93,7 +96,7 @@ test("My courses shows progress and where to continue", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "My courses" })).toBeVisible()
   const progress = page.getByRole("region", { name: "Your progress" })
   await expect(progress.getByText("1 day")).toBeVisible()
-  await expect(progress.getByText("Lessons completed").locator("..")).toContainText("1")
+  await expect(progress.getByText("Lessons completed", { exact: true }).locator("..")).toContainText("1")
   await expect(page.getByRole("link", { name: "Continue: Second steps" })).toBeVisible()
 })
 
@@ -121,12 +124,12 @@ test("catalog courses start in one tap and count toward the free allowance", asy
   await page.getByRole("button", { name: "Delete course…" }).click()
   await page.getByRole("button", { name: "Yes, delete it" }).click()
   await expect(page).toHaveURL(/\/learn$/)
-  await expect(page.getByRole("link", { name: "Test Course From Fake AI" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Test Course From Fake AI" }).first()).toBeVisible()
   await expect(page.getByRole("link", { name: /Python Fundamentals/i })).toHaveCount(0)
 })
 
 test("account page shows the plan and credits", async ({ page }) => {
   await page.goto("/account")
-  await expect(page.getByText(/Credits:/)).toBeVisible()
-  await expect(page.getByText("Plan & credits")).toBeVisible()
+  await expect(page.getByText(/Credits:/).first()).toBeVisible()
+  await expect(page.getByText("Plan & credits").first()).toBeVisible()
 })
