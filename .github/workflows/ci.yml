@@ -76,7 +76,8 @@ jobs:
           version: latest
       - name: Start local Supabase (all migrations + seed)
         run: |
-          supabase start
+          # Image pulls occasionally fail; try once more before giving up.
+          supabase start || { supabase stop --no-backup || true; sleep 10; supabase start; }
           eval "$(supabase status -o env)"
           echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY:-$PUBLISHABLE_KEY}" >> "$GITHUB_ENV"
