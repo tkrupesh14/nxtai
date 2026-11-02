@@ -36,6 +36,7 @@ import {
  *   Bedrock:     BEDROCK_API_KEY (+ BEDROCK_REGION, default ap-southeast-2)
  *                -> Responses API on bedrock-runtime, model "global.openai.gpt-6-luna"
  * AI_MODEL overrides the model id for whichever provider is active.
+ * AI_BASE_URL points the OpenRouter client elsewhere; only the signed-in browser tests use it (a fake AI server).
  * GPT-6 Luna costs $0.10 / $0.50 per 1M input/output tokens on both.
  */
 type Provider = "openrouter" | "bedrock"
@@ -67,7 +68,7 @@ function getClient() {
   client ??=
     PROVIDER === "openrouter"
       ? new OpenAI({
-          baseURL: "https://openrouter.ai/api/v1",
+          baseURL: process.env.AI_BASE_URL || "https://openrouter.ai/api/v1",
           apiKey: process.env.OPENROUTER_API_KEY,
           defaultHeaders: { "HTTP-Referer": "https://krpex.in", "X-Title": "Krpex" },
           maxRetries: 2,

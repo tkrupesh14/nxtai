@@ -51,3 +51,51 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  signed-in:
+    name: Signed-in browser tests (local Supabase + fake AI)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Test-only values: a local database seeded with this key (supabase/seed.sql) and a fake AI server.
+      SERVER_RPC_KEY: e2e-server-key
+      OPENROUTER_API_KEY: fake
+      AI_BASE_URL: http://127.0.0.1:3199/v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start local Supabase (all migrations + seed)
+        run: |
+          supabase start
+          eval "$(supabase status -o env)"
+          echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY:-$PUBLISHABLE_KEY}" >> "$GITHUB_ENV"
+
+      - name: Build against the local database
+        run: pnpm build
+
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Signed-in tests
+        run: pnpm test:e2e:signed-in
+      - name: Server logs
+        if: failure()
+        run: supabase status || true
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-signed-in
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

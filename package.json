@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:signed-in": "playwright test -c playwright.signed-in.config.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
