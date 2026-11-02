@@ -45,8 +45,19 @@ test("a lesson is written, taught and passed", async ({ page }) => {
   await expect(page).toHaveURL(new RegExp(`/learn/${UUID}/${UUID}$`))
 
   // The lesson streams in, then the class starts.
+  const after: string[] = []
+  page.on("response", (r) => after.push(`${r.status()} ${r.request().method()} ${r.url().replace(/^https?:\/\/[^/]+/, "")} rsc=${r.request().headers()["rsc"] ?? "-"}`))
+  page.on("console", (m) => after.push(`console.${m.type()}: ${m.text().slice(0, 200)}`))
   await page.getByRole("button", { name: "Start the class" }).first().click() // shown above and below the draft
-  await expect(page.getByText(/^Section 1 of \d+$/)).toBeVisible()
+  const section1 = page.getByText(/^Section 1 of \d+$/)
+  try {
+    await expect(section1).toBeVisible({ timeout: 8000 })
+  } catch {
+    // TEMP diagnostics: what happened after the click, and does a reload show the saved lesson?
+    await page.reload()
+    const afterReload = await section1.isVisible({ timeout: 8000 }).catch(() => false)
+    throw new Error(`lecture did not appear after "Start the class". Visible after reload: ${afterReload}\n${after.join("\n")}`)
+  }
 
   // Work through the lecture; the practice question must be answered before "Continue" works again.
   const submit = page.getByRole("button", { name: "Submit answers" })
