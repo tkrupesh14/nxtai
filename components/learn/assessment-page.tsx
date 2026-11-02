@@ -39,22 +39,23 @@ export async function AssessmentPage({ courseId, moduleId }: { courseId: string;
   const othersPassed = modules.every((m) => m.id === moduleId || byModule.get(m.id)?.passed_at)
   const nextHref = othersPassed ? `/learn/${courseId}/exam` : `/learn/${courseId}`
 
+  // Final exam: what the certificate panel needs (shown by the server once passed, or by the quiz right after passing).
+  const [account, current] = moduleId ? [null, null] : await Promise.all([getAccountSummary(), getCurrentProfile()])
+  const claim = account && current ? { isPro: account.plan === "pro", defaultName: current.profile.full_name } : undefined
+
   let certificate: React.ReactNode = null
   if (!moduleId && final?.passed_at) {
-    if (certificateCode) {
-      certificate = (
-        <div className="rounded-xl border border-green-600/40 bg-green-600/10 p-6">
-          <h2 className="text-lg font-semibold">Your certificate is ready</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Share the link or save it as a PDF.</p>
-          <Button asChild className="mt-4">
-            <Link href={`/certificate/${certificateCode}`}>View certificate</Link>
-          </Button>
-        </div>
-      )
-    } else {
-      const [account, { profile }] = await Promise.all([getAccountSummary(), getCurrentProfile()])
-      certificate = <CertificateClaim courseId={courseId} defaultName={profile.full_name} isPro={account.plan === "pro"} />
-    }
+    certificate = certificateCode ? (
+      <div className="rounded-xl border border-green-600/40 bg-green-600/10 p-6">
+        <h2 className="text-lg font-semibold">Your certificate is ready</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Share the link or save it as a PDF.</p>
+        <Button asChild className="mt-4">
+          <Link href={`/certificate/${certificateCode}`}>View certificate</Link>
+        </Button>
+      </div>
+    ) : (
+      claim && <CertificateClaim courseId={courseId} defaultName={claim.defaultName} isPro={claim.isPro} />
+    )
   }
 
   return (
@@ -79,7 +80,7 @@ export async function AssessmentPage({ courseId, moduleId }: { courseId: string;
           : "Questions on the whole course, including some that combine lessons. You get 2 tries a day."}
       </p>
       {row && (row.attempts > 0 || row.passed_at) && (
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="assessment-summary mt-2 text-sm text-muted-foreground">
           {row.passed_at ? "Passed" : "Not passed yet"} · best score {row.best_score ?? 0}% · {row.attempts} tr{row.attempts === 1 ? "y" : "ies"}
         </p>
       )}
@@ -97,6 +98,7 @@ export async function AssessmentPage({ courseId, moduleId }: { courseId: string;
             retryAt={qs.retryAt}
             passed={qs.passed}
             nextHref={nextHref}
+            certificate={claim}
             questions={qs.questions.map((q) => ({
               i: q.i,
               question: <Md compact>{q.question}</Md>,

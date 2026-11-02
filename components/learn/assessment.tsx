@@ -83,6 +83,7 @@ export function AssessmentQuiz({
   retryAt: initialRetryAt,
   passed: alreadyPassed,
   nextHref,
+  certificate,
 }: {
   courseId: string
   assessmentId: string
@@ -93,6 +94,8 @@ export function AssessmentQuiz({
   passed: boolean
   /** Where "Continue" goes after passing a module test (the final exam, or the course page). */
   nextHref: string
+  /** Final exam: shown right after a first pass, without waiting for the page to refresh. */
+  certificate?: { isPro: boolean; defaultName: string }
 }) {
   const router = useRouter()
   const [answers, setAnswers] = useState<Record<number, number>>({})
@@ -159,6 +162,13 @@ export function AssessmentQuiz({
             </Button>
           </div>
         </div>
+      )}
+
+      {/* The server-rendered summary above is out of date once a new result is in. */}
+      {result && <style>{".assessment-summary{display:none}"}</style>}
+
+      {result?.passed && kind === "final" && !alreadyPassed && certificate && (
+        <CertificateClaim courseId={courseId} defaultName={certificate.defaultName} isPro={certificate.isPro} />
       )}
 
       {!result && (
