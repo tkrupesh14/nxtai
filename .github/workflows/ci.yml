@@ -73,7 +73,7 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.122.1 # pinned: v3.0.0 (2026-11-02) broke "supabase start"; upgrade deliberately
       - name: Start local Supabase (all migrations + seed)
         run: |
           # Image pulls occasionally fail; try once more before giving up.
