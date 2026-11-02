@@ -33,3 +33,4 @@ next-env.d.ts
 # test output
 /test-results/
 /playwright-report/
+/e2e-server.log

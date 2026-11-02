@@ -32,6 +32,12 @@ export default defineConfig({
   ],
   webServer: [
     { command: "node tests/support/fake-ai.mjs 3199", url: "http://127.0.0.1:3199/", reuseExistingServer: false },
-    { command: `pnpm exec next start -p ${PORT}`, url: `${baseURL}/api/health`, timeout: 120_000, reuseExistingServer: false },
+    {
+      // Server output also goes to e2e-server.log (CI shows its tail when a test fails).
+      command: `pnpm exec next start -p ${PORT} 2>&1 | tee e2e-server.log`,
+      url: `${baseURL}/api/health`,
+      timeout: 120_000,
+      reuseExistingServer: false,
+    },
   ],
 })

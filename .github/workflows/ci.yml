@@ -88,9 +88,17 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: Signed-in tests
         run: pnpm test:e2e:signed-in
-      - name: Server logs
+      - name: Page snapshots from failed tests (shown as annotations)
         if: failure()
-        run: supabase status || true
+        run: |
+          find test-results -name error-context.md | head -3 | while read -r f; do
+            body=$(head -c 6000 "$f" | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
+            echo "::error title=Page at failure ($f)::$body"
+          done
+          if [ -f e2e-server.log ]; then
+            body=$(grep -iE "error|fail|warn" e2e-server.log | tail -n 40 | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
+            echo "::error title=App server errors::${body:-none}"
+          fi
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
