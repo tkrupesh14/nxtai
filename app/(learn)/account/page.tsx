@@ -3,6 +3,7 @@ import Link from "next/link"
 import { LearningForm, NameForm } from "@/components/learn/account-forms"
 import { AccountSection } from "@/components/learn/account-section"
 import { Button } from "@/components/site/ui/button"
+import { listCertificates } from "@/lib/learning/assessments"
 import { getAccountOverview, getAccountSummary } from "@/lib/learning/data"
 import { BuyButton } from "@/components/learn/buy-button"
 import {
@@ -72,10 +73,11 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 export default async function AccountPage() {
-  const [{ user, profile }, { learning, usage }, account] = await Promise.all([
+  const [{ user, profile }, { learning, usage }, account, certificates] = await Promise.all([
     getCurrentProfile(),
     getAccountOverview(),
     getAccountSummary(),
+    listCertificates(),
   ])
   const planName = PLANS[account.plan].name
   const payments = razorpayConfigured()
@@ -146,6 +148,35 @@ export default async function AccountPage() {
           />
           <Stat label="Lessons completed" value={usage.lessonsCompleted} />
         </div>
+      </AccountSection>
+
+      <AccountSection
+        title="Certificates"
+        description={
+          account.plan === "pro"
+            ? "Pass a course's module tests and final exam to get a certificate you can share."
+            : "Certificates are part of Pro. Your exam results are kept, so you can claim one after upgrading."
+        }
+      >
+        {certificates.length ? (
+          <ul className="divide-y rounded-lg border">
+            {certificates.map((c) => (
+              <li key={c.code} className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{c.course_title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(c.issued_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })} · {c.score}%
+                  </p>
+                </div>
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/certificate/${c.code}`}>View</Link>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">No certificates yet.</p>
+        )}
       </AccountSection>
 
       <section id="credits" className="scroll-mt-24">

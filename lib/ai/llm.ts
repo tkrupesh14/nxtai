@@ -19,6 +19,11 @@ import {
   GoalCheckSchema,
   type GoalCheck,
   LessonContentSchema,
+  AssessmentSchema,
+  ASSESSMENT_QUESTIONS,
+  type Assessment,
+  type AssessmentKind,
+  type QuizQuestion,
   ProfessorReplySchema,
   type ProfessorReply,
   LEVEL_LABELS,
@@ -387,6 +392,77 @@ export async function streamLesson(args: LessonArgs, onBlocks: (blocks: LessonBl
   } catch (error) {
     throw toAIError(error)
   }
+}
+
+export type AssessmentArgs = {
+  kind: AssessmentKind
+  categoryId: string | null
+  courseTitle: string
+  courseLevel: string
+  goal: string
+  /** Module title for a module test; null for the final exam. */
+  moduleTitle: string | null
+  /** The lessons the test covers (one module, or the whole course), in order. */
+  lessons: { title: string; objective: string; takeaways: string[] }[]
+}
+
+export function assessmentPrompt(args: AssessmentArgs): string {
+  const category = getCategory(args.categoryId)
+  const professor = professorForCategory(args.categoryId)
+  const count = ASSESSMENT_QUESTIONS[args.kind]
+  const covered = args.lessons
+    .map((l, i) => `${i + 1}. ${l.title} — ${l.objective}${l.takeaways.length ? `\n   Takeaways: ${l.takeaways.join("; ")}` : ""}`)
+    .join("\n")
+  const what = args.kind === "module"
+    ? `the module test for "${args.moduleTitle}"`
+    : `the final exam for the whole course`
+  return `${professorPreamble(professor, category)}
+
+Write ${what} of this learner's course.
+
+<course title="${args.courseTitle}" level="${args.courseLevel}">
+Learner's goal: ${args.goal}
+Lessons covered:
+${covered}
+</course>
+
+Requirements:
+- Exactly ${count} multiple-choice questions, each with exactly 4 options and one correct answer.
+- Cover every lesson listed${args.kind === "final" ? ", weighting the later and project lessons a little more" : ""}.
+- Test understanding and application, not recall of wording: short scenarios, "what happens if", spot the mistake,
+  choose the best approach. ${args.kind === "final" ? "Include several questions that combine ideas from different lessons." : ""}
+- These are new questions: don't copy the lesson quizzes. Wrong options must be plausible mistakes a learner might make.
+- Each question stands alone (no "as above"). Code, if any, goes inside the question as a fenced block with a language tag.
+- Math in LaTeX between double dollar signs, never a single $.
+- explanation: 1-2 sentences on why the answer is right, in your voice.
+- Match the course level; no trick questions and no trivia.`
+}
+
+/** Write a module test or final exam: valid questions only, options shuffled so the answer position is random. */
+export async function generateAssessment(args: AssessmentArgs, random = Math.random): Promise<QuizQuestion[]> {
+  const count = ASSESSMENT_QUESTIONS[args.kind]
+  const name = args.kind === "module" ? "module_test" : "final_exam"
+  const result = await callStructured<Assessment>(AssessmentSchema, name, assessmentPrompt(args), {
+    maxOutputTokens: args.kind === "module" ? 12000 : 24000,
+    effort: "low",
+  })
+  const questions = result.questions
+    .filter((q) => q.question.trim() && q.options.length === 4 && q.options.every((o) => o.trim()) && Number.isInteger(q.answer_index) && q.answer_index >= 0 && q.answer_index < 4)
+    .slice(0, count)
+    .map((q) => shuffleOptions(q, random))
+  if (questions.length < Math.ceil(count * 0.75)) {
+    throw new AIError(`only ${questions.length} valid questions`, "The AI returned an incomplete test. Please try again.")
+  }
+  return questions
+}
+
+function shuffleOptions(q: QuizQuestion, random: () => number): QuizQuestion {
+  const order = [0, 1, 2, 3]
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1))
+    ;[order[i], order[j]] = [order[j], order[i]]
+  }
+  return { ...q, options: order.map((k) => q.options[k]), answer_index: order.indexOf(q.answer_index) }
 }
 
 /** Shape a partially parsed block for display; null if it isn't usable yet. */

@@ -81,4 +81,27 @@ describe("fake AI server", () => {
     expect(reply).toEqual({ verdict: "answer", reply: "Fake professor answer to: What is a list?" })
     expect(received.map((r: { name: string }) => r.name)).toEqual(["goal_check", "course_plan", "lesson", "professor_reply"])
   })
+
+  it("writes module tests and final exams with shuffled options", async () => {
+    const args = {
+      kind: "module" as const,
+      categoryId: "coding",
+      courseTitle: "Test",
+      courseLevel: "beginner",
+      goal: "g",
+      moduleTitle: "Getting started",
+      lessons: [{ title: "First steps", objective: "o", takeaways: ["t"] }],
+    }
+    const mod = await llm.generateAssessment(args)
+    expect(mod).toHaveLength(8)
+    expect(mod.every((q) => q.options[q.answer_index] === "The right answer")).toBe(true)
+    // With a seeded order the right answer moves away from the first option.
+    let seed = 1
+    const seeded = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+    const exam = await llm.generateAssessment({ ...args, kind: "final", moduleTitle: null }, seeded)
+    expect(exam).toHaveLength(20)
+    expect(new Set(exam.map((q) => q.answer_index)).size).toBeGreaterThan(1)
+    expect(exam.every((q) => q.options[q.answer_index] === "The right answer")).toBe(true)
+    expect(received.slice(-2).map((r: { name: string }) => r.name)).toEqual(["module_test", "final_exam"])
+  })
 })

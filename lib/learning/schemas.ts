@@ -115,6 +115,11 @@ export const LessonContentSchema = z.object({
 })
 export type LessonContent = z.infer<typeof LessonContentSchema>
 
+export const AssessmentSchema = z.object({
+  questions: z.array(QuizQuestionSchema).describe("Multiple-choice questions, exactly 4 options each"),
+})
+export type Assessment = z.infer<typeof AssessmentSchema>
+
 // What the learner tells us in onboarding.
 export const OnboardingSchema = z
   .object({
@@ -133,3 +138,7 @@ export type Onboarding = z.infer<typeof OnboardingSchema>
 export { LEVEL_LABELS, STYLE_LABELS, TIMELINE_LABELS } from "./labels"
 /** Minimum quiz score (percent) that completes a lesson. */
 export const PASS_MARK = 60
+/** Module tests and the final exam: pass mark (percent) and number of questions. Keep in sync with migration 014. */
+export const ASSESSMENT_PASS_MARK = 70
+export const ASSESSMENT_QUESTIONS = { module: 8, final: 20 } as const
+export type AssessmentKind = keyof typeof ASSESSMENT_QUESTIONS

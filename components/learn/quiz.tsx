@@ -33,12 +33,15 @@ export function Quiz({
   questions,
   passMark,
   alreadyCompleted,
+  moduleTestHref,
 }: {
   courseId: string
   lessonId: string
   questions: Question[]
   passMark: number
   alreadyCompleted: boolean
+  /** Set when this is the last lesson of its module: passing it opens the module test. */
+  moduleTestHref?: string
 }) {
   const router = useRouter()
   const [answers, setAnswers] = useState<(number | null)[]>(() => questions.map(() => null))
@@ -144,14 +147,19 @@ export function Quiz({
               Try again
             </Button>
           )}
+          {result.passed && moduleTestHref && (
+            <Button asChild variant={result.nextLessonId ? "outline" : "default"}>
+              <Link href={moduleTestHref}>Take the module test</Link>
+            </Button>
+          )}
           {result.passed &&
             (result.nextLessonId ? (
               <Button asChild>
                 <Link href={`/learn/${courseId}/${result.nextLessonId}`}>Next lesson →</Link>
               </Button>
             ) : (
-              <Button asChild>
-                <Link href={`/learn/${courseId}`}>Course complete — view course</Link>
+              <Button asChild variant="outline">
+                <Link href={`/learn/${courseId}`}>All lessons done — view course</Link>
               </Button>
             ))}
         </div>

@@ -1,6 +1,7 @@
 // A stand-in for OpenRouter's Chat Completions API, used by the signed-in browser tests (and checked by a unit
 // test against the real AI client). It answers each structured-output request by its schema name with fixed,
-// valid content, so tests are fast, free and repeatable. In every question the right answer is the FIRST option.
+// valid content, so tests are fast, free and repeatable. Every question's right answer is "The right answer"
+// (the first option as sent; the app may shuffle options).
 //
 //   node tests/support/fake-ai.mjs [port]     (default 3199; the app then needs AI_BASE_URL=http://127.0.0.1:3199/v1)
 
@@ -74,6 +75,12 @@ function contentFor(name, prompt) {
       return FAKE_PLAN
     case "lesson":
       return fakeLesson(/Today's lesson: "([^"]+)"/.exec(prompt)?.[1])
+    case "module_test":
+    case "final_exam": {
+      const count = Number(/Exactly (\d+) multiple-choice/.exec(prompt)?.[1] ?? 8)
+      const label = name === "module_test" ? "Module test" : "Final exam"
+      return { questions: Array.from({ length: count }, (_, i) => q(`${label} question ${i + 1}?`)) }
+    }
     case "professor_reply": {
       const question = /<question>([\s\S]*?)<\/question>/.exec(prompt)?.[1]?.trim() ?? ""
       return { verdict: "answer", reply: `Fake professor answer to: ${question}` }

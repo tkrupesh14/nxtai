@@ -6,7 +6,9 @@ import { Button } from "@/components/site/ui/button"
 import { CourseOptions } from "@/components/learn/course-tools"
 import { ProfessorCard } from "@/components/learn/professor"
 import { getCategory, getProfessor, getSubcategory, professorForCategory } from "@/lib/learning/catalog"
+import { finalExamUnlocked, getAssessments, moduleTestUnlocked, type AssessmentRow } from "@/lib/learning/assessments"
 import { getCourse, isUnlocked, isUuid, progressOf } from "@/lib/learning/data"
+import { ASSESSMENT_PASS_MARK, ASSESSMENT_QUESTIONS } from "@/lib/learning/schemas"
 import { cn } from "@/lib/utils"
 
 export default async function CoursePage({ params }: { params: Promise<{ courseId: string }> }) {
@@ -20,6 +22,8 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   const category = getCategory(course.category)
   const subcategory = getSubcategory(course.category, course.subcategory)
   const professor = course.professor ? getProfessor(course.professor) : professorForCategory(course.category)
+  const { byModule, final, certificateCode } = await getAssessments(course.id)
+  const examOpen = finalExamUnlocked(modules, byModule)
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 md:py-14">
@@ -74,7 +78,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
               <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Module {m.position + 1}</h2>
               <p className="mt-1 text-xl font-semibold tracking-tight">{m.title}</p>
               <p className="mt-1 text-sm text-muted-foreground">{m.summary}</p>
-              <ul className="mt-4 divide-y rounded-xl border bg-card">
+              <ul className="mt-4 divide-y overflow-hidden rounded-xl border bg-card">
                 {moduleLessons.map((l) => {
                   const index = lessons.findIndex((x) => x.id === l.id)
                   const unlocked = isUnlocked(lessons, index)
@@ -112,13 +116,104 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                     </li>
                   )
                 })}
+                <li>
+                  <TestRow
+                    href={`/learn/${course.id}/test/${m.id}`}
+                    title="Module test"
+                    detail={`${ASSESSMENT_QUESTIONS.module} new questions on this module`}
+                    unlocked={moduleTestUnlocked(lessons, m.id)}
+                    lockedText="Pass every lesson above to unlock"
+                    row={byModule.get(m.id)}
+                  />
+                </li>
               </ul>
             </li>
           )
         })}
       </ol>
 
+      <section aria-labelledby="final-heading" className="mt-10 rounded-xl border bg-card p-6">
+        <h2 id="final-heading" className="text-xl font-semibold tracking-tight">
+          Final exam
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {ASSESSMENT_QUESTIONS.final} questions on the whole course · pass mark {ASSESSMENT_PASS_MARK}% · opens when every module test is
+          passed. Pro learners who pass get a certificate.
+        </p>
+        {final?.passed_at ? (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Badge className="bg-green-600 text-white hover:bg-green-600">Passed · {final.best_score}%</Badge>
+            <Button asChild variant={certificateCode ? "outline" : "default"}>
+              <Link href={certificateCode ? `/certificate/${certificateCode}` : `/learn/${course.id}/exam`}>
+                {certificateCode ? "View certificate" : "Get your certificate"}
+              </Link>
+            </Button>
+          </div>
+        ) : examOpen ? (
+          <Button asChild className="mt-4">
+            <Link href={`/learn/${course.id}/exam`}>{final?.attempts ? "Retake the final exam" : "Take the final exam"}</Link>
+          </Button>
+        ) : (
+          <p className="mt-4 text-sm font-medium text-muted-foreground">
+            Locked · {modules.filter((m) => byModule.get(m.id)?.passed_at).length} of {modules.length} module tests passed
+          </p>
+        )}
+      </section>
+
       <CourseOptions courseId={course.id} archived={course.status === "archived"} />
     </main>
+  )
+}
+
+function TestRow({
+  href,
+  title,
+  detail,
+  unlocked,
+  lockedText,
+  row,
+}: {
+  href: string
+  title: string
+  detail: string
+  unlocked: boolean
+  lockedText: string
+  row: AssessmentRow | undefined
+}) {
+  const passed = Boolean(row?.passed_at)
+  const status = passed
+    ? `Passed · ${row!.best_score}%`
+    : !unlocked
+      ? "Locked"
+      : row?.attempts
+        ? `Best ${row.best_score ?? 0}% · retake`
+        : "Ready"
+  const inner = (
+    <div className="flex items-start gap-4 bg-muted/30 px-5 py-4">
+      <span
+        className={cn(
+          "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border text-xs font-medium",
+          passed && "border-green-600 bg-green-600 text-white",
+          !passed && unlocked && "border-primary text-primary",
+        )}
+        aria-hidden
+      >
+        {passed ? "✓" : "?"}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className={cn("font-medium", !unlocked && "text-muted-foreground")}>{title}</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">{unlocked ? detail : lockedText}</p>
+      </div>
+      <span className={cn("shrink-0 text-xs", passed ? "font-medium text-green-700 dark:text-green-400" : "text-muted-foreground")}>{status}</span>
+    </div>
+  )
+  return unlocked ? (
+    <Link href={href} className="block rounded-b-xl transition-colors hover:bg-muted/50">
+      {inner}
+    </Link>
+  ) : (
+    <div aria-disabled="true" className="rounded-b-xl">
+      {inner}
+    </div>
   )
 }

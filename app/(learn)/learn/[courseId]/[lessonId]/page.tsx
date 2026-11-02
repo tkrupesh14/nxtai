@@ -72,6 +72,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
             questions={questions}
             passMark={PASS_MARK}
             alreadyCompleted={Boolean(lesson.completed_at)}
+            moduleTestHref={next?.module_id === lesson.module_id ? undefined : `/learn/${courseId}/test/${lesson.module_id}`}
           />
         </div>
       )}

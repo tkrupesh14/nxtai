@@ -76,8 +76,19 @@ jobs:
           version: 2.122.1 # pinned: v3.0.0 (2026-11-02) broke "supabase start"; upgrade deliberately
       - name: Start local Supabase (all migrations + seed)
         run: |
-          # Image pulls occasionally fail; try once more before giving up.
-          supabase start || { supabase stop --no-backup || true; sleep 10; supabase start; }
+          # Starting is occasionally flaky (image pulls, slow health checks): up to 3 tries. If all fail, post the
+          # end of the output as an annotation (job logs need sign-in to read).
+          started=false
+          for try in 1 2 3; do
+            if supabase start 2>&1 | tee -a supabase-start.log; [ "${PIPESTATUS[0]}" -eq 0 ]; then started=true; break; fi
+            echo "supabase start failed (try $try)" | tee -a supabase-start.log
+            supabase stop --no-backup || true
+            sleep 20
+          done
+          if [ "$started" != true ]; then
+            echo "::error title=supabase start failed::$(tail -n 40 supabase-start.log | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')"
+            exit 1
+          fi
           eval "$(supabase status -o env)"
           echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY:-$PUBLISHABLE_KEY}" >> "$GITHUB_ENV"
