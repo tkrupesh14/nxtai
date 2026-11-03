@@ -14,7 +14,7 @@ function watchErrors(page: Page) {
 }
 
 const PUBLIC_PAGES = [
-  ["/", /personal AI professor/i],
+  ["/", /built from a few questions/i],
   ["/pricing", /₹499/],
   ["/courses", /Ready-made courses/],
   ["/courses/python-fundamentals", /Syllabus/],

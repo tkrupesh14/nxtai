@@ -1,23 +1,7 @@
-let userConfig = undefined
-try {
-  // try to import ESM first
-  userConfig = await import('./v0-user-next.config.mjs')
-} catch (e) {
-  try {
-    // fallback to CJS import
-    userConfig = await import("./v0-user-next.config");
-  } catch (innerError) {
-    // ignore error
-  }
-}
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // scripts/deploy.sh builds into a separate folder, then swaps it in only if the build succeeded.
   distDir: process.env.NEXT_DIST_DIR || '.next',
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -39,32 +23,10 @@ const nextConfig = {
       { source: "/dashboard/:path*", destination: "/learn", permanent: false },
     ]
   },
-  // Tuned for the 1.8 GB server: one build worker at a time and webpack's memory savings,
-  // instead of parallel compiles (faster, but several heavy processes at once).
+  // The 1.8 GB server: one build worker at a time instead of parallel compiles.
   experimental: {
-    webpackBuildWorker: true,
-    webpackMemoryOptimizations: true,
     cpus: 1,
   },
-}
-
-if (userConfig) {
-  // ESM imports will have a "default" property
-  const config = userConfig.default || userConfig
-
-  for (const key in config) {
-    if (
-      typeof nextConfig[key] === 'object' &&
-      !Array.isArray(nextConfig[key])
-    ) {
-      nextConfig[key] = {
-        ...nextConfig[key],
-        ...config[key],
-      }
-    } else {
-      nextConfig[key] = config[key]
-    }
-  }
 }
 
 export default nextConfig
