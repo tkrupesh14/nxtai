@@ -9,6 +9,8 @@ export type PriceCard = {
   description: string
   features: string[]
   cta: { label: string; href: string }
+  /** Shown instead of cta to signed-in visitors. */
+  signedInCta?: { label: string; href: string }
   badge?: string
   highlighted?: boolean
 }
@@ -31,6 +33,7 @@ export const PRICE_CARDS: PriceCard[] = [
       `${PLANS.free.coursesMonth} new courses a month`,
     ],
     cta: { label: "Get started free", href: "/create-account" },
+    signedInCta: { label: "Go to my courses", href: "/learn" },
   },
   {
     id: "pro",

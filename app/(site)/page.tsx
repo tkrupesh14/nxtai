@@ -14,6 +14,7 @@ import {
 import { Reveal } from "@/components/site/reveal"
 import { Button } from "@/components/site/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/site/ui/card"
+import { getSignedInUser } from "@/lib/supabase/profile"
 import { PRICE_CARDS } from "@/lib/pricing"
 import { cn } from "@/lib/utils"
 
@@ -62,7 +63,8 @@ const features: Feature[] = [
   },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const signedIn = Boolean(await getSignedInUser())
   return (
     <main>
       <BackgroundEffects />
@@ -173,7 +175,9 @@ export default function HomePage() {
                     ))}
                   </ul>
                   <Button className="w-full" asChild>
-                    <Link href={plan.cta.href}>{plan.cta.label}</Link>
+                    <Link href={(signedIn && plan.signedInCta ? plan.signedInCta : plan.cta).href}>
+                  {(signedIn && plan.signedInCta ? plan.signedInCta : plan.cta).label}
+                </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -193,7 +197,7 @@ export default function HomePage() {
           </p>
           <div className="flex gap-3">
             <Button asChild size="lg">
-              <Link href="/create-account">Create your account</Link>
+              {signedIn ? <Link href="/onboarding">Start a new course</Link> : <Link href="/create-account">Create your account</Link>}
             </Button>
             <Button asChild size="lg" variant="outline">
               <a href="#features">Explore features</a>

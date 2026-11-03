@@ -9,10 +9,17 @@ import { Footer } from "@/components/site/footer"
 import { Navbar } from "@/components/site/navbar"
 import "./site.css"
 
+const DESCRIPTION =
+  "Krpex builds a personal course for whatever you want to learn, taught by an AI professor: class-style lessons, quizzes and answers to your questions."
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://krpex.in"),
   title: "Krpex — Your personal AI professor",
-  description:
-    "Krpex builds a personal course for whatever you want to learn, taught by an AI professor: class-style lessons, quizzes and answers to your questions.",
+  description: DESCRIPTION,
+  applicationName: "Krpex",
+  // Pages without their own openGraph title fall back to the page <title>.
+  openGraph: { siteName: "Krpex", type: "website", locale: "en_IN" },
+  twitter: { card: "summary_large_image" },
 }
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {

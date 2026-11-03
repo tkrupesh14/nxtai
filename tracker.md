@@ -58,7 +58,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 1.1 | Enable OAuth providers; Site URL + redirect URLs | P0 | 🟡 | 👤 | GitHub ✅; Google ⬜ |
 | 1.2 | Profile rows, protected routes, `/error` | P0 | ✅ | | D5, D8 |
 | 1.6 | Email/password in the new design; retire `/auth/*` pages | P1 | ✅ | | D19 |
-| 1.7 | Signed-in state in the site navbar | P1 | ⬜ | 🤖 | G18 |
+| 1.7 | Signed-in state in the site navbar | P1 | ✅ | 🤖 | Navbar since `ed2e4b2`; home and pricing buttons follow the signed-in state |
 | 1.8 | Verify GitHub sign-in end to end on a phone | P0 | ✅ | 👤 | Used on a phone 2026-11-01 |
 | 1.9 | Custom SMTP for auth emails (confirm / reset) | P0 | ⬜ | 👤 | G21 — Hostinger `info@krpex.in`, Resend or SES |
 | 1.10 | Email provider settings: confirm email ON, min password 8, redirect `https://krpex.in/**` | P0 | ⬜ | 👤 | Supabase → Authentication |
@@ -82,7 +82,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 3.1 | One price list for home and `/pricing`, matching plans + credit packs | P0 | ✅ | | G5 — `lib/pricing.ts`; only features that exist |
 | 3.2 | Terms, Privacy, Refund & Cancellation pages (Razorpay requirement) | P0 | 🟡 | 👤 | D23 — fill `lib/legal.ts` (legal name, address, city) and review (G23) |
 | 3.4 | Contact form email notification | P1 | 🟡 | 🤖 | Saving ✅ |
-| 3.5 | Favicon, OG image, metadata, sitemap, robots | P1 | ⬜ | 🤖 | |
+| 3.5 | Favicon, OG image, metadata, sitemap, robots | P1 | ✅ | 🤖 | `app/icon.svg`, apple icon, site + per-course sharing images (`lib/og.tsx`), metadataBase |
 | 3.6 | Analytics + Sentry | P2 | ⬜ | 👤🤖 | |
 
 ## Phase 4 — Dashboard on real data
@@ -91,7 +91,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 |----|------|-----|--------|-------|-------|
 | 4.1 | Dashboard on the site design system; merge with `/learn` | P1 | ✅ | | S4.1: streak, lessons, study time, quiz average, last-7-days chart and "Continue learning" on `/learn`; sample-data `/dashboard` removed (redirects to `/learn`) |
 | 4.2 | Real progress, scores, streaks | P1 | ✅ | 🤖 | Progress panel on `/learn` (S4.1) |
-| 4.3 | Delete legacy components, CSS, compat shim | P2 | ⬜ | 🤖 | |
+| 4.3 | Delete legacy components, CSS, compat shim | P2 | ✅ | 🤖 | 77 unused files and 41 unused packages removed |
 
 ## Phase 5 — Core product
 
@@ -107,7 +107,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 5.E | Ask the professor | P1 | ✅ | | D18 |
 | 5.F | Catalog courses + narration | P2 | ✅ | | Catalog ✅: 15 hand-written courses (all 9 subjects) at `/courses` + `/courses/[slug]`, one-tap start via `app_create_course` (counts toward the monthly allowance), suggestions on `/learn`, sitemap + robots. Narration ✅: "Listen" in lessons uses the browser's speech engine (free, no server); reads section by section, waits at practice questions, then reads the takeaways; speed 0.8–1.5×. Natural cloud voices later (Cloudflare TTS) |
 | 5.1b | Regenerate lesson / report a problem; course archive & delete | P1 | 🟡 | 👤 | S1.3 — needs migration 011 |
-| 5.1c | Stream lesson text while it is written | P2 | ⬜ | 🤖 | |
+| 5.1c | Stream lesson text while it is written | P2 | ✅ | 🤖 | `ed2e4b2` |
 | 5.2 | Doc upload → lessons from the learner's docs | P1 | ⬜ | 🤖 | |
 | 5.3 | Module tests, final exam, certificates | P1 | ✅ | | Deployed 2026-11-02 (migration 014). Module test per module (8 AI-written questions, unlocks when its lessons are passed, retry after 1 h), final exam (20 questions, unlocks when every module test is passed, 2 tries/day IST), pass mark 70%, graded in the DB, answers shown only once passed. Certificates Pro only: public /certificate/[code] (print to PDF, LinkedIn, preview image), labelled AI professor / not accredited. Needs OpenRouter credits to write new tests |
 | 5.4–5.7 | Coding practice, mock interviews, communities, XP/streaks | P2 | ⬜ | 🤖 | |

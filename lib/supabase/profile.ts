@@ -35,6 +35,15 @@ export async function ensureProfile(supabase: SupabaseClient, user: User) {
  * Never bounces a signed-in user just because the profile row is missing: it tries
  * to create it, then falls back to the name from the auth metadata.
  */
+/** The signed-in user or null, fetched once per request (navbar and page share it). */
+export const getSignedInUser = cache(async () => {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  return user
+})
+
 export const getCurrentProfile = cache(async () => {
   const supabase = await createClient()
   const {

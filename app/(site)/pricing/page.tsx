@@ -5,6 +5,7 @@ import { Badge } from "@/components/site/ui/badge"
 import { Button } from "@/components/site/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/site/ui/card"
 import { Separator } from "@/components/site/ui/separator"
+import { getSignedInUser } from "@/lib/supabase/profile"
 import { PRICE_CARDS, PRICE_COMPARISON } from "@/lib/pricing"
 
 export const metadata = { title: "Pricing — Krpex" }
@@ -48,7 +49,8 @@ const FAQ = [
   },
 ]
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const signedIn = Boolean(await getSignedInUser())
   return (
     <main className="mx-auto max-w-6xl px-6 py-12 md:py-16">
       <section className="space-y-4 text-center">
@@ -90,7 +92,9 @@ export default function PricingPage() {
                 ))}
               </ul>
               <Button className="w-full" variant={plan.highlighted || plan.id === "free" ? "default" : "outline"} asChild>
-                <Link href={plan.cta.href}>{plan.cta.label}</Link>
+                <Link href={(signedIn && plan.signedInCta ? plan.signedInCta : plan.cta).href}>
+                  {(signedIn && plan.signedInCta ? plan.signedInCta : plan.cta).label}
+                </Link>
               </Button>
             </CardContent>
           </Card>

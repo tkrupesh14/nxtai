@@ -4,8 +4,7 @@ import { UserMenu } from "@/components/learn/user-menu"
 import { MobileMenu } from "@/components/site/mobile-menu"
 import { ThemeToggle } from "@/components/site/theme-toggle"
 import { Button } from "@/components/site/ui/button"
-import { displayNameFor, initialsFor } from "@/lib/supabase/profile"
-import { createClient } from "@/lib/supabase/server"
+import { displayNameFor, getSignedInUser, initialsFor } from "@/lib/supabase/profile"
 
 const links = [
   { href: "/courses", label: "Courses" },
@@ -15,10 +14,7 @@ const links = [
 ]
 
 export async function Navbar() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSignedInUser()
   const name = user ? displayNameFor(user) : ""
   const avatar = user?.user_metadata?.avatar_url
   return (
