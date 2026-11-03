@@ -16,10 +16,14 @@ const q = (question) => ({
 
 const block = (type, title, body_markdown, extra = {}) => ({ type, title, body_markdown, items: [], checkpoint: null, diagram: null, ...extra })
 
-export function fakeLesson(title = "Today's lesson") {
+export function fakeLesson(title = "Today's lesson", sourceRef = null) {
   return {
     blocks: [
-      block("opening", "Welcome", `Welcome to **${title}**. This is a test lesson written by the fake AI.`),
+      block(
+        "opening",
+        "Welcome",
+        `Welcome to **${title}**. This is a test lesson written by the fake AI.${sourceRef ? ` Taught from your material (${sourceRef}).` : ""}`,
+      ),
       block("objectives", "By the end you can", "", { items: ["Explain the idea", "Use it in a small example"] }),
       block("explanation", "The idea", "Here is the main idea, with some `inline code` and a formula $$x^2 + 1 = 5$$."),
       block("checkpoint", "Pause and think", "Think about what we just covered.", { checkpoint: q("Which option is right?") }),
@@ -73,8 +77,19 @@ function contentFor(name, prompt) {
       return { verdict: "ok", message: "", better_category: "" }
     case "course_plan":
       return FAKE_PLAN
+    case "source_course_plan": {
+      // One lesson per section (at most 4), so tests can follow a section into its lesson.
+      const n = Number(/S numbers \(1-(\d+)\)/.exec(prompt)?.[1] ?? 1)
+      const lessons = Array.from({ length: Math.min(n, 4) }, (_, i) => ({
+        title: `From your material ${i + 1}`,
+        objective: `Learn section S${i + 1}.`,
+        est_minutes: 20,
+        sections: [i + 1],
+      }))
+      return { ...FAKE_PLAN, title: "Course from your material", modules: [{ title: "Your material", summary: "From your file.", lessons }] }
+    }
     case "lesson":
-      return fakeLesson(/Today's lesson: "([^"]+)"/.exec(prompt)?.[1])
+      return fakeLesson(/Today's lesson: "([^"]+)"/.exec(prompt)?.[1], /<section ref="([^"]+)">/.exec(prompt)?.[1] ?? null)
     case "module_test":
     case "final_exam": {
       const count = Number(/Exactly (\d+) multiple-choice/.exec(prompt)?.[1] ?? 8)

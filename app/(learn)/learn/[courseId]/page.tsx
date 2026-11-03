@@ -8,6 +8,7 @@ import { ProfessorCard } from "@/components/learn/professor"
 import { getCategory, getProfessor, getSubcategory, professorForCategory } from "@/lib/learning/catalog"
 import { finalExamUnlocked, getAssessments, moduleTestUnlocked, type AssessmentRow } from "@/lib/learning/assessments"
 import { getCourse, isUnlocked, isUuid, progressOf } from "@/lib/learning/data"
+import { getCourseSources } from "@/lib/sources/data"
 import { ASSESSMENT_PASS_MARK, ASSESSMENT_QUESTIONS } from "@/lib/learning/schemas"
 import { cn } from "@/lib/utils"
 
@@ -22,7 +23,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   const category = getCategory(course.category)
   const subcategory = getSubcategory(course.category, course.subcategory)
   const professor = course.professor ? getProfessor(course.professor) : professorForCategory(course.category)
-  const { byModule, final, certificateCode } = await getAssessments(course.id)
+  const [{ byModule, final, certificateCode }, sources] = await Promise.all([getAssessments(course.id), getCourseSources(course.id)])
   const examOpen = finalExamUnlocked(modules, byModule)
 
   return (
@@ -45,6 +46,18 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
       </div>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance">{course.title}</h1>
       <p className="mt-2 text-muted-foreground text-pretty">{course.summary}</p>
+      {sources.length > 0 && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          <span aria-hidden>📄 </span>
+          Built from your material:{" "}
+          {sources.map((s, i) => (
+            <span key={s.id}>
+              {i > 0 ? ", " : ""}
+              <span className="font-medium text-foreground">{s.filename}</span> ({s.pages} page{s.pages === 1 ? "" : "s"})
+            </span>
+          ))}
+        </p>
+      )}
       <ProfessorCard
         professor={professor}
         className="mt-6"

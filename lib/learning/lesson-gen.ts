@@ -3,6 +3,8 @@ import "server-only"
 import type { generateLesson } from "@/lib/ai/llm"
 import { getCourse, isUnlocked, isUuid } from "@/lib/learning/data"
 import type { LessonContent } from "@/lib/learning/schemas"
+import { getSections } from "@/lib/sources/data"
+import { sourceExcerpt } from "@/lib/sources/sections"
 import { createClient } from "@/lib/supabase/server"
 import { serverKey } from "@/lib/supabase/server-key"
 
@@ -48,7 +50,10 @@ export async function prepareLessonGeneration(courseId: string, lessonId: string
       return `Module ${m.position + 1}: ${m.title}\n${items}`
     })
     .join("\n")
-  const { data: profile } = await supabase.from("learner_profiles").select("learning_style, background").maybeSingle()
+  const [{ data: profile }, sources] = await Promise.all([
+    supabase.from("learner_profiles").select("learning_style, background").maybeSingle(),
+    getSections(courseId, lesson.source_sections ?? []),
+  ])
 
   return {
     status: "claimed",
@@ -67,6 +72,7 @@ export async function prepareLessonGeneration(courseId: string, lessonId: string
       objective: lesson.objective,
       estMinutes: lesson.est_minutes,
       learningStyle: profile?.learning_style,
+      sourceText: sources.length ? sourceExcerpt(sources, 40000) : null,
     },
   }
 }

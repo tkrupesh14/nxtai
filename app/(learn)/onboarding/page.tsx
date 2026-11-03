@@ -1,17 +1,21 @@
 import Link from "next/link"
 
 import { OnboardingForm } from "@/components/learn/onboarding-form"
+import { getAccountSummary } from "@/lib/learning/data"
+import { getPendingSources } from "@/lib/sources/data"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata = { title: "Build your course — Krpex" }
 
 export default async function OnboardingPage() {
   const supabase = await createClient()
-  const [{ data: profile }, { data: allowance }] = await Promise.all([
+  const [{ data: profile }, { data: allowance }, account, pendingSources] = await Promise.all([
     supabase.from("learner_profiles").select("level, background, hours_per_week, learning_style, timeline").maybeSingle(),
     supabase
       .rpc("course_allowance")
       .maybeSingle<{ allowed: boolean; reason: string | null; free_left: number; credits: number; cost: number }>(),
+    getAccountSummary(),
+    getPendingSources(),
   ])
 
   return (
@@ -19,7 +23,8 @@ export default async function OnboardingPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight text-balance">Let&apos;s build your course</h1>
         <p className="mt-2 text-muted-foreground text-pretty">
-          Answer a few quick questions. Krpex designs a learning path around your goal, level and schedule.
+          Answer a few quick questions. Krpex designs a learning path around your goal, level and schedule, and can
+          teach from your own notes or textbook.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
           Or{" "}
@@ -57,7 +62,7 @@ export default async function OnboardingPage() {
                 : `Free courses left this month: ${allowance.free_left}.`}
             </p>
           )}
-          <OnboardingForm defaults={profile ?? undefined} />
+          <OnboardingForm defaults={profile ?? undefined} plan={account.plan} pendingSources={pendingSources} />
         </>
       )}
     </main>

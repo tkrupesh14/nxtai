@@ -2,10 +2,13 @@
 
 import { redirect } from "next/navigation"
 
-import { AIError, checkGoal, generateCoursePlan } from "@/lib/ai/llm"
+import { AIError, checkGoal, generateCoursePlan, generateSourceCoursePlan } from "@/lib/ai/llm"
 import { professorForCategory } from "@/lib/learning/catalog"
+import { isUuid } from "@/lib/learning/data"
 import { COURSE_LIMIT_MESSAGES } from "@/lib/learning/plans"
-import { OnboardingSchema } from "@/lib/learning/schemas"
+import { OnboardingSchema, type CoursePlan, type SourceCoursePlan } from "@/lib/learning/schemas"
+import { getMaterialForPlan } from "@/lib/sources/data"
+import { sourceExcerpt, sourceOutline } from "@/lib/sources/sections"
 import { createClient } from "@/lib/supabase/server"
 import { serverKey } from "@/lib/supabase/server-key"
 
@@ -23,6 +26,8 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
     return { error: parsed.error.issues[0]?.message ?? "Please check your answers." }
   }
   const input = parsed.data
+  // Uploaded material to build the course from (ids from /api/sources, in the learner's order).
+  const sourceIds = [...new Set(String(formData.get("sources") ?? "").split(",").filter(isUuid))].slice(0, 3)
 
   const supabase = await createClient()
   const {
@@ -58,9 +63,18 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
     return { error: "We couldn't save your answers. Please try again." }
   }
 
-  let plan
+  const material = sourceIds.length ? await getMaterialForPlan(sourceIds) : []
+  if (sourceIds.length && material.length !== sourceIds.length) {
+    return { error: "One of your files is no longer available (uploads are kept for a day). Please add it again." }
+  }
+  const sections = material.flatMap((f) => f.sections)
+
+  let plan: CoursePlan | SourceCoursePlan
   try {
-    const check = await checkGoal(input)
+    const check = await checkGoal(
+      input,
+      material.length ? { filenames: material.map((f) => f.filename), sample: sourceExcerpt(sections.slice(0, 3), 3000) } : undefined,
+    )
     if (check.verdict === "wrong_category") {
       return {
         error: check.message || "That goal fits a different category better.",
@@ -70,7 +84,9 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
     if (check.verdict !== "ok") {
       return { error: check.message || "Please describe a clear learning goal.", reviseGoal: true }
     }
-    plan = await generateCoursePlan(input)
+    plan = material.length
+      ? await generateSourceCoursePlan(input, { outline: sourceOutline(material), sectionCount: sections.length })
+      : await generateCoursePlan(input)
   } catch (e) {
     console.error("generateCoursePlan failed:", e instanceof Error ? e.message : e)
     return { error: e instanceof AIError ? e.userMessage : "Something went wrong creating your course." }
@@ -93,15 +109,32 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
     p_modules: plan.modules.map((m) => ({
       title: m.title,
       summary: m.summary,
-      lessons: m.lessons.map((l) => ({ title: l.title, objective: l.objective, est_minutes: l.est_minutes })),
+      lessons: m.lessons.map((l) => ({
+        title: l.title,
+        objective: l.objective,
+        est_minutes: l.est_minutes,
+        ...("sections" in l ? { sections: l.sections } : {}),
+      })),
     })),
+    ...(sourceIds.length ? { p_sources: sourceIds } : {}),
   })
   if (courseError || !courseId) {
     console.error("app_create_course failed:", courseError?.message)
     if (courseError?.message === "course_daily_limit") return { error: COURSE_LIMIT_MESSAGES.daily_limit }
     if (courseError?.message === "course_monthly_limit") return { error: COURSE_LIMIT_MESSAGES.monthly_limit }
+    if (courseError?.message === "invalid_sources") {
+      return { error: "Your files couldn't be added to this course (they may be over your plan's limit). Please check them and try again." }
+    }
     return { error: "We couldn't save your course. Please try again." }
   }
 
   redirect(`/learn/${courseId as string}`)
+}
+
+/** Remove an upload before the course is built. */
+export async function removeSource(id: string): Promise<{ ok: boolean }> {
+  if (!isUuid(id)) return { ok: false }
+  const supabase = await createClient()
+  const { error } = await supabase.from("course_sources").delete().eq("id", id).is("course_id", null)
+  return { ok: !error }
 }

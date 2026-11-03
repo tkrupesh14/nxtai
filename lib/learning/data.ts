@@ -16,6 +16,8 @@ export type LessonRow = {
   attempts: number
   completed_at: string | null
   generated_at: string | null
+  /** S numbers of the learner's material this lesson teaches from (courses built from uploads). */
+  source_sections: number[] | null
 }
 export type ModuleRow = { id: string; course_id: string; position: number; title: string; summary: string }
 export type CourseRow = {
@@ -34,7 +36,7 @@ export type CourseRow = {
 }
 
 const LESSON_COLUMNS =
-  "id, course_id, module_id, position, title, objective, est_minutes, best_score, attempts, completed_at, generated_at"
+  "id, course_id, module_id, position, title, objective, est_minutes, best_score, attempts, completed_at, generated_at, source_sections"
 
 /** Lessons unlock in order: the first one, and any whose previous lesson is completed. */
 export function isUnlocked(lessons: LessonRow[], index: number) {

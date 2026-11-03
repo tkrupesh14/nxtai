@@ -107,11 +107,18 @@ export default function TermsPage() {
         </List>
       </Section>
 
-      <Section title="7. Your content and ours">
+      <Section title="7. Your content and ours" id="your-material">
         <List>
           <li>
-            You keep ownership of what you submit (your goals, background and questions). You let us use it to run and
-            improve the service for you, including sending it to our AI providers to generate your content.
+            You keep ownership of what you submit (your goals, background, questions and any material you upload). You let
+            us use it to run and improve the service for you, including sending it to our AI providers to generate your
+            content.
+          </li>
+          <li>
+            <strong>Material you upload</strong> (notes, documents, pasted text) must be yours or something you have the
+            right to use for your own study. Don&apos;t upload material that infringes someone else&apos;s copyright, or
+            that contains other people&apos;s personal information without their permission. We keep only the extracted
+            text, use it to teach you, and show it to no one else. We may remove material that breaks these terms.
           </li>
           <li>
             You may use the lessons generated for you for your own learning. The {LEGAL.brand} name, design, software and

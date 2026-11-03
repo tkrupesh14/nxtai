@@ -90,3 +90,10 @@ test("sitemap lists the course pages", async ({ request }) => {
   const xml = await (await request.get("/sitemap.xml")).text()
   expect(xml).toContain("/courses/python-fundamentals")
 })
+
+test("uploads need the Krpex site and a signed-in learner", async ({ request, baseURL }) => {
+  const res = await request.post("/api/sources", { multipart: { text: "x".repeat(300) } })
+  expect(res.status()).toBe(403)
+  const signedOut = await request.post("/api/sources", { multipart: { text: "x".repeat(300) }, headers: { origin: new URL(baseURL!).origin } })
+  expect(signedOut.status()).toBe(401)
+})

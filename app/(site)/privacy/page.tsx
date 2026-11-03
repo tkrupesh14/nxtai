@@ -40,6 +40,10 @@ export default function PrivacyPage() {
             progress, and the questions you ask your AI professors with their answers.
           </li>
           <li>
+            <strong>Your material:</strong> if you build a course from your own files or pasted text, the text extracted
+            from them, split into sections, plus the file name and page count. We don&apos;t keep the file itself.
+          </li>
+          <li>
             <strong>Usage and billing:</strong> daily usage counts, plan, credit balance and payment records (order and
             payment IDs, amount, status). Card, UPI and bank details are handled by our payment partner, not stored by us.
           </li>
@@ -78,7 +82,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>OpenRouter and the AI model providers it routes to (such as OpenAI)</strong>: your learning profile,
-            course outline and questions are sent to generate content. Don&apos;t include sensitive personal information
+            course outline, questions and the relevant parts of any material you uploaded are sent to generate content. Don&apos;t include sensitive personal information
             (such as health or financial details) in your goals or questions.
           </li>
           <li>
@@ -108,7 +112,9 @@ export default function PrivacyPage() {
       <Section title="6. How long we keep it">
         <p>
           We keep your data while your account is active. When you delete your account, your profile, courses, lessons,
-          progress and professor chats are deleted immediately from our database (backups roll off within about 30 days).
+          progress, professor chats and uploaded material are deleted immediately from our database (backups roll off within
+          about 30 days). Uploaded material that never became a course is deleted after a day, and a course&apos;s material
+          is deleted with the course.
           We keep payment records as long as tax and accounting laws require.
         </p>
       </Section>

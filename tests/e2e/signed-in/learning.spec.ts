@@ -236,3 +236,50 @@ test("module tests and the final exam lead to a certificate (Pro)", async ({ pag
   await expect(page.getByRole("link", { name: "View certificate" })).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test("a course is built from the learner's own material (Pro)", async ({ page }) => {
+  test.setTimeout(120_000)
+  const errors = watchErrors(page)
+  await page.goto("/onboarding")
+  await page.getByRole("button", { name: /Coding & Software/ }).click()
+  await page.getByRole("radio", { name: "Python" }).click()
+
+  const upload = page.getByLabel("Upload a file")
+  // A scanned PDF has no text to teach from.
+  await upload.setInputFiles("tests/fixtures/scanned.pdf")
+  await expect(page.getByText(/This PDF has no selectable text/)).toBeVisible()
+
+  await upload.setInputFiles("tests/fixtures/photosynthesis.pdf")
+  const material = page.getByRole("list", { name: "Your material" })
+  await expect(material.getByText("photosynthesis.pdf")).toBeVisible()
+  await expect(material.getByText("· 3 pages")).toBeVisible()
+
+  // Pasted text can be added and removed again.
+  await page.getByRole("button", { name: "Paste text instead" }).click()
+  await page.getByLabel("Text to learn from").fill("Notes about cells and energy. ".repeat(12))
+  await page.getByRole("button", { name: "Add this text" }).click()
+  await expect(material.getByText("Pasted text")).toBeVisible()
+  await page.getByRole("button", { name: "Remove Pasted text" }).click()
+  await expect(material.getByText("Pasted text")).toHaveCount(0)
+
+  await page.getByLabel("What do you want to learn or achieve?").fill("Prepare for my biology exam on this")
+  await page.getByLabel("Completely new to it").check()
+  await page.getByRole("button", { name: "Continue" }).click()
+  await page.getByRole("button", { name: "Continue" }).click()
+  await page.getByRole("button", { name: "Build my course" }).click()
+
+  await expect(page).toHaveURL(new RegExp(`/learn/${UUID}$`))
+  await expect(page.getByRole("heading", { name: "Course from your material" })).toBeVisible()
+  await expect(page.getByText(/Built from your material:/)).toContainText("photosynthesis.pdf")
+
+  await page.getByRole("link", { name: "Start first lesson" }).click()
+  await expect(page.getByText("From your material: photosynthesis.pdf, pp. 1–3")).toBeVisible()
+  await expect(page.getByText(/Taught from your material \(S1 · photosynthesis\.pdf · pp\. 1–3/).first()).toBeVisible({ timeout: 60_000 })
+
+  // The upload is now part of the course, so onboarding starts with an empty list again.
+  await page.goto("/onboarding")
+  await page.getByRole("button", { name: /Coding & Software/ }).click()
+  await page.getByRole("radio", { name: "Python" }).click()
+  await expect(page.getByRole("list", { name: "Your material" })).toHaveCount(0)
+  expect(errors).toEqual([])
+})

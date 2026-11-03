@@ -39,9 +39,9 @@ export function LegalPage({
   )
 }
 
-export function Section({ title, children }: { title: string; children: React.ReactNode }) {
+export function Section({ title, id, children }: { title: string; id?: string; children: React.ReactNode }) {
   return (
-    <section className="grid gap-3">
+    <section id={id} className="grid scroll-mt-24 gap-3">
       <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
       {children}
     </section>

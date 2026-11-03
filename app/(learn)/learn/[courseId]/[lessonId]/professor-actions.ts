@@ -2,6 +2,8 @@
 
 import { AIError, askProfessor, PRICE_PER_M } from "@/lib/ai/llm"
 import { getCourse, isUnlocked, isUuid } from "@/lib/learning/data"
+import { getSections } from "@/lib/sources/data"
+import { sourceExcerpt } from "@/lib/sources/sections"
 import {
   ASK_LIMITS,
   LIMIT_MESSAGES,
@@ -127,7 +129,10 @@ export async function askProfessorAction(
     .slice(0, 3)
     .reverse()
     .map((t) => ({ question: t.question, reply: t.reply }))
-  const { data: profile } = await supabase.from("learner_profiles").select("background").maybeSingle()
+  const [{ data: profile }, sources] = await Promise.all([
+    supabase.from("learner_profiles").select("background").maybeSingle(),
+    getSections(courseId, lesson.source_sections ?? []),
+  ])
 
   try {
     const { reply, usage } = await askProfessor({
@@ -138,6 +143,7 @@ export async function askProfessorAction(
       lessonTitle: lesson.title,
       objective: lesson.objective,
       lessonOutline: `${outline}${takeaways.length ? `\nKey takeaways: ${takeaways.join("; ")}` : ""}`,
+      sourceText: sources.length ? sourceExcerpt(sources, 12000) : null,
       sectionText: focus ? `${sectionLabel(focus)}\n${sectionText(focus)}` : null,
       history,
       question,

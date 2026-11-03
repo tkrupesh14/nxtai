@@ -10,6 +10,7 @@ import { ProfessorCard } from "@/components/learn/professor"
 import { Quiz } from "@/components/learn/quiz"
 import { getCategory, getProfessor, professorForCategory } from "@/lib/learning/catalog"
 import { getAccountSummary, getCourse, getProfessorChat, isUnlocked, isUuid } from "@/lib/learning/data"
+import { getSections, sourcesLabel } from "@/lib/sources/data"
 import { PASS_MARK, type LessonBlock, type QuizQuestion } from "@/lib/learning/schemas"
 import { chunkSpeech, sectionSpeech, speakMarkdown } from "@/lib/learning/narration"
 import { sectionLabel, toSections } from "@/lib/learning/sections"
@@ -32,10 +33,11 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   const professor = data.course.professor ? getProfessor(data.course.professor) : professorForCategory(data.course.category)
 
   const supabase = await createClient()
-  const [{ data: body }, { data: quiz }] = await Promise.all([
+  const [{ data: body }, { data: quiz }, sources] = await Promise.all([
     supabase.from("lessons").select("content_md, blocks, key_takeaways").eq("id", lessonId).single(),
     // Questions and options only: answers stay in the database, which grades the quiz.
     supabase.rpc("lesson_quiz_questions", { p_lesson: lessonId }),
+    getSections(courseId, lesson.source_sections ?? []),
   ])
   const questions = ((quiz ?? []) as Pick<QuizQuestion, "question" | "options">[]).map(({ question, options }) => ({
     question: <Md compact>{question}</Md>,
@@ -94,6 +96,11 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
       </p>
       <h1 className="mt-1 text-3xl font-semibold tracking-tight text-balance">{lesson.title}</h1>
       <p className="mt-2 text-muted-foreground text-pretty">{lesson.objective}</p>
+      {sources.length > 0 && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          <span aria-hidden>📄 </span>From your material: {sourcesLabel(sources)}
+        </p>
+      )}
       <ProfessorCard professor={professor} className="mt-6" />
 
       <div className="mt-8">

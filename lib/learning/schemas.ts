@@ -39,6 +39,27 @@ export const CoursePlanSchema = z.object({
 })
 export type CoursePlan = z.infer<typeof CoursePlanSchema>
 
+/** Course plan from the learner's material: each lesson names the sections (S numbers) it teaches from. */
+export const SourceCoursePlanSchema = CoursePlanSchema.extend({
+  modules: z
+    .array(
+      z.object({
+        title: z.string(),
+        summary: z.string().describe("One sentence"),
+        lessons: z.array(
+          z.object({
+            title: z.string(),
+            objective: z.string().describe("One sentence starting with a verb: what the learner can do after"),
+            est_minutes: z.number().int().describe("15-60"),
+            sections: z.array(z.number().int()).describe("The S numbers this lesson teaches from, in order (1-6)"),
+          }),
+        ),
+      }),
+    )
+    .describe("Modules following the material's own order, each with 3-6 lessons"),
+})
+export type SourceCoursePlan = z.infer<typeof SourceCoursePlanSchema>
+
 export const ProfessorReplySchema = z.object({
   verdict: z
     .enum(["answer", "off_topic", "not_allowed"])

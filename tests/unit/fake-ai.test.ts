@@ -105,3 +105,14 @@ describe("fake AI server", () => {
     expect(received.slice(-2).map((r: { name: string }) => r.name)).toEqual(["module_test", "final_exam"])
   })
 })
+
+describe("courses from the learner's material", () => {
+  it("plans lessons with valid section numbers and teaches them from the material", async () => {
+    const plan = await llm.generateSourceCoursePlan(onboarding, { outline: 'File "notes.pdf" (S1–S3):\nS1 Intro', sectionCount: 3 })
+    expect(plan.modules[0].lessons.map((l) => l.sections)).toEqual([[1], [2], [3]])
+    expect((received.at(-1) as { name: string }).name).toBe("source_course_plan")
+
+    const lesson = await llm.generateLesson({ ...lessonArgs, sourceText: '<section ref="S2 · notes.pdf · p. 4">\nLight reactions\n</section>' })
+    expect(lesson.blocks[0].body_markdown).toContain("Taught from your material (S2 · notes.pdf · p. 4)")
+  })
+})

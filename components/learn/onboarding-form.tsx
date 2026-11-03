@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react"
 
 import { createCourse, type OnboardingState } from "@/app/(learn)/onboarding/actions"
 import { ProfessorCard } from "@/components/learn/professor"
+import { SourceUpload, type UploadedSource } from "@/components/learn/source-upload"
 import { Button } from "@/components/site/ui/button"
 import { Input } from "@/components/site/ui/input"
 import { Label } from "@/components/site/ui/label"
@@ -66,24 +67,42 @@ const BUILD_STEPS = [
   "Almost there — saving your course…",
 ]
 
-function Building({ categoryId }: { categoryId: string }) {
+const MATERIAL_STEPS = [
+  "Checking your goal…",
+  "Your professor is reading your material…",
+  "Following its chapters and order…",
+  "Matching each lesson to the right pages…",
+  "Almost there — saving your course…",
+]
+
+function Building({ categoryId, fromMaterial }: { categoryId: string; fromMaterial: boolean }) {
+  const steps = fromMaterial ? MATERIAL_STEPS : BUILD_STEPS
   const [i, setI] = useState(0)
   useEffect(() => {
-    const t = setInterval(() => setI((v) => Math.min(v + 1, BUILD_STEPS.length - 1)), 6000)
+    const t = setInterval(() => setI((v) => Math.min(v + 1, steps.length - 1)), 6000)
     return () => clearInterval(t)
-  }, [])
+  }, [steps.length])
   const professor = professorForCategory(categoryId)
   return (
     <div role="status" aria-live="polite" className="rounded-xl border bg-card p-8 text-center">
       <div className="mx-auto mb-5 size-10 animate-spin rounded-full border-4 border-muted border-t-primary" aria-hidden />
       <p className="font-medium">{professor.name} is designing your course</p>
-      <p className="mt-1 text-sm text-muted-foreground">{BUILD_STEPS[i]}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{steps[i]}</p>
       <p className="mt-4 text-xs text-muted-foreground">This usually takes under a minute. Please keep this page open.</p>
     </div>
   )
 }
 
-export function OnboardingForm({ defaults }: { defaults?: Defaults }) {
+export function OnboardingForm({
+  defaults,
+  plan = "free",
+  pendingSources = [],
+}: {
+  defaults?: Defaults
+  plan?: "free" | "pro"
+  /** Uploads from earlier today that haven't become a course yet. */
+  pendingSources?: UploadedSource[]
+}) {
   const [state, formAction, pending] = useActionState<OnboardingState, FormData>(createCourse, {})
   const [step, setStep] = useState(0)
   const [categoryId, setCategoryId] = useState("")
@@ -94,6 +113,7 @@ export function OnboardingForm({ defaults }: { defaults?: Defaults }) {
   const [style, setStyle] = useState(defaults?.learning_style ?? "mixed")
   const [hours, setHours] = useState(String(defaults?.hours_per_week ?? 5))
   const [timeline, setTimeline] = useState(defaults?.timeline ?? "1_month")
+  const [sources, setSources] = useState<UploadedSource[]>(pendingSources)
 
   const category = getCategory(categoryId)
   const subcategory = category?.subcategories.find((s) => s.id === subcategoryId) ?? null
@@ -116,7 +136,7 @@ export function OnboardingForm({ defaults }: { defaults?: Defaults }) {
     setStep(1)
   }
 
-  if (pending) return <Building categoryId={categoryId} />
+  if (pending) return <Building categoryId={categoryId} fromMaterial={sources.length > 0} />
 
   return (
     <form
@@ -143,6 +163,7 @@ export function OnboardingForm({ defaults }: { defaults?: Defaults }) {
       <input type="hidden" name="learning_style" value={style} />
       <input type="hidden" name="hours_per_week" value={hours} />
       <input type="hidden" name="timeline" value={timeline} />
+      <input type="hidden" name="sources" value={sources.map((s) => s.id).join(",")} />
 
       <ol className="mb-8 flex items-center gap-2 text-xs text-muted-foreground" aria-label="Progress">
         {STEPS.map((s, i) => (
@@ -240,12 +261,13 @@ export function OnboardingForm({ defaults }: { defaults?: Defaults }) {
                 id="goal-input"
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
-                placeholder="Pick a topic above or describe your own goal"
+                placeholder={sources.length ? "e.g. Prepare for my exam on this material" : "Pick a topic above or describe your own goal"}
                 rows={2}
                 maxLength={500}
               />
             </div>
           )}
+          {subcategory && <SourceUpload plan={plan} sources={sources} onChange={setSources} />}
           {subcategory && (
             <div className="grid gap-2">
               <Label>How much do you already know about it?</Label>
