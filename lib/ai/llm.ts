@@ -5,6 +5,7 @@ import { zodResponseFormat, zodTextFormat } from "openai/helpers/zod"
 import { bedrock } from "openai/providers/bedrock"
 
 import { logAiUsage } from "@/lib/ai/usage-log"
+import { logError } from "@/lib/error-log"
 import { cleanDiagram } from "@/lib/learning/diagram"
 import {
   CATEGORIES,
@@ -187,18 +188,49 @@ async function callStructuredWithUsage<T>(
   }
 }
 
-function toAIError(error: unknown): AIError {
+const OUTAGE_MESSAGE =
+  "Our AI service is temporarily unavailable. We've been alerted and are fixing it. Please try again a little later."
+
+/** Map an SDK error to what the learner sees. Problems on our side (credits, keys, provider down) are logged for the admin. */
+export function toAIError(error: unknown): AIError {
   if (error instanceof AIError) return error
   if (error instanceof OpenAI.RateLimitError) {
     return new AIError(error.message, "Our AI is busy right now. Please try again in a minute.")
   }
-  if (error instanceof OpenAI.AuthenticationError || error instanceof OpenAI.PermissionDeniedError) {
-    return new AIError(`${error.status}: ${error.message}`, "AI course generation isn't configured correctly. Please contact support.")
+  if (error instanceof OpenAI.APIError && error.status !== undefined) {
+    const detail = `${error.status}: ${error.message}`
+    if (error.status === 402) {
+      reportOutage("AI outage: out of credits (add credits at openrouter.ai)", detail)
+      return new AIError(detail, OUTAGE_MESSAGE)
+    }
+    if (error.status === 403 && /moderat|flagged/i.test(error.message)) {
+      return new AIError(detail, "We couldn't create this content. Try rephrasing your request.")
+    }
+    if (error.status === 401 || error.status === 403) {
+      reportOutage("AI outage: API key rejected (check the key in .env.local)", detail)
+      return new AIError(detail, OUTAGE_MESSAGE)
+    }
+    if (error.status >= 500) {
+      reportOutage("AI provider error (5xx)", detail)
+      return new AIError(detail, "The AI service had a problem. Please try again.")
+    }
+    return new AIError(`API ${detail}`, "The AI service had a problem. Please try again.")
   }
-  if (error instanceof OpenAI.APIError) {
-    return new AIError(`API ${error.status}: ${error.message}`, "The AI service had a problem. Please try again.")
+  if (error instanceof OpenAI.APIConnectionError) {
+    reportOutage("AI provider unreachable", error.message)
+    return new AIError(error.message, "Couldn't reach the AI service. Please try again.")
   }
   return new AIError(String(error), "Couldn't reach the AI service. Please try again.")
+}
+
+// One admin log entry per kind of problem every 10 minutes, however many learners hit it.
+const lastReported = new Map<string, number>()
+function reportOutage(message: string, detail: string) {
+  const now = Date.now()
+  if (now - (lastReported.get(message) ?? 0) < 10 * 60 * 1000) return
+  lastReported.set(message, now)
+  console.error(`${message} — ${detail}`)
+  logError("server", message, null, detail)
 }
 
 function professorPreamble(professor: Professor, category: Category | null) {

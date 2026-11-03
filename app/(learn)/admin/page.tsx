@@ -67,6 +67,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const reportRows = (reports.data ?? []) as Report[]
   const errorRows = (errors.data ?? []) as ErrorGroup[]
   const failed = [overview, daily, users, payments, reports, errors].find((r) => r.error)
+  const outages = errorRows.filter((e) => e.message.startsWith("AI outage"))
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 md:py-14">
@@ -77,6 +78,15 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           Some data couldn&apos;t load: {failed.error.message}
         </p>
       ) : null}
+      {outages.map((e) => (
+        <div key={e.message} role="alert" className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
+          <p className="font-semibold">{e.message}</p>
+          <p className="mt-0.5 text-muted-foreground">
+            Learners can&apos;t use AI features. Last seen {new Date(e.last_seen).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+            {e.last_detail ? ` · ${e.last_detail.slice(0, 200)}` : ""}
+          </p>
+        </div>
+      ))}
 
       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Tile label="Users" value={o.users_total ?? 0} sub={`+${o.users_today ?? 0} today · ${o.active_7d ?? 0} active 7d`} />
