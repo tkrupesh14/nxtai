@@ -90,3 +90,56 @@ test("an invited professor joins, uploads and publishes material", async ({ page
 
   expect(errors).toEqual([])
 })
+
+test("a professor writes, previews and publishes a model lesson", async ({ page }) => {
+  test.setTimeout(120_000)
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  page.on("dialog", (d) => d.accept())
+
+  await page.goto("/teach")
+  await page.getByRole("link", { name: "Write a model lesson" }).click()
+  await expect(page.getByRole("heading", { name: "New model lesson" })).toBeVisible()
+  await page.getByLabel("Lesson title").fill("Newton's second law")
+  await page.getByLabel("Block 1 (Opening) text").fill("Today we meet the most useful equation in mechanics: $$F = ma$$")
+
+  // Empty blocks are pointed out before saving.
+  await page.getByRole("button", { name: "Save draft" }).click()
+  await expect(page.getByText("Block 2: The objectives block is empty.")).toBeVisible()
+
+  await page.getByLabel("Block 2 (Objectives) list").fill("Use F = ma\nPredict acceleration")
+  await page.getByLabel("Remove Block 3 (Explanation)").click()
+  await page.getByLabel("Remove Block 3 (Worked example)").click()
+  // Now: 1 Opening, 2 Objectives, 3 Practice question, 4 Summary.
+  await page.getByLabel("Block 3 (Practice question) question").fill("A 2 kg cart is pushed with 10 N. Its acceleration?")
+  for (const [k, v] of ["20 m/s²", "5 m/s²", "12 m/s²", "0.2 m/s²"].entries()) {
+    await page.getByLabel(`Block 3 (Practice question) option ${"ABCD"[k]}`, { exact: true }).fill(v)
+  }
+  await page.getByLabel("Block 3 (Practice question): option B is correct").check()
+  await page.getByLabel("Block 3 (Practice question) explanation").fill("a = F / m = 10 / 2 = 5 m/s².")
+  await page.getByLabel("Block 4 (Summary) list").fill("Force causes acceleration")
+  await page.getByLabel("Move Block 4 (Summary) up").click()
+  await expect(page.getByLabel("Block 3 (Summary) list")).toHaveValue("Force causes acceleration")
+
+  await page.getByRole("button", { name: "Save draft" }).click()
+  await expect(page).toHaveURL(/\/teach\/lessons\/[0-9a-f-]{36}$/)
+  await expect(page.getByRole("heading", { name: "Newton's second law" })).toBeVisible()
+
+  // The preview is the real lesson view: maths rendered, practice question answerable.
+  await page.getByRole("tab", { name: "Preview" }).click()
+  const preview = page.getByLabel("Lesson preview")
+  await expect(preview.locator(".katex").first()).toBeVisible()
+  await expect(preview.locator(".katex-error")).toHaveCount(0)
+  await expect(preview.getByText("Pause and think")).toBeVisible()
+  await preview.getByRole("radio", { name: "5 m/s²" }).check()
+  await preview.getByRole("button", { name: "Check my answer" }).click()
+  await expect(preview.getByText(/a = F \/ m/)).toBeVisible()
+
+  // Publish from the Teaching page (this professor was approved in the previous test).
+  await page.goto("/teach")
+  const lessons = page.getByRole("list", { name: "Your lessons" })
+  await expect(lessons.getByText(/Draft · .* · 4 blocks/)).toBeVisible()
+  await page.getByRole("button", { name: "Publish lesson Newton's second law" }).click()
+  await expect(lessons.getByText(/Published ·/)).toBeVisible()
+  expect(errors).toEqual([])
+})

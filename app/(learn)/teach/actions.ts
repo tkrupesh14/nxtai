@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { isUuid } from "@/lib/learning/data"
 import { createClient } from "@/lib/supabase/server"
 import { AGREEMENT_VERSION } from "@/lib/teach/agreement"
+import { firstProblem, ModelLessonSchema, toLessonBlocks } from "@/lib/teach/lessons"
 import { isTeachLanguage } from "@/lib/teach/subjects"
 
 export type TeachResult = { ok?: boolean; message?: string }
@@ -81,6 +82,64 @@ export async function removeMaterial(id: string): Promise<TeachResult> {
   const { error, count } = await supabase.from("professor_materials").delete({ count: "exact" }).eq("id", id)
   if (error || !count) {
     if (error) console.error("remove material failed:", error.message)
+    return { message: "We couldn't remove that. Please try again." }
+  }
+  revalidatePath("/teach")
+  return { ok: true }
+}
+
+const LESSON_ERRORS: Record<string, string> = {
+  not_professor: "This is only for Krpex professors.",
+  suspended: "Your professor account is paused, so lessons can't be saved.",
+  too_many_lessons: "You've reached 200 lessons. Remove some to add more.",
+  not_found: "This lesson no longer exists.",
+  not_approved: "You can publish once Krpex has approved your profile.",
+}
+
+/** Save a model lesson (new when id is null). Validated here, ownership and limits checked in the database. */
+export async function saveModelLesson(id: string | null, lesson: unknown): Promise<TeachResult & { id?: string }> {
+  if (id !== null && !isUuid(id)) return { message: "Something went wrong. Please reload." }
+  const problem = firstProblem(lesson)
+  if (problem) return { message: problem }
+  const l = ModelLessonSchema.parse(lesson)
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("professor_save_lesson", {
+    p_id: id,
+    p_title: l.title,
+    p_topic: l.topic,
+    p_language: l.language,
+    p_objective: l.objective,
+    p_blocks: toLessonBlocks(l.blocks),
+    p_takeaways: l.key_takeaways,
+  })
+  if (error || typeof data !== "string") {
+    const known = LESSON_ERRORS[error?.message ?? ""]
+    if (!known) console.error("professor_save_lesson failed:", error?.message)
+    return { message: known ?? "We couldn't save the lesson. Please try again." }
+  }
+  revalidatePath("/teach")
+  return { ok: true, id: data, message: "Saved." }
+}
+
+export async function setLessonStatus(id: string, status: "draft" | "published"): Promise<TeachResult> {
+  if (!isUuid(id) || (status !== "draft" && status !== "published")) return { message: "Something went wrong." }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("professor_set_lesson_status", { p_id: id, p_status: status })
+  if (error) {
+    const known = LESSON_ERRORS[error.message]
+    if (!known) console.error("professor_set_lesson_status failed:", error.message)
+    return { message: known ?? "We couldn't change that. Please try again." }
+  }
+  revalidatePath("/teach")
+  return { ok: true }
+}
+
+export async function removeLesson(id: string): Promise<TeachResult> {
+  if (!isUuid(id)) return { message: "Something went wrong." }
+  const supabase = await createClient()
+  const { error, count } = await supabase.from("professor_lessons").delete({ count: "exact" }).eq("id", id)
+  if (error || !count) {
+    if (error) console.error("remove lesson failed:", error.message)
     return { message: "We couldn't remove that. Please try again." }
   }
   revalidatePath("/teach")

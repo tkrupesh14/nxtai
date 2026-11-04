@@ -47,3 +47,37 @@ export async function getMyMaterials(): Promise<Material[]> {
     .order("created_at", { ascending: false })
   return (data ?? []) as Material[]
 }
+
+export type LessonSummary = {
+  id: string
+  title: string
+  topic: string | null
+  language: string
+  status: "draft" | "published"
+  updated_at: string
+  blocks: number
+}
+
+export async function getMyLessons(): Promise<LessonSummary[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("professor_lessons")
+    .select("id, title, topic, language, status, updated_at, blocks")
+    .order("updated_at", { ascending: false })
+  return ((data ?? []) as (Omit<LessonSummary, "blocks"> & { blocks: unknown[] })[]).map((l) => ({
+    ...l,
+    blocks: Array.isArray(l.blocks) ? l.blocks.length : 0,
+  }))
+}
+
+export async function getMyLesson(id: string) {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("professor_lessons")
+    .select("id, title, topic, language, objective, blocks, key_takeaways, status")
+    .eq("id", id)
+    .maybeSingle()
+  return data as
+    | { id: string; title: string; topic: string | null; language: string; objective: string | null; blocks: unknown; key_takeaways: unknown; status: "draft" | "published" }
+    | null
+}

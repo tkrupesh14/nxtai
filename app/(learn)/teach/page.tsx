@@ -2,10 +2,12 @@ import Link from "next/link"
 
 import { AccountSection } from "@/components/learn/account-section"
 import { AgreementText } from "@/components/teach/agreement-text"
+import { LessonList } from "@/components/teach/lesson-list"
 import { MaterialList } from "@/components/teach/material-list"
+import { Button } from "@/components/site/ui/button"
 import { MaterialUpload } from "@/components/teach/material-upload"
 import { ProfileForm } from "@/components/teach/profile-form"
-import { getMyMaterials, getMyProfessor } from "@/lib/teach/data"
+import { getMyLessons, getMyMaterials, getMyProfessor } from "@/lib/teach/data"
 import { subjectName } from "@/lib/teach/subjects"
 
 export const metadata = { title: "Teaching — Krpex" }
@@ -32,7 +34,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
       </main>
     )
   }
-  const [{ welcome }, materials] = await Promise.all([searchParams, getMyMaterials()])
+  const [{ welcome }, materials, lessons] = await Promise.all([searchParams, getMyMaterials(), getMyLessons()])
   const published = materials.filter((m) => m.status === "published").length
 
   return (
@@ -71,8 +73,20 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
         <MaterialList materials={materials} canPublish={professor.status === "approved"} />
       </AccountSection>
 
-      <AccountSection title="Coming next" description="Writing model lessons in the lesson editor, and reviewing lessons the AI writes in Physics.">
-        <p className="text-sm text-muted-foreground">We&apos;ll let you know when they&apos;re ready.</p>
+      <AccountSection
+        title={`Model lessons (${lessons.length})`}
+        description="Write a lesson the way you'd teach it in class. Published lessons show the AI how you explain things."
+      >
+        {professor.status !== "suspended" ? (
+          <Button asChild className="mb-4">
+            <Link href="/teach/lessons/new">Write a model lesson</Link>
+          </Button>
+        ) : null}
+        <LessonList lessons={lessons} canPublish={professor.status === "approved"} />
+      </AccountSection>
+
+      <AccountSection title="Coming next" description="Reviewing the lessons the AI writes in Physics: rate, correct and comment.">
+        <p className="text-sm text-muted-foreground">We&apos;ll let you know when it&apos;s ready.</p>
       </AccountSection>
 
       <details className="rounded-xl border bg-card p-5 md:p-6">

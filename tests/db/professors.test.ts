@@ -167,3 +167,54 @@ describe("material", () => {
     expect(data.professors).toEqual([expect.objectContaining({ email: PROF_EMAIL, materials: 1, pages: 3, status: "pending" })])
   })
 })
+
+describe("model lessons", () => {
+  const blocks = JSON.stringify([{ type: "opening", title: "", body_markdown: "Namaste", items: [], checkpoint: null, diagram: null }])
+  const save = (id: string | null = null, title = "Newton's laws") =>
+    t.one<{ id: string }>(`select public.professor_save_lesson($1, $2, 'Mechanics', 'hi', 'Use F = ma', $3, '["F = ma"]') as id`, [id, title, blocks])
+
+  it("are saved, edited and removed by their professor only", async () => {
+    await t.asUser(USER_B)
+    expect(await errorOf(save())).toMatch(/not_professor/)
+    await makeProfessor()
+    const { id } = (await save())!
+    await save(id, "Newton's three laws")
+    expect(await t.one(`select title, language, status from public.professor_lessons`)).toEqual({ title: "Newton's three laws", language: "hi", status: "draft" })
+    expect(await errorOf(t.query(`update public.professor_lessons set status = 'published'`))).toMatch(/permission denied/)
+
+    await t.asUser(USER_B)
+    expect(await t.query(`select * from public.professor_lessons`)).toHaveLength(0)
+    await t.query(`delete from public.professor_lessons where id = $1`, [id])
+    await t.asUser(USER_A)
+    expect(await t.query(`select * from public.professor_lessons`)).toHaveLength(1)
+    await t.query(`delete from public.professor_lessons where id = $1`, [id])
+    expect(await t.query(`select * from public.professor_lessons`)).toHaveLength(0)
+  })
+
+  it("can't be edited by another professor, and need approval to publish", async () => {
+    await makeProfessor()
+    const { id } = (await save())!
+    expect(await errorOf(t.query(`select public.professor_set_lesson_status($1, 'published')`, [id]))).toMatch(/not_approved/)
+    await approve()
+    await t.query(`select public.professor_set_lesson_status($1, 'published')`, [id])
+    expect(await t.one(`select status from public.professor_lessons`)).toEqual({ status: "published" })
+
+    // A second professor can't touch it.
+    await t.addUser("00000000-0000-0000-0000-0000000000c1", "other@example.com")
+    const tok = await invite("other@example.com")
+    await t.asUser("00000000-0000-0000-0000-0000000000c1")
+    await accept(tok)
+    expect(await errorOf(save(id, "Hijacked"))).toMatch(/not_found/)
+    expect(await errorOf(t.query(`select public.professor_set_lesson_status($1, 'draft')`, [id]))).toMatch(/not_found/)
+  })
+
+  it("rejects empty or oversized lessons, and suspended professors", async () => {
+    await makeProfessor()
+    expect(await errorOf(t.query(`select public.professor_save_lesson(null, 'Title', null, 'en', null, '[]', '[]')`))).toMatch(/check/)
+    expect(await errorOf(t.query(`select public.professor_save_lesson(null, 'Title', null, 'fr', null, $1, '[]')`, [blocks]))).toMatch(/check/)
+    await t.asOwner()
+    await t.query(`update public.professors set status = 'suspended'`)
+    await t.asUser(USER_A)
+    expect(await errorOf(save())).toMatch(/suspended/)
+  })
+})

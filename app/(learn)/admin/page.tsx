@@ -57,6 +57,8 @@ type AdminProfessor = {
   materials: number
   published: number
   pages: number
+  lessons?: number
+  lessons_published?: number
 }
 type AdminInvite = { id: string; email: string; subject: string; expires_at: string }
 
@@ -238,7 +240,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     <ProfessorStatusButtons id={p.id} status={p.status} />
                   </div>
                   <p className="text-muted-foreground">
-                    {p.status} · {subjectName(p.subject)} · {p.languages.join(", ")} · {p.materials} files ({p.published} published, {p.pages} pages)
+                    {p.status} · {subjectName(p.subject)} · {p.languages.join(", ")} · {p.materials} files ({p.published} published, {p.pages} pages) · {p.lessons ?? 0} lessons ({p.lessons_published ?? 0} published)
                   </p>
                   {[p.title, p.institution].filter(Boolean).length ? <p>{[p.title, p.institution].filter(Boolean).join(", ")}</p> : null}
                   {p.credentials ? <p className="whitespace-pre-wrap text-muted-foreground">{p.credentials}</p> : null}
