@@ -2,6 +2,7 @@
 
 import { AIError, askProfessor, PRICE_PER_M } from "@/lib/ai/llm"
 import { getCourse, isUnlocked, isUuid } from "@/lib/learning/data"
+import { gradedQuestionsText, HINT_FALLBACK, matchesGraded, revealsAnswer, type GradedQuestion } from "@/lib/learning/graded"
 import { getSections } from "@/lib/sources/data"
 import { sourceExcerpt } from "@/lib/sources/sections"
 import {
@@ -80,7 +81,8 @@ export async function askProfessorAction(
       ? t.kind === "ask" && t.verdict === "answer" && normalizeQuestion(t.question) === norm
       : t.kind === kind && t.section === section,
   )
-  if (hit) {
+  // Old replies that gave a graded answer away (before this was enforced) aren't reused.
+  if (hit && !(kind === "ask" && data.lessons[index].completed_at === null && revealsAnswer(hit.reply))) {
     return { ok: true, cached: true, paid: false, turn: { ...hit, question: kind === "ask" ? question : hit.question }, usedToday: -1, usedLesson: -1 }
   }
 
@@ -129,13 +131,22 @@ export async function askProfessorAction(
     .slice(0, 3)
     .reverse()
     .map((t) => ({ question: t.question, reply: t.reply }))
-  const [{ data: profile }, sources] = await Promise.all([
+  const [{ data: profile }, sources, { data: quiz }] = await Promise.all([
     supabase.from("learner_profiles").select("background").maybeSingle(),
     getSections(courseId, lesson.source_sections ?? []),
+    supabase.rpc("lesson_quiz_questions", { p_lesson: lessonId }),
   ])
+  // Practice and quiz questions (never their answers), so the professor recognises them when asked.
+  const checkpoints: GradedQuestion[] = (blocks ?? []).flatMap((b) =>
+    b.checkpoint ? [{ question: b.checkpoint.question, options: b.checkpoint.options }] : [],
+  )
+  const quizQuestions = ((quiz ?? []) as GradedQuestion[]).filter((q) => typeof q?.question === "string" && Array.isArray(q.options))
+  const graded = [...checkpoints, ...quizQuestions]
+  const lessonPassed = lesson.completed_at !== null
+  const isLessonQuestion = kind === "ask" && matchesGraded(question, graded)
 
   try {
-    const { reply, usage } = await askProfessor({
+    const ask = (hintsOnly: boolean) => askProfessor({
       categoryId: data.course.category,
       courseTitle: data.course.title,
       goal: data.course.goal,
@@ -147,7 +158,19 @@ export async function askProfessorAction(
       sectionText: focus ? `${sectionLabel(focus)}\n${sectionText(focus)}` : null,
       history,
       question,
+      gradedQuestions: graded.length ? gradedQuestionsText(checkpoints, quizQuestions) : undefined,
+      lessonPassed,
+      hintsOnly,
     })
+    let { reply, usage } = await ask(false)
+    // Answers to graded questions stay hidden, except this lesson's own questions once its quiz is passed.
+    const mustHide = (r: typeof reply) =>
+      (r.graded_question || isLessonQuestion) && !(lessonPassed && isLessonQuestion) && revealsAnswer(r.reply)
+    if (mustHide(reply)) {
+      const retry = await ask(true)
+      usage = { input: usage.input + retry.usage.input, output: usage.output + retry.usage.output }
+      reply = mustHide(retry.reply) ? { ...retry.reply, reply: HINT_FALLBACK } : retry.reply
+    }
     const text = reply.reply.trim().slice(0, 6000)
     // Only hand the answer over if this pending row is still ours to finish.
     const { data: saved, error } = await supabase

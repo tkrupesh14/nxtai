@@ -121,6 +121,12 @@ test("the AI professor answers a question about the lesson", async ({ page }) =>
   await expect(page.getByText("Fake professor answer to: What is a list?")).toBeVisible()
   // Labelled as an AI professor, never as a human.
   await expect(page.getByText(/AI professor · answers about this lesson/).first()).toBeVisible()
+
+  // A reply that gives a graded answer away is rewritten as hints (the fake AI answers "B" unless told not to).
+  await page.getByLabel("Your question").fill("GIVE-AWAY: which option is right in the module test?")
+  await page.getByRole("button", { name: "Ask", exact: true }).click()
+  await expect(page.getByText("Fake professor answer to: GIVE-AWAY: which option is right in the module test?")).toBeVisible()
+  await expect(page.getByText("The correct answer is B.")).toHaveCount(0)
   expect(errors).toEqual([])
 })
 

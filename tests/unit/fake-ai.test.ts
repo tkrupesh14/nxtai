@@ -78,7 +78,7 @@ describe("fake AI server", () => {
       history: [],
       question: "What is a list?",
     })
-    expect(reply).toEqual({ verdict: "answer", reply: "Fake professor answer to: What is a list?" })
+    expect(reply).toEqual({ verdict: "answer", graded_question: false, reply: "Fake professor answer to: What is a list?" })
     expect(received.map((r: { name: string }) => r.name)).toEqual(["goal_check", "course_plan", "lesson", "professor_reply"])
   })
 

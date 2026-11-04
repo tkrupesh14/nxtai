@@ -98,7 +98,11 @@ function contentFor(name, prompt) {
     }
     case "professor_reply": {
       const question = /<question>([\s\S]*?)<\/question>/.exec(prompt)?.[1]?.trim() ?? ""
-      return { verdict: "answer", reply: `Fake professor answer to: ${question}` }
+      // "GIVE-AWAY" questions answer like a careless model would, unless the prompt asks for hints only.
+      if (/GIVE-AWAY/.test(question) && !/hints only/.test(prompt)) {
+        return { verdict: "answer", graded_question: true, reply: "The correct answer is B." }
+      }
+      return { verdict: "answer", graded_question: false, reply: `Fake professor answer to: ${question}` }
     }
     default:
       return null

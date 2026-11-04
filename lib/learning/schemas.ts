@@ -65,6 +65,9 @@ export const ProfessorReplySchema = z.object({
     .enum(["answer", "off_topic", "not_allowed"])
     .describe("answer: about this lesson or course; off_topic: unrelated; not_allowed: harmful, cheating or abusive"),
   reply: z.string().describe("Markdown. answer: under 180 words. off_topic / not_allowed: one or two short sentences"),
+  graded_question: z
+    .boolean()
+    .describe("true if the learner is asking about a practice, quiz, test or exam question, or any multiple-choice question"),
 })
 export type ProfessorReply = z.infer<typeof ProfessorReplySchema>
 
