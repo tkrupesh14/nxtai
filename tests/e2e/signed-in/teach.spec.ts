@@ -65,9 +65,9 @@ test("an invited professor joins, uploads and publishes material", async ({ page
 
   // Upload: saved as a draft; publishing waits for approval.
   await page.getByLabel("Material title").fill("Light notes")
-  await page.getByLabel("Topic").fill("Optics")
+  await page.getByLabel("Material topic").fill("Optics")
   await page.getByLabel(/^File \(PDF/).setInputFiles("tests/fixtures/photosynthesis.pdf")
-  await page.getByRole("button", { name: "Upload" }).click()
+  await page.getByRole("button", { name: "Upload", exact: true }).click()
   const list = page.getByRole("list", { name: "Your material" })
   await expect(list.getByText("Light notes")).toBeVisible()
   await expect(list.getByText(/Draft · English · Optics · 3 pages/)).toBeVisible()

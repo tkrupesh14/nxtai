@@ -58,7 +58,7 @@ export function MaterialUpload({ languages }: { languages: string[] }) {
           <Input id="m-title" name="title" maxLength={200} placeholder="Chapter 3: Newton's laws (notes)" />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="m-topic">Topic</Label>
+          <Label htmlFor="m-topic">Material topic</Label>
           <Input id="m-topic" name="topic" maxLength={120} placeholder="Mechanics" />
         </div>
       </div>
