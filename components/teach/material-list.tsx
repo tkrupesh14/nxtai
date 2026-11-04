@@ -35,8 +35,10 @@ export function MaterialList({ materials, canPublish }: { materials: Material[];
               </p>
               <p className="text-xs text-muted-foreground">
                 {m.status === "published" ? "Published" : "Draft"} · {languageName(m.language)}
-                {m.topic ? ` · ${m.topic}` : ""} · {m.pages} page{m.pages === 1 ? "" : "s"}
-                {m.kind === "pdf" ? "" : " (approx.)"}
+                {m.topic ? ` · ${m.topic}` : ""} ·{" "}
+                {m.kind === "lecture"
+                  ? `Lecture transcript, ${m.pages} part${m.pages === 1 ? "" : "s"}`
+                  : `${m.pages} page${m.pages === 1 ? "" : "s"}${m.kind === "pdf" ? "" : " (approx.)"}`}
               </p>
             </div>
             <div className="flex gap-1">

@@ -47,7 +47,8 @@ export default function PrivacyPage() {
             <strong>Professors who teach with us:</strong> if you join by invitation as a professor, your profile (name,
             title, institution, bio, languages), the qualifications you tell us about (seen only by Krpex), the version and
             date of the agreement you accepted, the text of material you upload (never the file), and the model lessons and
-            lesson reviews you write (reviews are seen only by Krpex). Removing material deletes it from our database.
+            lesson reviews you write (reviews are seen only by Krpex), and transcripts of lecture recordings you upload
+            (recordings are sent to Sarvam AI for transcription and not kept by us). Removing material deletes it from our database.
           </li>
           <li>
             <strong>Usage and billing:</strong> daily usage counts, plan, credit balance and payment records (order and
@@ -90,6 +91,9 @@ export default function PrivacyPage() {
             <strong>OpenRouter and the AI model providers it routes to (such as OpenAI)</strong>: your learning profile,
             course outline, questions and the relevant parts of any material you uploaded are sent to generate content. Don&apos;t include sensitive personal information
             (such as health or financial details) in your goals or questions.
+          </li>
+          <li>
+            <strong>Sarvam AI</strong> (India): speech-to-text for lecture recordings that professors upload.
           </li>
           <li>
             <strong>GitHub / Google</strong>: only if you choose to sign in with them.

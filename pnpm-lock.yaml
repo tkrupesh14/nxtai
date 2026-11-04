@@ -201,7 +201,7 @@ importers:
         version: 16.4.3(@opentelemetry/api@1.10.0)(@playwright/test@1.64.1)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       openai:
         specifier: ^7.45.1
-        version: 7.45.1(zod@4.6.7)
+        version: 7.45.1(ws@8.22.1)(zod@4.6.7)
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -223,6 +223,9 @@ importers:
       remark-math:
         specifier: 6.0.0
         version: 6.0.0
+      sarvamai:
+        specifier: ^1.1.15
+        version: 1.1.15
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -1580,6 +1583,10 @@ packages:
   safe-buffer@5.1.2:
     resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
 
+  sarvamai@1.1.15:
+    resolution: {integrity: sha512-/bsPTx4QRf/FD6asGM9PHRaTmVCg32UMdqSyFZ8AK56nBwtfnEiZNvlCnEzc+1N310JenSG96lUIA2SKYIfN/Q==}
+    engines: {node: '>=18.0.0'}
+
   scheduler@0.28.0:
     resolution: {integrity: sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==}
 
@@ -1826,6 +1833,18 @@ packages:
     resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
     engines: {node: '>=8'}
     hasBin: true
+
+  ws@8.22.1:
+    resolution: {integrity: sha512-oyL6OPYme/CmiFvNuGzeoxCJ4nOrZE2O1FwM9MWM1AsGri6nLXB2pg+lNA8aLeXMSav0J6eIVS1j6vUPzUtK9g==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
 
   xmlbuilder@10.1.1:
     resolution: {integrity: sha512-OyzrcFLL/nb6fMGHbiRDuPup9ljBycsdCypwuyg5AAHvyWzGfChJpCXMG88AGTIMFhGZ9RccFN1e6lhg3hkwKg==}
@@ -3061,8 +3080,9 @@ snapshots:
 
   obug@2.2.1: {}
 
-  openai@7.45.1(zod@4.6.7):
+  openai@7.45.1(ws@8.22.1)(zod@4.6.7):
     optionalDependencies:
+      ws: 8.22.1
       zod: 4.6.7
 
   option@0.2.4: {}
@@ -3229,6 +3249,13 @@ snapshots:
       '@rolldown/binding-win32-x64-msvc': 1.2.16
 
   safe-buffer@5.1.2: {}
+
+  sarvamai@1.1.15:
+    dependencies:
+      ws: 8.22.1
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   scheduler@0.28.0: {}
 
@@ -3443,6 +3470,8 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
+
+  ws@8.22.1: {}
 
   xmlbuilder@10.1.1: {}
 

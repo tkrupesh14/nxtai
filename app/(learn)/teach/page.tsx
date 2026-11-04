@@ -6,8 +6,10 @@ import { LessonList } from "@/components/teach/lesson-list"
 import { MaterialList } from "@/components/teach/material-list"
 import { Button } from "@/components/site/ui/button"
 import { MaterialUpload } from "@/components/teach/material-upload"
+import { RecordingList } from "@/components/teach/recording-list"
+import { RecordingUpload } from "@/components/teach/recording-upload"
 import { ProfileForm } from "@/components/teach/profile-form"
-import { getMyLessons, getMyMaterials, getMyProfessor, getReviewQueue } from "@/lib/teach/data"
+import { getMyLessons, getMyMaterials, getMyProfessor, getMyRecordings, getReviewQueue, refreshMyRecordings } from "@/lib/teach/data"
 import { languageName, subjectName } from "@/lib/teach/subjects"
 
 export const metadata = { title: "Teaching — Krpex" }
@@ -34,11 +36,14 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
       </main>
     )
   }
-  const [{ welcome }, materials, lessons, queue] = await Promise.all([
+  // Finished transcriptions are collected first, so the lists below are up to date.
+  await refreshMyRecordings()
+  const [{ welcome }, materials, lessons, queue, recordings] = await Promise.all([
     searchParams,
     getMyMaterials(),
     getMyLessons(),
     professor.status === "approved" ? getReviewQueue() : Promise.resolve([]),
+    getMyRecordings(),
   ])
   const published = materials.filter((m) => m.status === "published").length
 
@@ -73,6 +78,18 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           <MaterialUpload languages={professor.languages} />
         </AccountSection>
       ) : null}
+
+      <AccountSection
+        title={`Lecture recordings (${recordings.length})`}
+        description="Upload a recorded lecture or explanation. We turn your speech into text; you check it, then add it to your material."
+      >
+        {professor.status !== "suspended" ? (
+          <div className="mb-5">
+            <RecordingUpload languages={professor.languages} />
+          </div>
+        ) : null}
+        <RecordingList recordings={recordings} />
+      </AccountSection>
 
       <AccountSection title={`Your material (${materials.length}${published ? `, ${published} published` : ""})`}>
         <MaterialList materials={materials} canPublish={professor.status === "approved"} />

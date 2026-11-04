@@ -288,3 +288,62 @@ describe("review queue", () => {
     expect(await errorOf(submit(id))).toMatch(/not_found/)
   })
 })
+
+describe("lecture recordings", () => {
+  const start = (seconds = 600) =>
+    t.one<{ id: string }>(`select public.app_start_recording($1, 'Lecture 1', 'hi', 'Mechanics', 'lecture.mp3', 1000, $2) as id`, [SERVER_KEY, seconds])
+  const update = (id: string, status: string, transcript: string | null = null, seconds: number | null = null) =>
+    t.query(`select public.app_update_recording($1, $2, $3, 'job-1', $4, $5, null)`, [SERVER_KEY, id, status, transcript, seconds])
+
+  it("needs a professor and the server key", async () => {
+    await t.asUser(USER_B)
+    expect(await errorOf(start())).toMatch(/not_professor/)
+    await makeProfessor()
+    expect(await errorOf(t.query(`select public.app_start_recording('wrong', 'T', 'en', null, 'a.mp3', 1, 60)`))).not.toBeNull()
+  })
+
+  it("goes from upload to a corrected transcript, private to its professor", async () => {
+    await makeProfessor()
+    const { id } = (await start())!
+    await update(id, "transcribing")
+    await update(id, "ready", "[0:00] Force equals mass times acceleration.", 95)
+    expect(await t.one(`select status, seconds, job_id from public.professor_recordings`)).toEqual({ status: "ready", seconds: 95, job_id: "job-1" })
+    await t.query(`select public.professor_save_transcript($1, '[0:00] F = ma.')`, [id])
+    expect(await errorOf(update(id, "ready"))).toMatch(/not_found/) // finished recordings can't be moved back
+    expect(await errorOf(t.query(`update public.professor_recordings set seconds = 1`))).toMatch(/permission denied/)
+
+    await t.asUser(USER_B)
+    expect(await t.query(`select * from public.professor_recordings`)).toHaveLength(0)
+    expect(await errorOf(t.query(`select public.professor_save_transcript($1, 'hacked')`, [id]))).toMatch(/not_found/)
+
+    // Added as material ('lecture'), then linked.
+    await t.asUser(USER_A)
+    const { id: material } = (await t.one<{ id: string }>(
+      `select public.app_add_professor_material($1, 'Lecture 1', 'lecture', 'hi', null, 1, 20, '[{"heading":"Lecture 1 (from 0:00)","body":"F = ma."}]') as id`,
+      [SERVER_KEY],
+    ))!
+    await t.query(`select public.app_recording_added($1, $2, $3)`, [SERVER_KEY, id, material])
+    expect(await t.one(`select status, material_id from public.professor_recordings`)).toEqual({ status: "added", material_id: material })
+    expect(await errorOf(t.query(`select public.professor_save_transcript($1, 'late edit')`, [id]))).toMatch(/not_found/)
+  })
+
+  it("enforces 2 hours a file, 3 at a time and 600 minutes a month (failed ones don't count)", async () => {
+    await makeProfessor()
+    expect(await errorOf(start(7201))).toMatch(/too_long|check/)
+    const ids = [(await start(7200))!.id, (await start(7200))!.id, (await start(7200))!.id]
+    expect(await errorOf(start(60))).toMatch(/too_many_in_progress/)
+    await update(ids[0], "failed", null, 7200)
+    await update(ids[1], "ready", "text", 7200)
+    await update(ids[2], "ready", "text", 7200)
+    // Counted this month: 2 × 120 min (the failed one doesn't count). Add 3 × 7,000 s (350 min) more: 590 min.
+    await t.asOwner()
+    await t.query(
+      `insert into public.professor_recordings (professor_id, title, language, filename, bytes, seconds, status)
+       select professor_id, 'Old', 'en', 'old.mp3', 1, 7000, 'ready' from public.professor_recordings, generate_series(1, 3) where id = $1`,
+      [ids[1]],
+    )
+    await t.asUser(USER_A)
+    expect(await errorOf(start(11 * 60))).toMatch(/monthly_limit/)
+    await start(10 * 60) // exactly 600 minutes
+  })
+})

@@ -62,6 +62,8 @@ jobs:
       SERVER_RPC_KEY: e2e-server-key
       OPENROUTER_API_KEY: fake
       AI_BASE_URL: http://127.0.0.1:3199/v1
+      SARVAM_API_KEY: fake
+      SARVAM_BASE_URL: http://127.0.0.1:3198
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

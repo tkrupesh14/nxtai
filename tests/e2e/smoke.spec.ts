@@ -109,3 +109,11 @@ test("the professor space needs sign-in, and its uploads need the Krpex site", a
   })
   expect(signedOut.status()).toBe(401)
 })
+
+test("lecture recording uploads need the Krpex site and a signed-in professor", async ({ request, baseURL }) => {
+  const url = "/api/teach/recordings?language=en&filename=lecture.mp3&seconds=5"
+  const data = Buffer.alloc(1000, 1)
+  expect((await request.post(url, { data, headers: { "content-type": "audio/mpeg" } })).status()).toBe(403)
+  const signedOut = await request.post(url, { data, headers: { "content-type": "audio/mpeg", origin: new URL(baseURL!).origin } })
+  expect(signedOut.status()).toBe(401)
+})

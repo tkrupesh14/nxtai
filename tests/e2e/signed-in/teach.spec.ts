@@ -193,3 +193,37 @@ test("the admin adds an AI lesson for review, and the professor reviews it", asy
   await expect(adminList.getByText("Define the symbols before using them.")).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test("a professor uploads a lecture recording, corrects the transcript and adds it to their material", async ({ page }) => {
+  test.setTimeout(120_000)
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+
+  await page.goto("/teach")
+  await page.getByLabel("Lecture title").fill("Newton in Hindi")
+  await page.getByLabel("Hindi (English words are kept in English)").check()
+  // Not real audio: the fake Sarvam (tests/support/fake-sarvam.mjs) transcribes anything to a fixed transcript.
+  // 12 MB: over the proxy's 10 MB body limit, so this checks the upload streams through whole.
+  await page.getByLabel("Recording", { exact: true }).setInputFiles({ name: "lecture.mp3", mimeType: "audio/mpeg", buffer: Buffer.alloc(12 * 1024 * 1024, 1) })
+  await page.getByRole("button", { name: "Upload recording" }).click()
+  await expect(page.getByText(/Uploaded\. Transcribing now/)).toBeVisible()
+
+  // The list checks on the transcription every 15 seconds.
+  const list = page.getByRole("list", { name: "Your recordings" })
+  await expect(list.getByText(/Transcript ready to check/)).toBeVisible({ timeout: 60_000 })
+  await page.getByRole("link", { name: "Check the transcript of Newton in Hindi" }).click()
+  const transcript = page.getByLabel("Transcript")
+  await expect(transcript).toHaveValue(/^\[0:00\] Newton का दूसरा नियम [^\n]*\n\n\[1:05\] अब एक example देखते हैं।$/)
+
+  await transcript.fill("[0:00] Newton का दूसरा नियम: $$F = ma$$\n\n[1:05] अब एक example देखते हैं।")
+  await page.getByRole("button", { name: "Save changes" }).click()
+  await expect(page.getByText("Saved.")).toBeVisible()
+  await page.getByRole("button", { name: "Add to my material" }).click()
+  await expect(page.getByText(/Added to your material as a draft/)).toBeVisible()
+  await expect(transcript).toHaveAttribute("readonly", "")
+
+  await page.goto("/teach")
+  await expect(list.getByText(/Added to your material/)).toBeVisible()
+  await expect(page.getByText(/Lecture transcript, 1 part/)).toBeVisible()
+  expect(errors).toEqual([])
+})

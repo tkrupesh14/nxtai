@@ -8,6 +8,7 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Everything except static files and images.
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Also not the recording upload: the proxy would cut its body off at 10 MB (the route checks sign-in itself).
+    '/((?!_next/static|_next/image|favicon.ico|api/teach/recordings$|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

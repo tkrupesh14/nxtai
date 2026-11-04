@@ -2,7 +2,7 @@
 // DRAFT: written as a starting point, not legal advice. It must be reviewed by a lawyer before real professors
 // are invited. Change AGREEMENT_VERSION whenever the wording changes; each professor's accepted version is stored.
 
-export const AGREEMENT_VERSION = "draft-2026-11-04"
+export const AGREEMENT_VERSION = "draft-2026-11-05"
 export const AGREEMENT_IS_DRAFT = true
 
 export const AGREEMENT: { heading: string; body: string }[] = [
@@ -29,6 +29,10 @@ export const AGREEMENT: { heading: string; body: string }[] = [
   {
     heading: "Quality and safety",
     body: "Your material and corrections are reviewed by Krpex before learners see them. Krpex may edit, decline or stop using any contribution, and may suspend a professor account.",
+  },
+  {
+    heading: "Recordings",
+    body: "If you upload a recorded lecture, it is sent to our speech-to-text provider (Sarvam AI, in India) to be transcribed, and then deleted: we keep only the transcript, which you can correct before it is used. Upload only recordings of yourself; don't include other people's voices, such as students', unless they have agreed.",
   },
   {
     heading: "Your data",

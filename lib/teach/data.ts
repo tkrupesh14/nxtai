@@ -3,6 +3,8 @@ import "server-only"
 import { cache } from "react"
 
 import { createClient } from "@/lib/supabase/server"
+import { serverKey } from "@/lib/supabase/server-key"
+import { checkTranscription } from "@/lib/teach/sarvam"
 
 export type Professor = {
   id: string
@@ -133,4 +135,76 @@ export async function getReviewLesson(id: string): Promise<{ lesson: ReviewLesso
       .maybeSingle(),
   ])
   return { lesson: (lesson.data as ReviewLesson | null) ?? null, review: (review.data as MyReview | null) ?? null }
+}
+
+export type Recording = {
+  id: string
+  title: string
+  language: string
+  topic: string | null
+  filename: string
+  seconds: number
+  status: "uploading" | "transcribing" | "ready" | "failed" | "added"
+  error: string | null
+  material_id: string | null
+  created_at: string
+  updated_at: string
+}
+const RECORDING_COLUMNS = "id, title, language, topic, filename, seconds, status, error, material_id, created_at, updated_at"
+
+/**
+ * Bring this professor's transcriptions up to date: ask Sarvam about jobs still running (at most 3 per page view,
+ * each at most every 10 seconds) and save finished transcripts. Uploads that never finished are marked failed.
+ */
+export async function refreshMyRecordings() {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("professor_recordings")
+    .select("id, status, job_id, updated_at")
+    .in("status", ["uploading", "transcribing"])
+    .order("updated_at")
+    .limit(10)
+  const rows = (data ?? []) as { id: string; status: string; job_id: string | null; updated_at: string }[]
+  const now = Date.now()
+  const update = (id: string, status: "ready" | "failed" | "transcribing", fields: { transcript?: string; seconds?: number | null; error?: string }) =>
+    supabase.rpc("app_update_recording", {
+      p_key: serverKey(),
+      p_id: id,
+      p_status: status,
+      p_job_id: null,
+      p_transcript: fields.transcript ?? null,
+      p_seconds: fields.seconds ?? null,
+      p_error: fields.error ?? null,
+    })
+  let checked = 0
+  for (const r of rows) {
+    const age = now - new Date(r.updated_at).getTime()
+    if (r.status === "uploading" || !r.job_id) {
+      if (age > 60 * 60 * 1000) await update(r.id, "failed", { error: "The upload didn't finish. Please try again." })
+      continue
+    }
+    if (age < 10_000 || checked >= 3) continue
+    checked++
+    try {
+      const result = await checkTranscription(r.job_id)
+      if (result.state === "done") await update(r.id, "ready", { transcript: result.transcript, seconds: result.seconds })
+      else if (result.state === "failed") await update(r.id, "failed", { error: result.error })
+      else if (age > 3 * 60 * 60 * 1000) await update(r.id, "failed", { error: "Transcription took too long. Please try again." })
+      else await update(r.id, "transcribing", {}) // records when we last checked
+    } catch (e) {
+      console.error("transcription check failed:", e instanceof Error ? e.message : e)
+    }
+  }
+}
+
+export async function getMyRecordings(): Promise<Recording[]> {
+  const supabase = await createClient()
+  const { data } = await supabase.from("professor_recordings").select(RECORDING_COLUMNS).order("created_at", { ascending: false }).limit(100)
+  return (data ?? []) as Recording[]
+}
+
+export async function getMyRecording(id: string): Promise<(Recording & { transcript: string | null }) | null> {
+  const supabase = await createClient()
+  const { data } = await supabase.from("professor_recordings").select(`${RECORDING_COLUMNS}, transcript`).eq("id", id).maybeSingle()
+  return (data as (Recording & { transcript: string | null }) | null) ?? null
 }

@@ -5,8 +5,10 @@ import { redirect } from "next/navigation"
 
 import { isUuid } from "@/lib/learning/data"
 import { createClient } from "@/lib/supabase/server"
+import { serverKey } from "@/lib/supabase/server-key"
 import { AGREEMENT_VERSION } from "@/lib/teach/agreement"
 import { firstProblem, ModelLessonSchema, toLessonBlocks } from "@/lib/teach/lessons"
+import { transcriptSections } from "@/lib/teach/recordings"
 import { ReviewSchema } from "@/lib/teach/reviews"
 import { isTeachLanguage } from "@/lib/teach/subjects"
 
@@ -178,4 +180,74 @@ export async function submitReview(lessonId: string, review: unknown): Promise<T
   revalidatePath("/teach")
   revalidatePath(`/teach/review/${lessonId}`)
   return { ok: true, message: "Thank you. Your review is saved; you can change it any time." }
+}
+
+/** Save the professor's corrections to a transcript. */
+export async function saveTranscript(id: string, text: string): Promise<TeachResult> {
+  if (!isUuid(id)) return { message: "Not found." }
+  const clean = String(text ?? "").replace(/\r\n/g, "\n").trim()
+  if (!clean) return { message: "The transcript can't be empty." }
+  if (clean.length > 300000) return { message: "The transcript is too long (300,000 characters at most)." }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("professor_save_transcript", { p_id: id, p_transcript: clean })
+  if (error) {
+    if (error.message !== "not_found") console.error("professor_save_transcript failed:", error.message)
+    return { message: error.message === "not_found" ? "This transcript can't be changed any more." : "Couldn't save. Please try again." }
+  }
+  revalidatePath(`/teach/recordings/${id}`)
+  return { ok: true, message: "Saved." }
+}
+
+const ADD_ERRORS: Record<string, string> = {
+  suspended: "Your professor account is paused. Please contact Krpex.",
+  too_many_files: "You've reached 300 files. Remove some to add more.",
+  too_many_pages: "That would go over your material allowance. Remove some material to add more.",
+  rate_limited: "That's a lot of uploads in an hour. Please wait a little and try again.",
+}
+
+/** Add a checked transcript to the professor's material (as a draft, like an uploaded file). */
+export async function addRecordingAsMaterial(id: string): Promise<TeachResult> {
+  if (!isUuid(id)) return { message: "Not found." }
+  const supabase = await createClient()
+  const { data: rec } = await supabase
+    .from("professor_recordings")
+    .select("id, title, language, topic, status, transcript")
+    .eq("id", id)
+    .maybeSingle()
+  if (!rec || rec.status !== "ready" || !rec.transcript) return { message: "This transcript isn't ready to add." }
+  const sections = transcriptSections(rec.transcript, rec.title)
+  if (sections.length === 0) return { message: "The transcript is empty." }
+  const key = serverKey()
+  const { data: materialId, error } = await supabase.rpc("app_add_professor_material", {
+    p_key: key,
+    p_title: rec.title,
+    p_kind: "lecture",
+    p_language: rec.language,
+    p_topic: rec.topic ?? "",
+    p_pages: Math.min(1000, Math.max(1, sections.length)),
+    p_chars: rec.transcript.length,
+    p_sections: sections,
+  })
+  if (error || typeof materialId !== "string") {
+    const known = error ? ADD_ERRORS[error.message] : undefined
+    if (!known) console.error("app_add_professor_material (lecture) failed:", error?.message)
+    return { message: known ?? "Couldn't add it. Please try again." }
+  }
+  const { error: linkError } = await supabase.rpc("app_recording_added", { p_key: key, p_id: id, p_material: materialId })
+  if (linkError) console.error("app_recording_added failed:", linkError.message)
+  revalidatePath("/teach")
+  revalidatePath(`/teach/recordings/${id}`)
+  return { ok: true, message: "Added to your material as a draft. Publish it from your Teaching page." }
+}
+
+export async function removeRecording(id: string): Promise<TeachResult> {
+  if (!isUuid(id)) return { message: "Not found." }
+  const supabase = await createClient()
+  const { error } = await supabase.from("professor_recordings").delete().eq("id", id)
+  if (error) {
+    console.error("remove recording failed:", error.message)
+    return { message: "Couldn't remove it. Please try again." }
+  }
+  revalidatePath("/teach")
+  return { ok: true }
 }
