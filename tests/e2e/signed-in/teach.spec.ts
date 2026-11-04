@@ -212,7 +212,7 @@ test("a professor uploads a lecture recording, corrects the transcript and adds 
   const list = page.getByRole("list", { name: "Your recordings" })
   await expect(list.getByText(/Transcript ready to check/)).toBeVisible({ timeout: 60_000 })
   await page.getByRole("link", { name: "Check the transcript of Newton in Hindi" }).click()
-  const transcript = page.getByLabel("Transcript")
+  const transcript = page.getByRole("textbox", { name: "Transcript", exact: true })
   await expect(transcript).toHaveValue(/^\[0:00\] Newton का दूसरा नियम [^\n]*\n\n\[1:05\] अब एक example देखते हैं।$/)
 
   await transcript.fill("[0:00] Newton का दूसरा नियम: $$F = ma$$\n\n[1:05] अब एक example देखते हैं।")
