@@ -1,12 +1,13 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-import { GrantForm, ResolveButton } from "@/components/learn/admin-forms"
+import { GrantForm, InviteProfessorForm, ProfessorStatusButtons, ResolveButton, RevokeInviteButton } from "@/components/learn/admin-forms"
 import { AccountSection } from "@/components/learn/account-section"
 import { Input } from "@/components/site/ui/input"
 import { Button } from "@/components/site/ui/button"
 import { PRODUCTS, type ProductId } from "@/lib/learning/plans"
 import { createClient } from "@/lib/supabase/server"
+import { subjectName, TEACH_SUBJECTS } from "@/lib/teach/subjects"
 
 export const metadata = { title: "Admin — Krpex" }
 export const dynamic = "force-dynamic"
@@ -43,6 +44,22 @@ function Tile({ label, value, sub }: { label: string; value: string | number; su
   )
 }
 
+type AdminProfessor = {
+  id: string
+  email: string
+  display_name: string
+  title: string | null
+  institution: string | null
+  subject: string
+  languages: string[]
+  credentials: string | null
+  status: string
+  materials: number
+  published: number
+  pages: number
+}
+type AdminInvite = { id: string; email: string; subject: string; expires_at: string }
+
 const th = "px-3 py-2 text-left font-medium whitespace-nowrap"
 const td = "px-3 py-2 whitespace-nowrap"
 
@@ -52,21 +69,24 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   if (!isAdmin) notFound()
   const { q = "" } = await searchParams
 
-  const [overview, daily, users, payments, reports, errors] = await Promise.all([
+  const [overview, daily, users, payments, reports, errors, profs] = await Promise.all([
     supabase.rpc("admin_overview"),
     supabase.rpc("admin_daily", { p_days: 14 }),
     supabase.rpc("admin_users", { p_search: q.slice(0, 100), p_limit: 50 }),
     supabase.rpc("admin_payments", { p_limit: 20 }),
     supabase.rpc("admin_reports", { p_status: "open" }),
     supabase.rpc("admin_errors", { p_hours: 24 }),
+    supabase.rpc("admin_professors"),
   ])
+  const professors = ((profs.data as { professors?: AdminProfessor[] } | null)?.professors ?? []) as AdminProfessor[]
+  const invites = ((profs.data as { invites?: AdminInvite[] } | null)?.invites ?? []) as AdminInvite[]
   const o = (overview.data ?? {}) as Overview
   const days = (daily.data ?? []) as Day[]
   const userRows = (users.data ?? []) as UserRow[]
   const paymentRows = (payments.data ?? []) as Payment[]
   const reportRows = (reports.data ?? []) as Report[]
   const errorRows = (errors.data ?? []) as ErrorGroup[]
-  const failed = [overview, daily, users, payments, reports, errors].find((r) => r.error)
+  const failed = [overview, daily, users, payments, reports, errors, profs].find((r) => r.error)
   const outages = errorRows.filter((e) => e.message.startsWith("AI outage"))
 
   return (
@@ -185,6 +205,47 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               ))}
             </ul>
           )}
+        </AccountSection>
+
+        <AccountSection
+          title={`Professors (${professors.length})`}
+          description="Invite a professor by email, check their qualifications, then approve them. Approved professors can publish material."
+        >
+          <InviteProfessorForm subjects={TEACH_SUBJECTS} />
+          {invites.length ? (
+            <div className="mt-4">
+              <p className="mb-2 text-sm font-medium">Open invites</p>
+              <ul className="grid gap-1 text-sm">
+                {invites.map((i) => (
+                  <li key={i.id} className="flex flex-wrap items-center justify-between gap-2">
+                    <span>
+                      {i.email} · {subjectName(i.subject)} · expires {new Date(i.expires_at).toLocaleDateString("en-IN", { dateStyle: "medium" })}
+                    </span>
+                    <RevokeInviteButton id={i.id} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {professors.length ? (
+            <ul className="mt-4 grid gap-3">
+              {professors.map((p) => (
+                <li key={p.id} className="grid gap-1 rounded-md border p-3 text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium">
+                      {p.display_name} <span className="font-normal text-muted-foreground">· {p.email}</span>
+                    </span>
+                    <ProfessorStatusButtons id={p.id} status={p.status} />
+                  </div>
+                  <p className="text-muted-foreground">
+                    {p.status} · {subjectName(p.subject)} · {p.languages.join(", ")} · {p.materials} files ({p.published} published, {p.pages} pages)
+                  </p>
+                  {[p.title, p.institution].filter(Boolean).length ? <p>{[p.title, p.institution].filter(Boolean).join(", ")}</p> : null}
+                  {p.credentials ? <p className="whitespace-pre-wrap text-muted-foreground">{p.credentials}</p> : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </AccountSection>
 
         <AccountSection title="Give credits or Pro" description="Applied immediately. Use negative credits to take credits away.">

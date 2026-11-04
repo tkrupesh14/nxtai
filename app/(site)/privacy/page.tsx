@@ -44,6 +44,12 @@ export default function PrivacyPage() {
             from them, split into sections, plus the file name and page count. We don&apos;t keep the file itself.
           </li>
           <li>
+            <strong>Professors who teach with us:</strong> if you join by invitation as a professor, your profile (name,
+            title, institution, bio, languages), the qualifications you tell us about (seen only by Krpex), the version and
+            date of the agreement you accepted, and the text of material you upload (never the file). Removing material
+            deletes it from our database.
+          </li>
+          <li>
             <strong>Usage and billing:</strong> daily usage counts, plan, credit balance and payment records (order and
             payment IDs, amount, status). Card, UPI and bank details are handled by our payment partner, not stored by us.
           </li>

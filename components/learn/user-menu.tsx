@@ -14,12 +14,14 @@ export function UserMenu({
   avatarUrl,
   initials,
   isAdmin = false,
+  isProfessor = false,
 }: {
   name: string
   email?: string
   avatarUrl?: string
   initials: string
   isAdmin?: boolean
+  isProfessor?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -77,6 +79,11 @@ export function UserMenu({
           <Link role="menuitem" href="/account/settings" className={itemClass}>
             Settings
           </Link>
+          {isProfessor && (
+            <Link role="menuitem" href="/teach" className={itemClass}>
+              Teaching
+            </Link>
+          )}
           {isAdmin && (
             <Link role="menuitem" href="/admin" className={itemClass}>
               Admin

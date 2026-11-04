@@ -1,0 +1,169 @@
+// Professor portal (8.1): invites, profiles, material uploads, and who can see what.
+import { beforeEach, describe, expect, it } from "vitest"
+
+import { createTestDb, errorOf, SERVER_KEY, USER_A, USER_ADMIN, USER_B, type TestDb } from "../support/db"
+
+let t: TestDb
+const PROF_EMAIL = "prof@example.com"
+
+beforeEach(async () => {
+  t = await createTestDb()
+  await t.addUser(USER_A, PROF_EMAIL)
+  await t.addUser(USER_B, "learner@example.com")
+  await t.addUser(USER_ADMIN, "admin@example.com")
+  await t.asOwner()
+  await t.query(`insert into private.admins (user_id) values ($1)`, [USER_ADMIN])
+})
+
+const invite = async (email = PROF_EMAIL) => {
+  await t.asUser(USER_ADMIN)
+  return (await t.one<{ tok: string }>(`select public.admin_create_professor_invite($1, 'science/physics') as tok`, [email]))!.tok
+}
+const accept = (tok: string) => t.query(`select public.accept_professor_invite($1, 'Dr. Asha Rao', 'draft-2026-11-04')`, [tok])
+const status = async (tok: string) => (await t.one<{ s: { status: string } }>(`select public.professor_invite_status($1) as s`, [tok]))!.s.status
+
+const sections = JSON.stringify([
+  { heading: "Newton's laws", page_from: 1, page_to: 2, body: "A body stays at rest unless acted on by a force." },
+  { heading: "Momentum", page_from: 3, page_to: 3, body: "p = mv" },
+])
+const upload = (pages = 3) =>
+  t.one<{ id: string }>(`select public.app_add_professor_material($1, 'Mechanics notes', 'pdf', 'hi', 'Mechanics', $2, 500, $3) as id`, [
+    SERVER_KEY,
+    pages,
+    sections,
+  ])
+
+const makeProfessor = async () => {
+  const tok = await invite()
+  await t.asUser(USER_A)
+  await accept(tok)
+}
+const approve = async () => {
+  await t.asOwner()
+  const { id } = (await t.one<{ id: string }>(`select id from public.professors where user_id = $1`, [USER_A]))!
+  await t.asUser(USER_ADMIN)
+  await t.query(`select public.admin_set_professor_status($1, 'approved')`, [id])
+  await t.asUser(USER_A)
+}
+
+describe("invites", () => {
+  it("only admins can invite", async () => {
+    await t.asUser(USER_B)
+    expect(await errorOf(t.query(`select public.admin_create_professor_invite('x@example.com', 'science/physics')`))).toMatch(/admin only/)
+    await t.asAnon()
+    expect(await errorOf(t.query(`select public.admin_create_professor_invite('x@example.com', 'science/physics')`))).toMatch(/permission denied/)
+  })
+
+  it("stores only the token's hash", async () => {
+    const tok = await invite()
+    expect(tok).toMatch(/^[0-9a-f]{64}$/)
+    await t.asOwner()
+    const row = await t.one<{ token_hash: string }>(`select token_hash from private.professor_invites`)
+    expect(row!.token_hash).not.toBe(tok)
+  })
+
+  it("works once, for the invited email only", async () => {
+    const tok = await invite()
+    await t.asUser(USER_B)
+    expect(await status(tok)).toBe("wrong_email")
+    expect(await errorOf(accept(tok))).toMatch(/wrong_email/)
+
+    await t.asUser(USER_A)
+    expect(await status(tok)).toBe("ok")
+    await accept(tok)
+    const me = await t.one<{ status: string; display_name: string; agreement_version: string }>(`select status, display_name, agreement_version from public.professors`)
+    expect(me).toEqual({ status: "pending", display_name: "Dr. Asha Rao", agreement_version: "draft-2026-11-04" })
+    expect(await status(tok)).toBe("already_professor")
+    expect(await errorOf(accept(tok))).toMatch(/invite_invalid/)
+  })
+
+  it("rejects unknown, revoked and expired tokens", async () => {
+    await t.asUser(USER_A)
+    expect(await status("nope")).toBe("not_found")
+    const tok = await invite()
+    const { id } = (await t.one<{ id: string }>(`select (public.admin_professors()->'invites'->0->>'id')::uuid as id`))!
+    await t.query(`select public.admin_revoke_professor_invite($1)`, [id])
+    await t.asUser(USER_A)
+    expect(await status(tok)).toBe("not_found")
+
+    const tok2 = await invite()
+    await t.asOwner()
+    await t.query(`update private.professor_invites set expires_at = now() - interval '1 minute' where revoked_at is null`)
+    await t.asUser(USER_A)
+    expect(await status(tok2)).toBe("expired")
+    expect(await errorOf(accept(tok2))).toMatch(/invite_invalid/)
+  })
+})
+
+describe("profiles", () => {
+  it("a professor edits only their own profile; learners see none", async () => {
+    await makeProfessor()
+    await t.query(`select public.professor_update_profile('Dr. Asha Rao', 'Associate Professor', 'IIT Bombay', 'Bio', '{en,hi}', 'PhD')`)
+    expect(await t.one(`select title, institution, languages from public.professors`)).toEqual({
+      title: "Associate Professor",
+      institution: "IIT Bombay",
+      languages: ["en", "hi"],
+    })
+    expect(await errorOf(t.query(`select public.professor_update_profile('X Y', null, null, null, '{fr}', null)`))).toMatch(/check/)
+    expect(await errorOf(t.query(`update public.professors set status = 'approved'`))).toMatch(/permission denied/)
+
+    await t.asUser(USER_B)
+    expect(await t.query(`select * from public.professors`)).toHaveLength(0)
+    expect(await errorOf(t.query(`select public.professor_update_profile('Hacker', null, null, null, '{en}', null)`))).toMatch(/not_professor/)
+  })
+})
+
+describe("material", () => {
+  it("needs a professor and the server key", async () => {
+    await t.asUser(USER_B)
+    expect(await errorOf(upload())).toMatch(/not_professor/)
+    await makeProfessor()
+    expect(await errorOf(t.query(`select public.app_add_professor_material('wrong', 't', 'pdf', 'en', null, 1, 1, $1)`, [sections]))).not.toBeNull()
+  })
+
+  it("is private to its professor and can be withdrawn for good", async () => {
+    await makeProfessor()
+    const { id } = (await upload())!
+    expect(await t.query(`select heading from public.professor_material_sections order by idx`)).toEqual([
+      { heading: "Newton's laws" },
+      { heading: "Momentum" },
+    ])
+    await t.asUser(USER_B)
+    expect(await t.query(`select * from public.professor_materials`)).toHaveLength(0)
+    expect(await t.query(`select * from public.professor_material_sections`)).toHaveLength(0)
+    await t.query(`delete from public.professor_materials where id = $1`, [id])
+
+    await t.asUser(USER_A)
+    expect(await t.query(`select * from public.professor_materials`)).toHaveLength(1)
+    await t.query(`delete from public.professor_materials where id = $1`, [id])
+    await t.asOwner()
+    expect(await t.query(`select * from public.professor_material_sections`)).toHaveLength(0)
+  })
+
+  it("is published only by approved professors", async () => {
+    await makeProfessor()
+    const { id } = (await upload())!
+    expect(await errorOf(t.query(`select public.professor_set_material_status($1, 'published')`, [id]))).toMatch(/not_approved/)
+    await approve()
+    await t.query(`select public.professor_set_material_status($1, 'published')`, [id])
+    expect(await t.one(`select status from public.professor_materials`)).toEqual({ status: "published" })
+    expect(await errorOf(t.query(`update public.professor_materials set status = 'draft'`))).toMatch(/permission denied/)
+  })
+
+  it("stops uploads from suspended professors and enforces the page allowance", async () => {
+    await makeProfessor()
+    expect(await errorOf(upload(5001))).toMatch(/too_many_pages|check/)
+    await t.asOwner()
+    await t.query(`update public.professors set status = 'suspended'`)
+    await t.asUser(USER_A)
+    expect(await errorOf(upload())).toMatch(/suspended/)
+  })
+
+  it("admin sees professors with their counts", async () => {
+    await makeProfessor()
+    await upload()
+    await t.asUser(USER_ADMIN)
+    const data = (await t.one<{ d: { professors: { email: string; materials: number; pages: number; status: string }[] } }>(`select public.admin_professors() as d`))!.d
+    expect(data.professors).toEqual([expect.objectContaining({ email: PROF_EMAIL, materials: 1, pages: 3, status: "pending" })])
+  })
+})

@@ -97,3 +97,15 @@ test("uploads need the Krpex site and a signed-in learner", async ({ request, ba
   const signedOut = await request.post("/api/sources", { multipart: { text: "x".repeat(300) }, headers: { origin: new URL(baseURL!).origin } })
   expect(signedOut.status()).toBe(401)
 })
+
+test("the professor space needs sign-in, and its uploads need the Krpex site", async ({ page, request, baseURL }) => {
+  await page.goto("/teach/join?token=abc")
+  await expect(page).toHaveURL(/\/login\?next=%2Fteach%2Fjoin%3Ftoken%3Dabc$/)
+  const res = await request.post("/api/teach/materials", { multipart: { text: "x".repeat(300), language: "en" } })
+  expect(res.status()).toBe(403)
+  const signedOut = await request.post("/api/teach/materials", {
+    multipart: { text: "x".repeat(300), language: "en" },
+    headers: { origin: new URL(baseURL!).origin },
+  })
+  expect(signedOut.status()).toBe(401)
+})

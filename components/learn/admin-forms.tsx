@@ -2,7 +2,7 @@
 
 import { useActionState, useTransition } from "react"
 
-import { grantAction, resolveReport } from "@/app/(learn)/admin/actions"
+import { grantAction, inviteProfessorAction, resolveReport, revokeInvite, setProfessorStatus, type InviteResult } from "@/app/(learn)/admin/actions"
 import { Button } from "@/components/site/ui/button"
 import { Input } from "@/components/site/ui/input"
 import { Label } from "@/components/site/ui/label"
@@ -50,5 +50,80 @@ export function ResolveButton({ id }: { id: string }) {
     <Button size="sm" variant="outline" disabled={pending} onClick={() => start(() => resolveReport(id))}>
       {pending ? "…" : "Resolve"}
     </Button>
+  )
+}
+
+export function InviteProfessorForm({ subjects }: { subjects: readonly { id: string; name: string }[] }) {
+  const [state, action, pending] = useActionState<InviteResult, FormData>(inviteProfessorAction, {})
+  return (
+    <form action={action} className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-[2fr_1fr_auto] sm:items-end">
+        <div className="grid gap-1.5">
+          <Label htmlFor="p-email">Professor email</Label>
+          <Input id="p-email" name="email" type="email" required autoComplete="off" />
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="p-subject">Subject</Label>
+          <select id="p-subject" name="subject" className="h-9 rounded-md border bg-background px-3 text-sm">
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <Button type="submit" disabled={pending}>
+          {pending ? "Creating…" : "Create invite"}
+        </Button>
+      </div>
+      {state.message ? (
+        <p role={state.ok ? "status" : "alert"} className={state.ok ? "text-sm text-green-700 dark:text-green-400" : "text-sm text-destructive-foreground"}>
+          {state.message}
+        </p>
+      ) : null}
+      {state.link ? (
+        <div className="flex min-w-0 gap-2">
+          <Input readOnly value={state.link} aria-label="Invite link" onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 font-mono text-xs" />
+          <Button type="button" variant="outline" onClick={() => navigator.clipboard?.writeText(state.link!)}>
+            Copy
+          </Button>
+        </div>
+      ) : null}
+      <p className="text-xs text-muted-foreground">The link is shown only once. It works for that email only, once, for 14 days.</p>
+    </form>
+  )
+}
+
+export function RevokeInviteButton({ id }: { id: string }) {
+  const [pending, start] = useTransition()
+  return (
+    <Button size="sm" variant="ghost" disabled={pending} onClick={() => start(() => revokeInvite(id))}>
+      {pending ? "…" : "Revoke"}
+    </Button>
+  )
+}
+
+export function ProfessorStatusButtons({ id, status }: { id: string; status: string }) {
+  const [pending, start] = useTransition()
+  return (
+    <div className="flex gap-1">
+      {status !== "approved" ? (
+        <Button size="sm" variant="outline" disabled={pending} onClick={() => start(() => setProfessorStatus(id, "approved"))}>
+          Approve
+        </Button>
+      ) : null}
+      {status !== "suspended" ? (
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={pending}
+          onClick={() => {
+            if (window.confirm("Pause this professor? Their material stops being used.")) start(() => setProfessorStatus(id, "suspended"))
+          }}
+        >
+          Pause
+        </Button>
+      ) : null}
+    </div>
   )
 }

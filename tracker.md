@@ -141,7 +141,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 |----|------|-----|--------|-------|-------|
 | 8.0 | Contributor agreement (licence, name/photo/style consent, withdrawal, own-material rule) + programme page; lawyer review | P1 | ⬜ | 👤 | Before inviting professors |
 | 8.0b | Recruit 2–3 Physics professors (volunteers) | P1 | ⬜ | 👤 | |
-| 8.1 | Portal `/teach`: invites from `/admin`, professor profile, agreement, uploads (reuse 5.2), model-lesson editor, review queue (rate/edit/comment), drafts + publish, withdraw | P1 | ⬜ | 🤖 | Needs a migration |
+| 8.1 | Portal `/teach`: invites from `/admin`, professor profile, agreement, uploads (reuse 5.2), model-lesson editor, review queue (rate/edit/comment), drafts + publish, withdraw | P1 | 🟡 | 🤖 | Part 1 built (migration 016): invites, join + agreement (draft), profile, uploads, publish/withdraw, admin approve/pause. Next: model-lesson editor, review queue |
 | 8.2 | Professor-backed lessons: teaching profile + examples + search over their material in lessons, tests and chat; professor choice in onboarding; "Taught by Prof. X (AI)" + professor page | P1 | ⬜ | 🤖 | |
 | 8.3 | Hindi teaching language: onboarding choice, lessons/quizzes/tests/chat in Hindi, Devanagari font | P1 | ⬜ | 🤖 | |
 | 8.4 | Lecture audio/video transcription; question banks; flagged learner questions → professor inbox | P2 | ⬜ | 🤖 | Outside transcription service (~₹0.5/min) |
