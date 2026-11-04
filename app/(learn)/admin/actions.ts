@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 
+import { generateLesson, toAIError } from "@/lib/ai/llm"
 import { createClient } from "@/lib/supabase/server"
+import { GenerateReviewLessonSchema, reviewLessonArgs } from "@/lib/teach/reviews"
 
 export type AdminResult = { ok?: boolean; message?: string }
 
@@ -69,5 +71,53 @@ export async function setProfessorStatus(id: string, status: "approved" | "suspe
   const supabase = await createClient()
   const { error } = await supabase.rpc("admin_set_professor_status", { p_id: id, p_status: status })
   if (error) console.error("admin_set_professor_status failed:", error.message)
+  revalidatePath("/admin")
+}
+
+export type GenerateResult = AdminResult & { id?: string }
+
+/** Write a sample Physics lesson with the AI and add it to the professors' review queue. Takes about a minute. */
+export async function generateReviewLessonAction(_: GenerateResult, formData: FormData): Promise<GenerateResult> {
+  const parsed = GenerateReviewLessonSchema.safeParse({
+    title: String(formData.get("title") ?? ""),
+    objective: String(formData.get("objective") ?? ""),
+    level: String(formData.get("level") ?? ""),
+    language: String(formData.get("language") ?? ""),
+  })
+  if (!parsed.success) return { message: parsed.error.issues[0]?.message ?? "Check the form." }
+  const supabase = await createClient()
+  const { data: isAdmin } = await supabase.rpc("is_admin")
+  if (!isAdmin) return { message: "Admins only." }
+
+  let lesson
+  try {
+    lesson = await generateLesson(reviewLessonArgs(parsed.data))
+  } catch (e) {
+    const err = toAIError(e)
+    console.error("review lesson generation failed:", err.message)
+    return { message: err.userMessage }
+  }
+  const { data: id, error } = await supabase.rpc("admin_add_review_lesson", {
+    p_subject: "science/physics",
+    p_language: parsed.data.language,
+    p_level: parsed.data.level,
+    p_title: parsed.data.title,
+    p_objective: parsed.data.objective,
+    p_blocks: lesson.blocks,
+    p_takeaways: lesson.key_takeaways,
+    p_quiz: lesson.quiz,
+  })
+  if (error || typeof id !== "string") {
+    console.error("admin_add_review_lesson failed:", error?.message)
+    return { message: "The lesson was written but couldn't be saved. Please try again." }
+  }
+  revalidatePath("/admin")
+  return { ok: true, id, message: `Added "${parsed.data.title}" to the review queue.` }
+}
+
+export async function setReviewLessonStatus(id: string, status: "open" | "closed") {
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("admin_set_review_lesson_status", { p_id: id, p_status: status })
+  if (error) console.error("admin_set_review_lesson_status failed:", error.message)
   revalidatePath("/admin")
 }

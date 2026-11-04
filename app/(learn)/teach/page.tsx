@@ -7,8 +7,8 @@ import { MaterialList } from "@/components/teach/material-list"
 import { Button } from "@/components/site/ui/button"
 import { MaterialUpload } from "@/components/teach/material-upload"
 import { ProfileForm } from "@/components/teach/profile-form"
-import { getMyLessons, getMyMaterials, getMyProfessor } from "@/lib/teach/data"
-import { subjectName } from "@/lib/teach/subjects"
+import { getMyLessons, getMyMaterials, getMyProfessor, getReviewQueue } from "@/lib/teach/data"
+import { languageName, subjectName } from "@/lib/teach/subjects"
 
 export const metadata = { title: "Teaching — Krpex" }
 
@@ -34,7 +34,12 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
       </main>
     )
   }
-  const [{ welcome }, materials, lessons] = await Promise.all([searchParams, getMyMaterials(), getMyLessons()])
+  const [{ welcome }, materials, lessons, queue] = await Promise.all([
+    searchParams,
+    getMyMaterials(),
+    getMyLessons(),
+    professor.status === "approved" ? getReviewQueue() : Promise.resolve([]),
+  ])
   const published = materials.filter((m) => m.status === "published").length
 
   return (
@@ -85,8 +90,36 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
         <LessonList lessons={lessons} canPublish={professor.status === "approved"} />
       </AccountSection>
 
-      <AccountSection title="Coming next" description="Reviewing the lessons the AI writes in Physics: rate, correct and comment.">
-        <p className="text-sm text-muted-foreground">We&apos;ll let you know when it&apos;s ready.</p>
+      <AccountSection
+        title={`Review AI lessons${queue.length ? ` (${queue.filter((q) => !q.reviewed_at).length} to review)` : ""}`}
+        description="Sample Physics lessons written by the AI. Rate them, say what's wrong, and show how you'd put it. Your reviews teach the AI."
+      >
+        {professor.status !== "approved" ? (
+          <p className="text-sm text-muted-foreground">You can review lessons once Krpex has approved your profile.</p>
+        ) : queue.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No lessons to review right now. We&apos;ll add more soon.</p>
+        ) : (
+          <ul className="grid min-w-0 gap-2" aria-label="Lessons to review">
+            {queue.map((q) => (
+              <li key={q.id} className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium" title={q.title}>
+                    {q.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {languageName(q.language)} · {q.level}
+                    {q.reviewed_at ? " · Reviewed ✓" : ""}
+                  </p>
+                </div>
+                <Button asChild size="sm" variant={q.reviewed_at ? "outline" : "default"}>
+                  <Link href={`/teach/review/${q.id}`} aria-label={`${q.reviewed_at ? "Edit your review of" : "Review"} ${q.title}`}>
+                    {q.reviewed_at ? "Edit review" : "Review"}
+                  </Link>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
       </AccountSection>
 
       <details className="rounded-xl border bg-card p-5 md:p-6">

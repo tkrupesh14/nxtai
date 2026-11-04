@@ -218,3 +218,73 @@ describe("model lessons", () => {
     expect(await errorOf(save())).toMatch(/suspended/)
   })
 })
+
+describe("review queue", () => {
+  const blocks = JSON.stringify([
+    { type: "opening", title: "", body_markdown: "Hello", items: [], checkpoint: null, diagram: null },
+    { type: "explanation", title: "F = ma", body_markdown: "Force", items: [], checkpoint: null, diagram: null },
+  ])
+  const addLesson = async (language = "en") => {
+    await t.asUser(USER_ADMIN)
+    const { id } = (await t.one<{ id: string }>(
+      `select public.admin_add_review_lesson('science/physics', $1, 'Class 11–12 (school)', 'Newton''s second law', null, $2, '[]', '[]') as id`,
+      [language, blocks],
+    ))!
+    return id
+  }
+  const submit = (id: string, notes = "[]", overall = 4) =>
+    t.query(`select public.professor_submit_review($1, 5, 4, 3, $2, 'Good start', $3)`, [id, overall, notes])
+
+  it("only admins add lessons", async () => {
+    await t.asUser(USER_B)
+    expect(await errorOf(t.query(`select public.admin_add_review_lesson('science/physics', 'en', 'School', 'Title', null, $1, '[]', '[]')`, [blocks]))).toMatch(/admin only/)
+    await t.asAnon()
+    expect(await errorOf(t.query(`select public.admin_review_lessons()`))).toMatch(/permission denied/)
+  })
+
+  it("is shown to approved professors in their languages only", async () => {
+    const en = await addLesson("en")
+    await addLesson("hi")
+    await makeProfessor()
+    expect(await t.query(`select * from public.review_lessons`)).toHaveLength(0) // pending
+    expect(await errorOf(submit(en))).toMatch(/not_approved/)
+    await approve()
+    expect(await t.query(`select language from public.review_lessons`)).toEqual([{ language: "en" }])
+    await t.asUser(USER_B)
+    expect(await t.query(`select * from public.review_lessons`)).toHaveLength(0)
+    expect(await errorOf(submit(en))).toMatch(/not_professor/)
+  })
+
+  it("takes one review per professor, which they can update and only they see", async () => {
+    const id = await addLesson()
+    await makeProfessor()
+    await approve()
+    await submit(id, JSON.stringify([{ block: 1, note: "Say what F is", suggestion: "" }]))
+    await submit(id, "[]", 2)
+    expect(await t.query(`select overall, comment, block_notes from public.lesson_reviews`)).toEqual([
+      { overall: 2, comment: "Good start", block_notes: [] },
+    ])
+    await t.asUser(USER_B)
+    expect(await t.query(`select * from public.lesson_reviews`)).toHaveLength(0)
+
+    await t.asUser(USER_ADMIN)
+    const data = (await t.one<{ d: { reviews: { professor: string; overall: number }[] }[] }>(`select public.admin_review_lessons() as d`))!.d
+    expect(data[0].reviews).toEqual([expect.objectContaining({ professor: "Dr. Asha Rao", overall: 2 })])
+  })
+
+  it("rejects bad ratings and notes, and closed lessons", async () => {
+    const id = await addLesson()
+    await makeProfessor()
+    await approve()
+    expect(await errorOf(submit(id, "[]", 6))).toMatch(/check/)
+    expect(await errorOf(submit(id, JSON.stringify([{ block: 2, note: "x", suggestion: "" }])))).toMatch(/invalid_notes/)
+    expect(await errorOf(submit(id, JSON.stringify([{ block: 0, note: " ", suggestion: "" }])))).toMatch(/invalid_notes/)
+    expect(await errorOf(t.query(`insert into public.lesson_reviews (review_lesson_id, professor_id, accuracy, clarity, level_fit, overall) select $1, id, 5, 5, 5, 5 from public.professors`, [id]))).toMatch(/permission denied/)
+
+    await t.asUser(USER_ADMIN)
+    await t.query(`select public.admin_set_review_lesson_status($1, 'closed')`, [id])
+    await t.asUser(USER_A)
+    expect(await t.query(`select * from public.review_lessons`)).toHaveLength(0)
+    expect(await errorOf(submit(id))).toMatch(/not_found/)
+  })
+})

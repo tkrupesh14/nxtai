@@ -81,3 +81,56 @@ export async function getMyLesson(id: string) {
     | { id: string; title: string; topic: string | null; language: string; objective: string | null; blocks: unknown; key_takeaways: unknown; status: "draft" | "published" }
     | null
 }
+
+export type ReviewQueueItem = {
+  id: string
+  title: string
+  level: string
+  language: string
+  created_at: string
+  reviewed_at: string | null
+}
+
+/** Open sample lessons this professor can review (RLS: approved, same subject, their languages), newest first. */
+export async function getReviewQueue(): Promise<ReviewQueueItem[]> {
+  const supabase = await createClient()
+  const [lessons, reviews] = await Promise.all([
+    supabase.from("review_lessons").select("id, title, level, language, created_at").order("created_at", { ascending: false }).limit(100),
+    supabase.from("lesson_reviews").select("review_lesson_id, updated_at"),
+  ])
+  const done = new Map(((reviews.data ?? []) as { review_lesson_id: string; updated_at: string }[]).map((r) => [r.review_lesson_id, r.updated_at]))
+  return ((lessons.data ?? []) as Omit<ReviewQueueItem, "reviewed_at">[]).map((l) => ({ ...l, reviewed_at: done.get(l.id) ?? null }))
+}
+
+export type ReviewLesson = {
+  id: string
+  title: string
+  level: string
+  language: string
+  objective: string | null
+  blocks: unknown
+  key_takeaways: unknown
+  quiz: unknown
+}
+export type MyReview = {
+  accuracy: number
+  clarity: number
+  level_fit: number
+  overall: number
+  comment: string | null
+  block_notes: unknown
+  updated_at: string
+}
+
+export async function getReviewLesson(id: string): Promise<{ lesson: ReviewLesson | null; review: MyReview | null }> {
+  const supabase = await createClient()
+  const [lesson, review] = await Promise.all([
+    supabase.from("review_lessons").select("id, title, level, language, objective, blocks, key_takeaways, quiz").eq("id", id).maybeSingle(),
+    supabase
+      .from("lesson_reviews")
+      .select("accuracy, clarity, level_fit, overall, comment, block_notes, updated_at")
+      .eq("review_lesson_id", id)
+      .maybeSingle(),
+  ])
+  return { lesson: (lesson.data as ReviewLesson | null) ?? null, review: (review.data as MyReview | null) ?? null }
+}

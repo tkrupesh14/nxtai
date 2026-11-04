@@ -143,3 +143,53 @@ test("a professor writes, previews and publishes a model lesson", async ({ page 
   await expect(lessons.getByText(/Published ·/)).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test("the admin adds an AI lesson for review, and the professor reviews it", async ({ page }) => {
+  test.setTimeout(120_000)
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+
+  await page.goto("/admin")
+  await page.getByLabel("Lesson topic").fill("Projectile motion")
+  await page.getByRole("button", { name: "Write a lesson for review" }).click()
+  await expect(page.getByText('Added "Projectile motion" to the review queue.')).toBeVisible()
+  const adminList = page.getByRole("list", { name: "Lessons for review" })
+  await expect(adminList.getByText(/open · English · Class 11–12 \(school\) · \d+ blocks · 0 reviews/)).toBeVisible()
+
+  // The professor (approved in the first test) sees it in their queue.
+  await page.goto("/teach")
+  const queue = page.getByRole("list", { name: "Lessons to review" })
+  await expect(queue.getByText("Projectile motion")).toBeVisible()
+  await page.getByRole("link", { name: "Review Projectile motion" }).click()
+  await expect(page.getByRole("heading", { name: "Projectile motion" })).toBeVisible()
+  await expect(page.getByLabel("End-of-lesson quiz").getByText("(correct)").first()).toBeVisible()
+
+  await page.getByRole("button", { name: "Add a note on block 2" }).click()
+  await page.getByLabel("Block 2 note").fill("Define the symbols before using them.")
+  await page.getByLabel("Block 2 suggestion").fill("Here $$v$$ is the speed.")
+
+  // Every rating is needed.
+  await page.getByRole("button", { name: "Submit review" }).click()
+  await expect(page.getByText('Give a rating for "Accurate".')).toBeVisible()
+  for (const [label, v] of [["Accurate", 5], ["Clear", 4], ["Right level", 4], ["Overall", 4]] as const) {
+    await page.getByLabel(`${label}: ${v} out of 5`).check({ force: true })
+  }
+  await page.getByLabel("Overall comment (optional)").fill("Clear, but slow down on the vectors.")
+  await page.getByRole("button", { name: "Submit review" }).click()
+  await expect(page.getByText(/Thank you. Your review is saved/)).toBeVisible()
+
+  // Coming back shows the saved review.
+  await page.goto("/teach")
+  await expect(queue.getByText(/Reviewed ✓/)).toBeVisible()
+  await page.getByRole("link", { name: "Edit your review of Projectile motion" }).click()
+  await expect(page.getByLabel("Block 2 note")).toHaveValue("Define the symbols before using them.")
+  await expect(page.getByLabel("Accurate: 5 out of 5")).toBeChecked()
+  await expect(page.getByRole("button", { name: "Update review" })).toBeVisible()
+
+  // The admin sees it.
+  await page.goto("/admin")
+  await expect(adminList.getByText(/1 review · Accurate 5, Clear 4, Right level 4, Overall 4/)).toBeVisible()
+  await adminList.getByText("Read the reviews").click()
+  await expect(adminList.getByText("Define the symbols before using them.")).toBeVisible()
+  expect(errors).toEqual([])
+})

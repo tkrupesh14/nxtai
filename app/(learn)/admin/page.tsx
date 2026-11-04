@@ -1,13 +1,22 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-import { GrantForm, InviteProfessorForm, ProfessorStatusButtons, ResolveButton, RevokeInviteButton } from "@/components/learn/admin-forms"
+import {
+  GenerateReviewLessonForm,
+  GrantForm,
+  InviteProfessorForm,
+  ProfessorStatusButtons,
+  ResolveButton,
+  ReviewLessonStatusButton,
+  RevokeInviteButton,
+} from "@/components/learn/admin-forms"
 import { AccountSection } from "@/components/learn/account-section"
 import { Input } from "@/components/site/ui/input"
 import { Button } from "@/components/site/ui/button"
 import { PRODUCTS, type ProductId } from "@/lib/learning/plans"
 import { createClient } from "@/lib/supabase/server"
-import { subjectName, TEACH_SUBJECTS } from "@/lib/teach/subjects"
+import { average, RATING_CRITERIA } from "@/lib/teach/reviews"
+import { languageName, subjectName, TEACH_SUBJECTS } from "@/lib/teach/subjects"
 
 export const metadata = { title: "Admin — Krpex" }
 export const dynamic = "force-dynamic"
@@ -60,6 +69,17 @@ type AdminProfessor = {
   lessons?: number
   lessons_published?: number
 }
+type AdminReview = {
+  professor: string
+  accuracy: number
+  clarity: number
+  level_fit: number
+  overall: number
+  comment: string | null
+  block_notes: { block: number; note: string; suggestion: string }[]
+  updated_at: string
+}
+type AdminReviewLesson = { id: string; title: string; level: string; language: string; status: string; created_at: string; blocks: number; reviews: AdminReview[] }
 type AdminInvite = { id: string; email: string; subject: string; expires_at: string }
 
 const th = "px-3 py-2 text-left font-medium whitespace-nowrap"
@@ -71,7 +91,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   if (!isAdmin) notFound()
   const { q = "" } = await searchParams
 
-  const [overview, daily, users, payments, reports, errors, profs] = await Promise.all([
+  const [overview, daily, users, payments, reports, errors, profs, reviewQueue] = await Promise.all([
     supabase.rpc("admin_overview"),
     supabase.rpc("admin_daily", { p_days: 14 }),
     supabase.rpc("admin_users", { p_search: q.slice(0, 100), p_limit: 50 }),
@@ -79,7 +99,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_reports", { p_status: "open" }),
     supabase.rpc("admin_errors", { p_hours: 24 }),
     supabase.rpc("admin_professors"),
+    supabase.rpc("admin_review_lessons"),
   ])
+  const reviewLessons = (reviewQueue.data ?? []) as AdminReviewLesson[]
   const professors = ((profs.data as { professors?: AdminProfessor[] } | null)?.professors ?? []) as AdminProfessor[]
   const invites = ((profs.data as { invites?: AdminInvite[] } | null)?.invites ?? []) as AdminInvite[]
   const o = (overview.data ?? {}) as Overview
@@ -88,7 +110,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const paymentRows = (payments.data ?? []) as Payment[]
   const reportRows = (reports.data ?? []) as Report[]
   const errorRows = (errors.data ?? []) as ErrorGroup[]
-  const failed = [overview, daily, users, payments, reports, errors, profs].find((r) => r.error)
+  const failed = [overview, daily, users, payments, reports, errors, profs, reviewQueue].find((r) => r.error)
   const outages = errorRows.filter((e) => e.message.startsWith("AI outage"))
 
   return (
@@ -244,6 +266,62 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                   </p>
                   {[p.title, p.institution].filter(Boolean).length ? <p>{[p.title, p.institution].filter(Boolean).join(", ")}</p> : null}
                   {p.credentials ? <p className="whitespace-pre-wrap text-muted-foreground">{p.credentials}</p> : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </AccountSection>
+
+        <AccountSection
+          title={`Lessons for review (${reviewLessons.length})`}
+          description="Sample Physics lessons written by the AI, with no learner data. Approved professors in that language rate and correct them."
+        >
+          <GenerateReviewLessonForm />
+          {reviewLessons.length ? (
+            <ul className="mt-4 grid gap-3" aria-label="Lessons for review">
+              {reviewLessons.map((l) => (
+                <li key={l.id} className="grid gap-2 rounded-md border p-3 text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium">{l.title}</span>
+                    <ReviewLessonStatusButton id={l.id} status={l.status} title={l.title} />
+                  </div>
+                  <p className="text-muted-foreground">
+                    {l.status} · {languageName(l.language)} · {l.level} · {l.blocks} blocks · {l.reviews.length}{" "}
+                    {l.reviews.length === 1 ? "review" : "reviews"}
+                    {l.reviews.length
+                      ? ` · ${RATING_CRITERIA.map((c) => `${c.label} ${average(l.reviews.map((r) => r[c.key]))}`).join(", ")}`
+                      : ""}
+                  </p>
+                  {l.reviews.length ? (
+                    <details>
+                      <summary className="cursor-pointer text-primary">Read the reviews</summary>
+                      <ul className="mt-2 grid gap-3">
+                        {l.reviews.map((r, i) => (
+                          <li key={i} className="grid gap-1 border-l-2 pl-3">
+                            <p className="font-medium">
+                              {r.professor}{" "}
+                              <span className="font-normal text-muted-foreground">
+                                · {RATING_CRITERIA.map((c) => `${c.label} ${r[c.key]}/5`).join(", ")} · {when(r.updated_at)}
+                              </span>
+                            </p>
+                            {r.comment ? <p className="whitespace-pre-wrap">{r.comment}</p> : null}
+                            {r.block_notes.map((n, j) => (
+                              <div key={j} className="rounded bg-muted/50 p-2">
+                                <p className="text-xs text-muted-foreground">Block {n.block + 1}</p>
+                                {n.note ? <p className="whitespace-pre-wrap">{n.note}</p> : null}
+                                {n.suggestion ? (
+                                  <p className="mt-1 whitespace-pre-wrap">
+                                    <span className="text-xs text-muted-foreground">Suggested text: </span>
+                                    {n.suggestion}
+                                  </p>
+                                ) : null}
+                              </div>
+                            ))}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  ) : null}
                 </li>
               ))}
             </ul>

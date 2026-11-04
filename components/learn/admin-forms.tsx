@@ -2,10 +2,21 @@
 
 import { useActionState, useTransition } from "react"
 
-import { grantAction, inviteProfessorAction, resolveReport, revokeInvite, setProfessorStatus, type InviteResult } from "@/app/(learn)/admin/actions"
+import {
+  generateReviewLessonAction,
+  grantAction,
+  inviteProfessorAction,
+  resolveReport,
+  revokeInvite,
+  setProfessorStatus,
+  setReviewLessonStatus,
+  type GenerateResult,
+  type InviteResult,
+} from "@/app/(learn)/admin/actions"
 import { Button } from "@/components/site/ui/button"
 import { Input } from "@/components/site/ui/input"
 import { Label } from "@/components/site/ui/label"
+import { REVIEW_LEVELS } from "@/lib/teach/reviews"
 
 export function GrantForm() {
   const [state, action, pending] = useActionState(grantAction, {})
@@ -125,5 +136,68 @@ export function ProfessorStatusButtons({ id, status }: { id: string; status: str
         </Button>
       ) : null}
     </div>
+  )
+}
+
+const selectClass = "h-9 rounded-md border bg-background px-3 text-sm"
+
+/** Write a sample Physics lesson for professors to review. */
+export function GenerateReviewLessonForm() {
+  const [state, action, pending] = useActionState<GenerateResult, FormData>(generateReviewLessonAction, {})
+  return (
+    <form action={action} className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1.5 sm:col-span-2">
+          <Label htmlFor="r-title">Lesson topic</Label>
+          <Input id="r-title" name="title" required minLength={3} maxLength={200} placeholder="e.g. Newton's second law" autoComplete="off" />
+        </div>
+        <div className="grid gap-1.5 sm:col-span-2">
+          <Label htmlFor="r-objective">Objective (optional)</Label>
+          <Input id="r-objective" name="objective" maxLength={500} placeholder="What the student should be able to do" autoComplete="off" />
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="r-level">Level</Label>
+          <select id="r-level" name="level" className={selectClass}>
+            {REVIEW_LEVELS.map((l) => (
+              <option key={l}>{l}</option>
+            ))}
+          </select>
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="r-language">Language</Label>
+          <select id="r-language" name="language" className={selectClass}>
+            <option value="en">English</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+          </select>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="submit" disabled={pending}>
+          {pending ? "Writing the lesson…" : "Write a lesson for review"}
+        </Button>
+        {pending ? <span className="text-sm text-muted-foreground">This takes about a minute. Keep this page open.</span> : null}
+      </div>
+      {state.message ? (
+        <p role={state.ok ? "status" : "alert"} className={state.ok ? "text-sm text-green-700 dark:text-green-400" : "text-sm text-destructive-foreground"}>
+          {state.message}
+        </p>
+      ) : null}
+    </form>
+  )
+}
+
+export function ReviewLessonStatusButton({ id, status, title }: { id: string; status: string; title: string }) {
+  const [pending, start] = useTransition()
+  const next = status === "open" ? "closed" : "open"
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      disabled={pending}
+      aria-label={`${status === "open" ? "Close" : "Reopen"} review of ${title}`}
+      onClick={() => start(() => setReviewLessonStatus(id, next))}
+    >
+      {pending ? "…" : status === "open" ? "Close" : "Reopen"}
+    </Button>
   )
 }

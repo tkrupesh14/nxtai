@@ -46,8 +46,8 @@ export default function PrivacyPage() {
           <li>
             <strong>Professors who teach with us:</strong> if you join by invitation as a professor, your profile (name,
             title, institution, bio, languages), the qualifications you tell us about (seen only by Krpex), the version and
-            date of the agreement you accepted, and the text of material you upload (never the file). Removing material
-            deletes it from our database.
+            date of the agreement you accepted, the text of material you upload (never the file), and the model lessons and
+            lesson reviews you write (reviews are seen only by Krpex). Removing material deletes it from our database.
           </li>
           <li>
             <strong>Usage and billing:</strong> daily usage counts, plan, credit balance and payment records (order and

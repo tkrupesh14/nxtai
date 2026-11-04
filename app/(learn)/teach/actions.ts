@@ -7,6 +7,7 @@ import { isUuid } from "@/lib/learning/data"
 import { createClient } from "@/lib/supabase/server"
 import { AGREEMENT_VERSION } from "@/lib/teach/agreement"
 import { firstProblem, ModelLessonSchema, toLessonBlocks } from "@/lib/teach/lessons"
+import { ReviewSchema } from "@/lib/teach/reviews"
 import { isTeachLanguage } from "@/lib/teach/subjects"
 
 export type TeachResult = { ok?: boolean; message?: string }
@@ -144,4 +145,37 @@ export async function removeLesson(id: string): Promise<TeachResult> {
   }
   revalidatePath("/teach")
   return { ok: true }
+}
+
+const REVIEW_ERRORS: Record<string, string> = {
+  not_professor: "Only Krpex professors can review lessons.",
+  not_approved: "You can review lessons once Krpex has approved your profile.",
+  not_found: "This lesson isn't open for review any more.",
+  invalid_notes: "One of your block notes couldn't be saved. Check it and try again.",
+}
+
+/** Submit or update this professor's review of a sample AI lesson. */
+export async function submitReview(lessonId: string, review: unknown): Promise<TeachResult> {
+  if (!isUuid(lessonId)) return { message: REVIEW_ERRORS.not_found }
+  const parsed = ReviewSchema.safeParse(review)
+  if (!parsed.success) return { message: parsed.error.issues[0]?.message ?? "Check your review." }
+  const r = parsed.data
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("professor_submit_review", {
+    p_lesson: lessonId,
+    p_accuracy: r.accuracy,
+    p_clarity: r.clarity,
+    p_level_fit: r.level_fit,
+    p_overall: r.overall,
+    p_comment: r.comment,
+    p_notes: r.block_notes,
+  })
+  if (error) {
+    const known = REVIEW_ERRORS[error.message]
+    if (!known) console.error("professor_submit_review failed:", error.message)
+    return { message: known ?? "Couldn't save your review. Please try again." }
+  }
+  revalidatePath("/teach")
+  revalidatePath(`/teach/review/${lessonId}`)
+  return { ok: true, message: "Thank you. Your review is saved; you can change it any time." }
 }

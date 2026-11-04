@@ -359,7 +359,15 @@ export type LessonArgs = {
   learningStyle?: string | null
   /** The learner's material this lesson teaches from (sourceExcerpt), if the course was built from uploads. */
   sourceText?: string | null
+  /** Language to teach in (default English). */
+  language?: "en" | "hi"
 }
+
+const HINDI_RULE = `
+Language: write the whole lesson (every block, the takeaways and the quiz) in Hindi, in Devanagari script, the way a
+good teacher speaks in a Hindi-medium classroom in India. Keep standard scientific terms recognisable: give the
+English term in brackets the first time, e.g. त्वरण (acceleration). Formulas, units and symbols stay as usual (F = ma, m/s²).
+`
 
 function lessonPrompt(args: LessonArgs): string {
   const category = getCategory(args.categoryId)
@@ -395,6 +403,7 @@ practice, and fill small gaps, but don't contradict it or drift into topics it d
 wrong, say so gently and explain. Mention section headings or page numbers when you point back to the material.
 The quiz and checkpoints test this material.
 ` : ""}
+${args.language === "hi" ? HINDI_RULE : ""}
 Write the lecture as 8-14 blocks, in this order:
 1. opening — greet the learner, briefly recap the previous lesson (if any), and say why today matters for their goal.
 2. objectives — "By the end of this lesson you'll be able to…"; put 2-3 objectives in items.
