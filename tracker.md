@@ -135,6 +135,12 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 7.3 | Playwright e2e + visual regression tests | P1 | ✅ | | Unit (Vitest), database (PGlite: RLS, server key, limits, payments), Playwright smoke tests, and signed-in browser tests (onboarding → course, lesson taught + quiz passed, AI professor, My courses progress, catalog limits/delete, account) against a local Supabase + fake AI in CI: `pnpm test`, `pnpm test:e2e`, `pnpm test:e2e:signed-in`. Supabase CLI pinned to 2.122.1 in CI. Visual regression optional, not done |
 | 7.4 | CI on pull requests | P1 | ✅ | | `.github/workflows/ci.yml`: typecheck → tests → build → smoke tests, on push to dev/main and PRs |
 
+## Bugs
+
+| ID | Bug | Pri | Status | Owner | Notes |
+|----|-----|-----|--------|-------|-------|
+| B1 | Ask the professor gives away quiz, checkpoint and test answers | P1 | ⬜ | 🤖 | Reported 2026-11-04. The chat should hint and guide the learner's reasoning, never state the correct option, until that question is answered. Current prompt rule (`PROFESSOR_SYSTEM` in `lib/ai/llm.ts`) only says "guide their reasoning instead of just giving the letter" — too weak. Fix: stronger rule, keep answer keys out of the chat context, refuse while a module test / final exam is in progress, and a test with the fake AI |
+
 ## Next up — Sprint 1: ready for real users (proposed)
 
 | ID | Task | Pri | Status | Owner | Notes |
