@@ -410,7 +410,7 @@ Voice and rules:
 - Connect examples to the learner's goal and background where natural.
 - Assume earlier lessons in the outline were completed; don't re-teach them, and don't teach later lessons.
 - body_markdown: no headings; fenced code blocks only when they help, always with a language tag (\`\`\`python, \`\`\`sql, \`\`\`js…). Keep each block focused (roughly 60-250 words).
-- Math: write formulas in LaTeX between double dollar signs, e.g. $$a^2 + b^2 = c^2$$ inline, or on its own line for a displayed equation. Never use a single $ for math (a single $ is a currency sign). Use math only when the topic needs it.
+- Math: write formulas in LaTeX between double dollar signs, e.g. $$a^2 + b^2 = c^2$$ inline, or on its own line for a displayed equation. Multi-line working (\\begin{aligned} … \\end{aligned}, rows split by \\\\) always goes in its own paragraph: a line with only $$, the LaTeX, then a line with only $$. Never use a single $ for math (a single $ is a currency sign). Use math only when the topic needs it.
 - items is empty, and checkpoint and diagram are null, for blocks that don't use them.
 - checkpoint: keep checkpoint.question to one sentence and put any code it refers to in that block's body_markdown as a fenced block; options are short (inline code with backticks is fine).
 - Then a 4-5 question end-of-lesson quiz with exactly 4 options each, testing understanding and application. Vary which option is correct.`

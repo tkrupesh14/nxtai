@@ -55,3 +55,11 @@
 .dark .lesson-prose .hljs-attr, .dark .lesson-prose .hljs-attribute, .dark .lesson-prose .hljs-variable, .dark .lesson-prose .hljs-template-variable { color: #fcd34d; }
 .dark .lesson-prose .hljs-meta, .dark .lesson-prose .hljs-tag { color: #67e8f9; }
 .dark .lesson-prose .hljs-comment, .dark .lesson-prose .hljs-quote { color: #9ca3af; }
+
+/* Maths KaTeX can't read is shown as plain, readable source rather than red code. */
+.lesson-prose .katex-error {
+  color: inherit !important;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}

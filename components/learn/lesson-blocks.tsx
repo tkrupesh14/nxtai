@@ -10,6 +10,7 @@ import { DiagramView } from "@/components/learn/diagram-view"
 import { Checkpoint } from "@/components/learn/lecture"
 import { ProfessorAvatar } from "@/components/learn/professor"
 import type { Professor } from "@/lib/learning/catalog"
+import { tidyMath } from "@/lib/learning/math"
 import type { LessonBlock } from "@/lib/learning/schemas"
 import { cn } from "@/lib/utils"
 
@@ -20,11 +21,6 @@ const REHYPE = [
   [rehypeHighlight, { detect: false }],
 ] as React.ComponentProps<typeof ReactMarkdown>["rehypePlugins"]
 
-/** A line that is only "$$...$$" is meant as a displayed equation; remark-math needs the $$ on their own lines for that. */
-function displayMath(md: string) {
-  return md.replace(/^[ \t]*\$\$([^\n$]+?)\$\$[ \t]*$/gm, (_, tex: string) => `$$\n${tex.trim()}\n$$`)
-}
-
 export function Md({ children, className, compact }: { children: string; className?: string; compact?: boolean }) {
   return (
     <div className={cn("lesson-prose", compact && "lesson-prose-compact", className)}>
@@ -33,7 +29,7 @@ export function Md({ children, className, compact }: { children: string; classNa
         rehypePlugins={REHYPE}
         components={{ pre: (props) => <CodeBlock {...props} /> }}
       >
-        {displayMath(children)}
+        {tidyMath(children)}
       </ReactMarkdown>
     </div>
   )
