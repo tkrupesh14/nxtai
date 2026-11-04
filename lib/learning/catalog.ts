@@ -13,6 +13,8 @@ export type Professor = {
   initials: string
   /** Tailwind classes for the avatar circle. */
   avatarClass: string
+  /** Set for the AI version of a real professor (8.2): their professors.id, for the link to their page. */
+  realId?: string
 }
 
 export type Subcategory = { id: string; name: string; topics: string[] }

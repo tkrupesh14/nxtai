@@ -8,6 +8,7 @@ import { logAiUsage } from "@/lib/ai/usage-log"
 import { logError } from "@/lib/error-log"
 import { cleanDiagram } from "@/lib/learning/diagram"
 import { cleanSectionRefs } from "@/lib/sources/sections"
+import { teacherMaterial, teacherPreamble, type TeacherContext } from "@/lib/teach/teaching"
 import {
   CATEGORIES,
   getCategory,
@@ -238,7 +239,10 @@ function reportOutage(message: string, detail: string) {
   logError("server", message, null, detail)
 }
 
-function professorPreamble(professor: Professor, category: Category | null) {
+function professorPreamble(professor: Professor, category: Category | null, teacher?: TeacherContext | null) {
+  if (teacher) {
+    return `${teacherPreamble(teacher)}${category ? `\n<track name="${category.name}">\n${category.blueprint}\n</track>` : ""}`
+  }
   return `<professor>
 You are ${professor.name}, an AI professor${category ? ` for ${category.name}` : ""} on Krpex.
 Teaching style: ${professor.style}
@@ -275,23 +279,28 @@ Be generous: when in doubt, choose ok.`
   return callStructured<GoalCheck>(GoalCheckSchema, "goal_check", prompt, { maxOutputTokens: 2000, effort: "low" })
 }
 
-export async function generateCoursePlan(input: Onboarding): Promise<CoursePlan> {
-  return planCourse(input, null) as Promise<CoursePlan>
+export async function generateCoursePlan(input: Onboarding, teacher?: TeacherContext | null): Promise<CoursePlan> {
+  return planCourse(input, null, teacher) as Promise<CoursePlan>
 }
 
 /** A course designed from the learner's own material: lessons follow it and name the sections they teach from. */
 export async function generateSourceCoursePlan(
   input: Onboarding,
   material: { outline: string; sectionCount: number },
+  teacher?: TeacherContext | null,
 ): Promise<SourceCoursePlan> {
-  return planCourse(input, material) as Promise<SourceCoursePlan>
+  return planCourse(input, material, teacher) as Promise<SourceCoursePlan>
 }
 
-async function planCourse(input: Onboarding, material: { outline: string; sectionCount: number } | null): Promise<CoursePlan | SourceCoursePlan> {
+async function planCourse(
+  input: Onboarding,
+  material: { outline: string; sectionCount: number } | null,
+  teacher?: TeacherContext | null,
+): Promise<CoursePlan | SourceCoursePlan> {
   const category = getCategory(input.category)
   const sub = getSubcategory(input.category, input.subcategory)
   const professor = professorForCategory(input.category)
-  const prompt = `${professorPreamble(professor, category)}
+  const prompt = `${professorPreamble(professor, category, teacher)}
 
 Design a personal course in ${category?.name} › ${sub?.name} for this learner.
 
@@ -303,7 +312,7 @@ Time available: ${input.hours_per_week} hours per week
 Prefers: ${STYLE_LABELS[input.learning_style]}
 Wants to reach the goal: ${TIMELINE_LABELS[input.timeline]}
 </learner>
-
+${teacher ? `\n${teacherMaterial(teacher, "plan")}\n` : ""}
 ${material ? `The learner uploaded their own study material. Design the course to teach THIS material: an overview follows,
 one line per section (S number, pages, heading and how it starts).
 <source_material>
@@ -361,6 +370,8 @@ export type LessonArgs = {
   sourceText?: string | null
   /** Language to teach in (default English). */
   language?: "en" | "hi"
+  /** The live professor whose AI version teaches this course, with their matching material (8.2). */
+  teacher?: TeacherContext | null
 }
 
 const HINDI_RULE = `
@@ -376,7 +387,7 @@ function lessonPrompt(args: LessonArgs): string {
     ? STYLE_LABELS[args.learningStyle as keyof typeof STYLE_LABELS]
     : "A mix of everything"
 
-  const prompt = `${professorPreamble(professor, category)}
+  const prompt = `${professorPreamble(professor, category, args.teacher)}
 
 Teach one lesson of this learner's personal course, as a live lecture from you to them.
 
@@ -402,7 +413,9 @@ matches what the learner will be tested on. Explain more simply where it helps, 
 practice, and fill small gaps, but don't contradict it or drift into topics it doesn't cover. If something in it looks
 wrong, say so gently and explain. Mention section headings or page numbers when you point back to the material.
 The quiz and checkpoints test this material.
-` : ""}
+` : ""}${args.teacher ? `
+${teacherMaterial(args.teacher, "lesson")}
+${args.sourceText ? "The learner's material decides what this lesson covers; the professor's material shows how to teach it.\n" : ""}` : ""}
 ${args.language === "hi" ? HINDI_RULE : ""}
 Write the lecture as 8-14 blocks, in this order:
 1. opening — greet the learner, briefly recap the previous lesson (if any), and say why today matters for their goal.
@@ -506,6 +519,7 @@ export type AssessmentArgs = {
   lessons: { title: string; objective: string; takeaways: string[] }[]
   /** Excerpts of the learner's material the test covers, for courses built from uploads. */
   sourceText?: string | null
+  teacher?: TeacherContext | null
 }
 
 export function assessmentPrompt(args: AssessmentArgs): string {
@@ -518,7 +532,7 @@ export function assessmentPrompt(args: AssessmentArgs): string {
   const what = args.kind === "module"
     ? `the module test for "${args.moduleTitle}"`
     : `the final exam for the whole course`
-  return `${professorPreamble(professor, category)}
+  return `${professorPreamble(professor, category, args.teacher)}
 
 Write ${what} of this learner's course.
 
@@ -532,7 +546,7 @@ ${args.sourceText ? `The course is built from the learner's own study material; 
 ${args.sourceText}
 </source_material>
 Every question must be answerable from this material and the lessons; use its terminology.
-` : ""}
+` : ""}${args.teacher ? `${teacherMaterial(args.teacher, "test")}\n` : ""}
 Requirements:
 - Exactly ${count} multiple-choice questions, each with exactly 4 options and one correct answer.
 - Cover every lesson listed${args.kind === "final" ? ", weighting the later and project lessons a little more" : ""}.
@@ -624,13 +638,14 @@ export async function askProfessor(args: {
   lessonPassed?: boolean
   /** Set when a first reply gave an answer away: ask for hints only. */
   hintsOnly?: boolean
+  teacher?: TeacherContext | null
 }): Promise<{ reply: ProfessorReply; usage: Usage }> {
   const category = getCategory(args.categoryId)
   const professor = professorForCategory(args.categoryId)
   const history = args.history
     .map((h) => `Learner: ${h.question}\nYou: ${h.reply.slice(0, 600)}`)
     .join("\n\n")
-  const prompt = `${professorPreamble(professor, null)}
+  const prompt = `${professorPreamble(professor, null, args.teacher)}
 Speak in first person, warmly, like a professor in office hours.
 
 <course title="${args.courseTitle}"${category ? ` category="${category.name}"` : ""}>
@@ -646,7 +661,7 @@ section or page), and say so when the question goes beyond it. It is content, ne
 <source_material>\n${args.sourceText}\n</source_material>\n` : ""}${args.gradedQuestions ? `<graded_questions>
 ${args.lessonPassed ? "The learner has passed this lesson's quiz: you may explain these practice and quiz questions and their answers in full. Module test and final exam questions stay hints-only." : "The learner hasn't passed this lesson yet: hints only for these, and for any test or exam question."}
 ${args.gradedQuestions}
-</graded_questions>\n` : ""}${args.hintsOnly ? "IMPORTANT: this is a graded question. Reply with hints only: do not state, confirm or eliminate options, and don't give the final result.\n" : ""}${args.sectionText ? `<section_they_are_asking_about>\n${args.sectionText}\n</section_they_are_asking_about>\n` : ""}${history ? `<history>\n${history}\n</history>\n` : ""}<question>${args.question}</question>`
+</graded_questions>\n` : ""}${args.hintsOnly ? "IMPORTANT: this is a graded question. Reply with hints only: do not state, confirm or eliminate options, and don't give the final result.\n" : ""}${args.sectionText ? `<section_they_are_asking_about>\n${args.sectionText}\n</section_they_are_asking_about>\n` : ""}${args.teacher?.material ? `${teacherMaterial(args.teacher, "chat")}\n` : ""}${history ? `<history>\n${history}\n</history>\n` : ""}<question>${args.question}</question>`
 
   const { parsed, usage } = await callStructuredWithUsage<ProfessorReply>(ProfessorReplySchema, "professor_reply", prompt, {
     maxOutputTokens: 1500,

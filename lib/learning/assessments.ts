@@ -6,6 +6,8 @@ import { getSections } from "@/lib/sources/data"
 import { sourceExcerpt } from "@/lib/sources/sections"
 import { createClient } from "@/lib/supabase/server"
 import { serverKey } from "@/lib/supabase/server-key"
+import { getTeacherContext } from "@/lib/teach/teacher"
+import { searchQuery } from "@/lib/teach/teaching"
 
 // Module tests and the final exam (migration 014). The database decides what's unlocked and grades every try;
 // the helpers here mirror its rules for display only.
@@ -108,12 +110,13 @@ export async function prepareAssessment(courseId: string, moduleId: string | nul
   try {
     const covered = moduleId ? data.lessons.filter((l) => l.module_id === moduleId) : data.lessons
     const refs = [...new Set(covered.flatMap((l) => l.source_sections ?? []))].sort((a, b) => a - b)
-    const [{ data: takeaways }, sources] = await Promise.all([
+    const [{ data: takeaways }, sources, teacher] = await Promise.all([
       supabase
         .from("lessons")
         .select("id, key_takeaways")
         .in("id", covered.map((l) => l.id)),
       getSections(courseId, refs),
+      getTeacherContext(data.course.professor, searchQuery(...covered.map((l) => l.title)), 8000),
     ])
     const byId = new Map((takeaways ?? []).map((t) => [t.id as string, (t.key_takeaways ?? []) as string[]]))
     const args: AssessmentArgs = {
@@ -125,6 +128,7 @@ export async function prepareAssessment(courseId: string, moduleId: string | nul
       moduleTitle: moduleId ? (data.modules.find((m) => m.id === moduleId)?.title ?? "") : null,
       lessons: covered.map((l) => ({ title: l.title, objective: l.objective, takeaways: (byId.get(l.id) ?? []).slice(0, 5) })),
       sourceText: sources.length ? sourceExcerpt(sources, moduleId ? 30000 : 40000) : null,
+      teacher,
     }
     const questions = await generateAssessment(args)
     const { data: saved, error: saveError } = await supabase.rpc("app_save_assessment", {

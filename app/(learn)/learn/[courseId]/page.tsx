@@ -5,7 +5,8 @@ import { Badge } from "@/components/site/ui/badge"
 import { Button } from "@/components/site/ui/button"
 import { CourseOptions } from "@/components/learn/course-tools"
 import { ProfessorCard } from "@/components/learn/professor"
-import { getCategory, getProfessor, getSubcategory, professorForCategory } from "@/lib/learning/catalog"
+import { getCategory, getSubcategory } from "@/lib/learning/catalog"
+import { courseProfessor } from "@/lib/teach/teacher"
 import { finalExamUnlocked, getAssessments, moduleTestUnlocked, type AssessmentRow } from "@/lib/learning/assessments"
 import { getCourse, isUnlocked, isUuid, progressOf } from "@/lib/learning/data"
 import { getCourseSources } from "@/lib/sources/data"
@@ -22,7 +23,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   const nextIndex = lessons.findIndex((l) => !l.completed_at)
   const category = getCategory(course.category)
   const subcategory = getSubcategory(course.category, course.subcategory)
-  const professor = course.professor ? getProfessor(course.professor) : professorForCategory(course.category)
+  const professor = await courseProfessor(course)
   const [{ byModule, final, certificateCode }, sources] = await Promise.all([getAssessments(course.id), getCourseSources(course.id)])
   const examOpen = finalExamUnlocked(modules, byModule)
 

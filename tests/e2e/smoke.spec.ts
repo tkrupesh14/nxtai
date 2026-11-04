@@ -84,6 +84,9 @@ test("starting a ready-made course while signed out goes through sign-up and bac
 
 test("unknown course pages are 404s", async ({ request }) => {
   expect((await request.get("/courses/not-a-course")).status()).toBe(404)
+  // Professor pages exist only for live professors.
+  expect((await request.get("/professors/not-a-professor")).status()).toBe(404)
+  expect((await request.get("/professors/00000000-0000-4000-8000-000000000000")).status()).toBe(404)
 })
 
 test("sitemap lists the course pages", async ({ request }) => {

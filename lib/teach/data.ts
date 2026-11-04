@@ -18,6 +18,9 @@ export type Professor = {
   status: "pending" | "approved" | "suspended"
   agreement_version: string
   agreement_at: string
+  teaching_style: string | null
+  listing_requested: boolean
+  live_at: string | null
 }
 
 export type Material = {
@@ -36,7 +39,9 @@ export const getMyProfessor = cache(async (): Promise<Professor | null> => {
   const supabase = await createClient()
   const { data } = await supabase
     .from("professors")
-    .select("id, subject, display_name, title, institution, bio, languages, credentials, status, agreement_version, agreement_at")
+    .select(
+      "id, subject, display_name, title, institution, bio, languages, credentials, status, agreement_version, agreement_at, teaching_style, listing_requested, live_at",
+    )
     .maybeSingle()
   return (data as Professor | null) ?? null
 })

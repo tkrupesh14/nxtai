@@ -4,19 +4,26 @@ import { OnboardingForm } from "@/components/learn/onboarding-form"
 import { getAccountSummary } from "@/lib/learning/data"
 import { getPendingSources } from "@/lib/sources/data"
 import { createClient } from "@/lib/supabase/server"
+import { getLiveProfessors } from "@/lib/teach/teacher"
+import { teacherPersona } from "@/lib/teach/teaching"
 
 export const metadata = { title: "Build your course — Krpex" }
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ teacher?: string }> }) {
+  const { teacher } = await searchParams
   const supabase = await createClient()
-  const [{ data: profile }, { data: allowance }, account, pendingSources] = await Promise.all([
+  const [{ data: profile }, { data: allowance }, account, pendingSources, live] = await Promise.all([
     supabase.from("learner_profiles").select("level, background, hours_per_week, learning_style, timeline").maybeSingle(),
     supabase
       .rpc("course_allowance")
       .maybeSingle<{ allowed: boolean; reason: string | null; free_left: number; credits: number; cost: number }>(),
     getAccountSummary(),
     getPendingSources(),
+    getLiveProfessors(),
   ])
+  // Real professors' AI versions learners can choose, by subject ("science/physics").
+  const teachers = live.map((p) => ({ subject: p.subject, persona: teacherPersona(p) }))
+  const chosen = live.find((p) => p.id === teacher)
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 md:py-16">
@@ -62,7 +69,13 @@ export default async function OnboardingPage() {
                 : `Free courses left this month: ${allowance.free_left}.`}
             </p>
           )}
-          <OnboardingForm defaults={profile ?? undefined} plan={account.plan} pendingSources={pendingSources} />
+          <OnboardingForm
+            defaults={profile ?? undefined}
+            plan={account.plan}
+            pendingSources={pendingSources}
+            teachers={teachers}
+            initialTeacher={chosen ? { id: chosen.id, subject: chosen.subject } : undefined}
+          />
         </>
       )}
     </main>

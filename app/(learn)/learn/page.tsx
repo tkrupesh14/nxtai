@@ -5,23 +5,25 @@ import { Badge } from "@/components/site/ui/badge"
 import { Button } from "@/components/site/ui/button"
 import { ProfessorAvatar } from "@/components/learn/professor"
 import { ProgressSummary } from "@/components/learn/progress-summary"
-import { getCategory, getProfessor, professorForCategory } from "@/lib/learning/catalog"
+import { getCategory } from "@/lib/learning/catalog"
 import { CatalogCard } from "@/components/site/catalog-card"
 import { CATALOG } from "@/lib/learning/course-catalog"
 import { getQuestionTimes, listCourses } from "@/lib/learning/data"
 import { learningStats } from "@/lib/learning/stats"
+import { courseProfessor } from "@/lib/teach/teacher"
 
 export const metadata = { title: "My courses — Krpex" }
 
-function CourseGrid({ courses }: { courses: Awaited<ReturnType<typeof listCourses>> }) {
+async function CourseGrid({ courses }: { courses: Awaited<ReturnType<typeof listCourses>> }) {
   if (courses.length === 0) {
     return <p className="rounded-xl border p-6 text-sm text-muted-foreground">No active courses. Restore one below or start a new one.</p>
   }
+  const professors = await Promise.all(courses.map((c) => courseProfessor(c)))
   return (
     <ul className="grid gap-4 md:grid-cols-2">
-        {courses.map((c) => {
+        {courses.map((c, i) => {
           const category = getCategory(c.category)
-          const professor = c.professor ? getProfessor(c.professor) : professorForCategory(c.category)
+          const professor = professors[i]
           return (
           <li key={c.id} className="flex flex-col rounded-xl border bg-card p-6">
             <div className="mb-3 flex flex-wrap items-center gap-2">

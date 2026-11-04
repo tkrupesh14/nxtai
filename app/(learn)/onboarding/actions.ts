@@ -11,6 +11,8 @@ import { getMaterialForPlan } from "@/lib/sources/data"
 import { sourceExcerpt, sourceOutline } from "@/lib/sources/sections"
 import { createClient } from "@/lib/supabase/server"
 import { serverKey } from "@/lib/supabase/server-key"
+import { getLiveProfessor, getTeacherContext } from "@/lib/teach/teacher"
+import { searchQuery, teacherRef } from "@/lib/teach/teaching"
 
 export type OnboardingState = {
   error?: string
@@ -28,6 +30,12 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
   const input = parsed.data
   // Uploaded material to build the course from (ids from /api/sources, in the learner's order).
   const sourceIds = [...new Set(String(formData.get("sources") ?? "").split(",").filter(isUuid))].slice(0, 3)
+  // A live professor whose AI version should teach the course (8.2); must teach this subject.
+  const teacherId = String(formData.get("teacher") ?? "")
+  const teacher = isUuid(teacherId) ? await getLiveProfessor(teacherId) : null
+  if (teacherId && (!teacher || teacher.subject !== `${input.category}/${input.subcategory}`)) {
+    return { error: "That professor isn't available for this subject any more. Please choose again." }
+  }
 
   const supabase = await createClient()
   const {
@@ -71,6 +79,7 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
 
   let plan: CoursePlan | SourceCoursePlan
   try {
+    const teaching = teacher ? await getTeacherContext(teacherRef(teacher.id), searchQuery(input.goal, input.background), 6000) : null
     const check = await checkGoal(
       input,
       material.length ? { filenames: material.map((f) => f.filename), sample: sourceExcerpt(sections.slice(0, 3), 3000) } : undefined,
@@ -85,8 +94,8 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
       return { error: check.message || "Please describe a clear learning goal.", reviseGoal: true }
     }
     plan = material.length
-      ? await generateSourceCoursePlan(input, { outline: sourceOutline(material), sectionCount: sections.length })
-      : await generateCoursePlan(input)
+      ? await generateSourceCoursePlan(input, { outline: sourceOutline(material), sectionCount: sections.length }, teaching)
+      : await generateCoursePlan(input, teaching)
   } catch (e) {
     console.error("generateCoursePlan failed:", e instanceof Error ? e.message : e)
     return { error: e instanceof AIError ? e.userMessage : "Something went wrong creating your course." }
@@ -103,7 +112,7 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
       goal: input.goal,
       category: input.category,
       subcategory: input.subcategory,
-      professor: professorForCategory(input.category).id,
+      professor: teacher ? teacherRef(teacher.id) : professorForCategory(input.category).id,
       welcome: plan.welcome_message,
     },
     p_modules: plan.modules.map((m) => ({

@@ -7,6 +7,8 @@ import { getSections } from "@/lib/sources/data"
 import { sourceExcerpt } from "@/lib/sources/sections"
 import { createClient } from "@/lib/supabase/server"
 import { serverKey } from "@/lib/supabase/server-key"
+import { getTeacherContext } from "@/lib/teach/teacher"
+import { searchQuery } from "@/lib/teach/teaching"
 
 type Supabase = Awaited<ReturnType<typeof createClient>>
 export type LessonArgs = Parameters<typeof generateLesson>[0]
@@ -50,9 +52,10 @@ export async function prepareLessonGeneration(courseId: string, lessonId: string
       return `Module ${m.position + 1}: ${m.title}\n${items}`
     })
     .join("\n")
-  const [{ data: profile }, sources] = await Promise.all([
+  const [{ data: profile }, sources, teacher] = await Promise.all([
     supabase.from("learner_profiles").select("learning_style, background").maybeSingle(),
     getSections(courseId, lesson.source_sections ?? []),
+    getTeacherContext(data.course.professor, searchQuery(lesson.title, lesson.objective, mod?.title), 12000),
   ])
 
   return {
@@ -73,6 +76,7 @@ export async function prepareLessonGeneration(courseId: string, lessonId: string
       estMinutes: lesson.est_minutes,
       learningStyle: profile?.learning_style,
       sourceText: sources.length ? sourceExcerpt(sources, 40000) : null,
+      teacher,
     },
   }
 }

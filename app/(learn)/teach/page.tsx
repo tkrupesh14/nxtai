@@ -9,6 +9,7 @@ import { MaterialUpload } from "@/components/teach/material-upload"
 import { RecordingList } from "@/components/teach/recording-list"
 import { RecordingUpload } from "@/components/teach/recording-upload"
 import { ProfileForm } from "@/components/teach/profile-form"
+import { PublicProfile } from "@/components/teach/public-profile"
 import { getMyLessons, getMyMaterials, getMyProfessor, getMyRecordings, getReviewQueue, refreshMyRecordings } from "@/lib/teach/data"
 import { languageName, subjectName } from "@/lib/teach/subjects"
 
@@ -16,7 +17,7 @@ export const metadata = { title: "Teaching — Krpex" }
 
 const STATUS_NOTE = {
   pending: "Krpex is checking your profile. You can fill it in and upload material now; you can publish once you're approved.",
-  approved: "You're approved. Published material can be used to teach learners once professor-backed courses launch.",
+  approved: "You're approved. You can publish material and model lessons, and ask to show your AI professor to learners.",
   suspended: "Your professor account is paused. Your material isn't being used. Contact Krpex if you think this is a mistake.",
 } as const
 
@@ -46,6 +47,14 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
     getMyRecordings(),
   ])
   const published = materials.filter((m) => m.status === "published").length
+  const live = professor.status === "approved" && professor.listing_requested && professor.live_at !== null
+  const listing = !professor.listing_requested
+    ? null
+    : live
+      ? `Your AI professor is live: learners can choose it for their ${subjectName(professor.subject)} courses.`
+      : professor.status === "approved"
+        ? "You asked to show your AI professor to learners. Krpex will check your profile and material, then make it live."
+        : "You asked to show your AI professor to learners. It can go live once you're approved."
 
   return (
     <main className="mx-auto grid max-w-3xl gap-6 px-4 py-10 md:py-14 [&>*]:min-w-0">
@@ -68,6 +77,35 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
 
       <AccountSection title="Your profile" description="Learners will see your name, title, institution and bio next to your AI professor.">
         <ProfileForm professor={professor} />
+        {listing && (
+          <p role="status" className="mt-5 rounded-md border bg-muted/40 px-4 py-2 text-sm text-muted-foreground">
+            {listing}{" "}
+            {live && (
+              <Link href={`/professors/${professor.id}`} className="font-medium text-primary hover:underline">
+                See your public page
+              </Link>
+            )}
+          </p>
+        )}
+        <details className="mt-5 rounded-lg border p-4">
+          <summary className="cursor-pointer text-sm font-medium">Preview your public page</summary>
+          <div className="mt-4">
+            <PublicProfile
+              preview
+              professor={{
+                id: professor.id,
+                display_name: professor.display_name,
+                title: professor.title,
+                institution: professor.institution,
+                bio: professor.bio,
+                subject: professor.subject,
+                languages: professor.languages,
+                materials: published,
+                lessons: lessons.filter((l) => l.status === "published").length,
+              }}
+            />
+          </div>
+        </details>
       </AccountSection>
 
       {professor.status !== "suspended" ? (

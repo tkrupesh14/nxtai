@@ -16,13 +16,13 @@ const q = (question) => ({
 
 const block = (type, title, body_markdown, extra = {}) => ({ type, title, body_markdown, items: [], checkpoint: null, diagram: null, ...extra })
 
-export function fakeLesson(title = "Today's lesson", sourceRef = null) {
+export function fakeLesson(title = "Today's lesson", sourceRef = null, teacher = null) {
   return {
     blocks: [
       block(
         "opening",
         "Welcome",
-        `Welcome to **${title}**. This is a test lesson written by the fake AI.${sourceRef ? ` Taught from your material (${sourceRef}).` : ""}`,
+        `Welcome to **${title}**. This is a test lesson written by the fake AI.${sourceRef ? ` Taught from your material (${sourceRef}).` : ""}${teacher ? ` ${teacher}` : ""}`,
       ),
       block("objectives", "By the end you can", "", { items: ["Explain the idea", "Use it in a small example"] }),
       block("explanation", "The idea", "Here is the main idea, with some `inline code` and a formula $$x^2 + 1 = 5$$."),
@@ -71,6 +71,14 @@ export const FAKE_PLAN = {
   ],
 }
 
+/** For courses taught by a real professor's AI version (8.2): who, and whether their material was in the prompt. */
+function teacherNote(prompt) {
+  const name = /You are the AI version of (.+?) \(/.exec(prompt)?.[1]
+  if (!name) return null
+  const excerpts = (prompt.match(/<excerpt from=/g) ?? []).length
+  return `Taught as ${name} (AI), with ${excerpts} excerpt${excerpts === 1 ? "" : "s"} of their material${prompt.includes("<example_lesson>") ? " and a model lesson" : ""}.`
+}
+
 function contentFor(name, prompt) {
   switch (name) {
     case "goal_check":
@@ -89,7 +97,7 @@ function contentFor(name, prompt) {
       return { ...FAKE_PLAN, title: "Course from your material", modules: [{ title: "Your material", summary: "From your file.", lessons }] }
     }
     case "lesson":
-      return fakeLesson(/Today's lesson: "([^"]+)"/.exec(prompt)?.[1], /<section ref="([^"]+)">/.exec(prompt)?.[1] ?? null)
+      return fakeLesson(/Today's lesson: "([^"]+)"/.exec(prompt)?.[1], /<section ref="([^"]+)">/.exec(prompt)?.[1] ?? null, teacherNote(prompt))
     case "module_test":
     case "final_exam": {
       const count = Number(/Exactly (\d+) multiple-choice/.exec(prompt)?.[1] ?? 8)

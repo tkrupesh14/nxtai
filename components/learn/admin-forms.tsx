@@ -8,6 +8,7 @@ import {
   inviteProfessorAction,
   resolveReport,
   revokeInvite,
+  setProfessorLive,
   setProfessorStatus,
   setReviewLessonStatus,
   type GenerateResult,
@@ -136,6 +137,22 @@ export function ProfessorStatusButtons({ id, status }: { id: string; status: str
         </Button>
       ) : null}
     </div>
+  )
+}
+
+/** Make a professor's AI version live for learners, or hide it. Only shown once they've asked and are approved. */
+export function ProfessorLiveButton({ id, live, name }: { id: string; live: boolean; name: string }) {
+  const [pending, start] = useTransition()
+  return (
+    <Button
+      size="sm"
+      variant={live ? "ghost" : "default"}
+      disabled={pending}
+      aria-label={live ? `Hide ${name} from learners` : `Make ${name} live`}
+      onClick={() => start(() => setProfessorLive(id, !live))}
+    >
+      {live ? "Hide from learners" : "Make live"}
+    </Button>
   )
 }
 

@@ -74,6 +74,14 @@ export async function setProfessorStatus(id: string, status: "approved" | "suspe
   revalidatePath("/admin")
 }
 
+/** Show (or hide) a professor's AI version to learners (8.2). */
+export async function setProfessorLive(id: string, live: boolean) {
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("admin_set_professor_live", { p_id: id, p_live: live })
+  if (error) console.error("admin_set_professor_live failed:", error.message)
+  revalidatePath("/admin")
+}
+
 export type GenerateResult = AdminResult & { id?: string }
 
 /** Write a sample Physics lesson with the AI and add it to the professors' review queue. Takes about a minute. */

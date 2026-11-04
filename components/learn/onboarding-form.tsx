@@ -9,7 +9,7 @@ import { Button } from "@/components/site/ui/button"
 import { Input } from "@/components/site/ui/input"
 import { Label } from "@/components/site/ui/label"
 import { Textarea } from "@/components/site/ui/textarea"
-import { CATEGORIES, GROUP_LABELS, getCategory, professorForCategory } from "@/lib/learning/catalog"
+import { CATEGORIES, GROUP_LABELS, getCategory, professorForCategory, type Professor } from "@/lib/learning/catalog"
 import { LEVEL_LABELS, STYLE_LABELS, TIMELINE_LABELS } from "@/lib/learning/labels"
 import { cn } from "@/lib/utils"
 
@@ -75,14 +75,13 @@ const MATERIAL_STEPS = [
   "Almost there — saving your course…",
 ]
 
-function Building({ categoryId, fromMaterial }: { categoryId: string; fromMaterial: boolean }) {
+function Building({ professor, fromMaterial }: { professor: Professor; fromMaterial: boolean }) {
   const steps = fromMaterial ? MATERIAL_STEPS : BUILD_STEPS
   const [i, setI] = useState(0)
   useEffect(() => {
     const t = setInterval(() => setI((v) => Math.min(v + 1, steps.length - 1)), 6000)
     return () => clearInterval(t)
   }, [steps.length])
-  const professor = professorForCategory(categoryId)
   return (
     <div role="status" aria-live="polite" className="rounded-xl border bg-card p-8 text-center">
       <div className="mx-auto mb-5 size-10 animate-spin rounded-full border-4 border-muted border-t-primary" aria-hidden />
@@ -97,16 +96,24 @@ export function OnboardingForm({
   defaults,
   plan = "free",
   pendingSources = [],
+  teachers = [],
+  initialTeacher,
 }: {
   defaults?: Defaults
   plan?: "free" | "pro"
   /** Uploads from earlier today that haven't become a course yet. */
   pendingSources?: UploadedSource[]
+  /** Live professors' AI versions (8.2), by subject ("science/physics"). */
+  teachers?: { subject: string; persona: Professor }[]
+  /** Chosen on a professor's page: start on their subject with them selected. */
+  initialTeacher?: { id: string; subject: string }
 }) {
   const [state, formAction, pending] = useActionState<OnboardingState, FormData>(createCourse, {})
-  const [step, setStep] = useState(0)
-  const [categoryId, setCategoryId] = useState("")
-  const [subcategoryId, setSubcategoryId] = useState("")
+  const [initialCategory, initialSubcategory] = initialTeacher?.subject.split("/") ?? ["", ""]
+  const [step, setStep] = useState(initialTeacher ? 1 : 0)
+  const [categoryId, setCategoryId] = useState(initialCategory)
+  const [subcategoryId, setSubcategoryId] = useState(initialSubcategory)
+  const [teacherId, setTeacherId] = useState(initialTeacher?.id ?? "")
   const [goal, setGoal] = useState("")
   const [level, setLevel] = useState(defaults?.level ?? "")
   const [background, setBackground] = useState(defaults?.background ?? "")
@@ -117,6 +124,9 @@ export function OnboardingForm({
 
   const category = getCategory(categoryId)
   const subcategory = category?.subcategories.find((s) => s.id === subcategoryId) ?? null
+  const subjectTeachers = teachers.filter((t) => t.subject === `${categoryId}/${subcategoryId}`)
+  const teacher = subjectTeachers.find((t) => t.persona.realId === teacherId)?.persona ?? null
+  const professor = teacher ?? professorForCategory(categoryId)
   const canNext =
     step === 0 ? category !== null : step === 1 ? subcategory !== null && goal.trim().length >= 3 && level !== "" : true
 
@@ -136,7 +146,7 @@ export function OnboardingForm({
     setStep(1)
   }
 
-  if (pending) return <Building categoryId={categoryId} fromMaterial={sources.length > 0} />
+  if (pending) return <Building professor={professor} fromMaterial={sources.length > 0} />
 
   return (
     <form
@@ -164,6 +174,7 @@ export function OnboardingForm({
       <input type="hidden" name="hours_per_week" value={hours} />
       <input type="hidden" name="timeline" value={timeline} />
       <input type="hidden" name="sources" value={sources.map((s) => s.id).join(",")} />
+      <input type="hidden" name="teacher" value={teacher?.realId ?? ""} />
 
       <ol className="mb-8 flex items-center gap-2 text-xs text-muted-foreground" aria-label="Progress">
         {STEPS.map((s, i) => (
@@ -213,10 +224,9 @@ export function OnboardingForm({
 
       {step === 1 && category && (
         <div className="grid gap-6">
-          <ProfessorCard
-            professor={professorForCategory(category.id)}
-            note={<span className="text-muted-foreground">{professorForCategory(category.id).bio}</span>}
-          />
+          {subjectTeachers.length === 0 && (
+            <ProfessorCard professor={professor} note={<span className="text-muted-foreground">{professor.bio}</span>} />
+          )}
           <div className="grid gap-2">
             <Label>
               {category.icon} {category.name}: pick a subject
@@ -266,6 +276,37 @@ export function OnboardingForm({
                 maxLength={500}
               />
             </div>
+          )}
+          {subcategory && subjectTeachers.length > 0 && (
+            <fieldset className="grid gap-2">
+              <legend className="mb-1 text-sm font-medium">Who should teach you?</legend>
+              {[professorForCategory(category.id), ...subjectTeachers.map((t) => t.persona)].map((p) => {
+                const value = p.realId ?? ""
+                return (
+                  <label
+                    key={p.id}
+                    className={cn(
+                      "flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm transition-colors hover:bg-muted/60",
+                      teacherId === value && "border-primary bg-primary/5 ring-1 ring-primary",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="teacher-choice"
+                      value={value}
+                      checked={teacherId === value}
+                      onChange={() => setTeacherId(value)}
+                      className="mt-1 accent-[var(--primary)]"
+                    />
+                    <span className="min-w-0">
+                      <span className="block font-medium">{p.name}</span>
+                      <span className="block text-xs text-muted-foreground">{p.title}</span>
+                      <span className="mt-1 block text-xs text-muted-foreground text-pretty">{p.bio}</span>
+                    </span>
+                  </label>
+                )
+              })}
+            </fieldset>
           )}
           {subcategory && <SourceUpload plan={plan} sources={sources} onChange={setSources} />}
           {subcategory && (

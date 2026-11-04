@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 import type { Professor } from "@/lib/learning/catalog"
 import { cn } from "@/lib/utils"
 
@@ -33,9 +35,17 @@ export function ProfessorCard({
       <ProfessorAvatar professor={professor} />
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="font-semibold leading-tight">{professor.name}</p>
+          <p className="font-semibold leading-tight">
+            {professor.realId ? (
+              <Link href={`/professors/${professor.realId}`} className="hover:underline">
+                {professor.name}
+              </Link>
+            ) : (
+              professor.name
+            )}
+          </p>
           <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            AI professor
+            {professor.realId ? "AI version" : "AI professor"}
           </span>
         </div>
         <p className="text-xs text-muted-foreground">{professor.title.replace(/^AI professor · /, "")}</p>

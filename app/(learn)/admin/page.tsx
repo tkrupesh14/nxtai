@@ -5,6 +5,7 @@ import {
   GenerateReviewLessonForm,
   GrantForm,
   InviteProfessorForm,
+  ProfessorLiveButton,
   ProfessorStatusButtons,
   ResolveButton,
   ReviewLessonStatusButton,
@@ -69,6 +70,9 @@ type AdminProfessor = {
   lessons?: number
   lessons_published?: number
   recording_minutes_month?: number
+  teaching_style?: string | null
+  listing_requested?: boolean
+  live?: boolean
 }
 type AdminReview = {
   professor: string
@@ -260,13 +264,30 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     <span className="font-medium">
                       {p.display_name} <span className="font-normal text-muted-foreground">· {p.email}</span>
                     </span>
-                    <ProfessorStatusButtons id={p.id} status={p.status} />
+                    <div className="flex flex-wrap gap-1">
+                      {p.status === "approved" && (p.listing_requested || p.live) ? (
+                        <ProfessorLiveButton id={p.id} live={Boolean(p.live)} name={p.display_name} />
+                      ) : null}
+                      <ProfessorStatusButtons id={p.id} status={p.status} />
+                    </div>
                   </div>
                   <p className="text-muted-foreground">
-                    {p.status} · {subjectName(p.subject)} · {p.languages.join(", ")} · {p.materials} files ({p.published} published, {p.pages} pages) · {p.lessons ?? 0} lessons ({p.lessons_published ?? 0} published) · {p.recording_minutes_month ?? 0} recording min this month
+                    {p.status}
+                    {p.live ? " · live for learners" : p.listing_requested ? " · asked to go live" : ""} · {subjectName(p.subject)} · {p.languages.join(", ")} · {p.materials} files ({p.published} published, {p.pages} pages) · {p.lessons ?? 0} lessons ({p.lessons_published ?? 0} published) · {p.recording_minutes_month ?? 0} recording min this month
                   </p>
                   {[p.title, p.institution].filter(Boolean).length ? <p>{[p.title, p.institution].filter(Boolean).join(", ")}</p> : null}
                   {p.credentials ? <p className="whitespace-pre-wrap text-muted-foreground">{p.credentials}</p> : null}
+                  {p.teaching_style ? (
+                    <p className="whitespace-pre-wrap">
+                      <span className="text-muted-foreground">How they teach: </span>
+                      {p.teaching_style}
+                    </p>
+                  ) : null}
+                  {p.live ? (
+                    <Link href={`/professors/${p.id}`} className="text-primary hover:underline">
+                      Public page
+                    </Link>
+                  ) : null}
                 </li>
               ))}
             </ul>

@@ -8,7 +8,8 @@ import { LessonTools } from "@/components/learn/course-tools"
 import { LessonGenerator } from "@/components/learn/lesson-generator"
 import { ProfessorCard } from "@/components/learn/professor"
 import { Quiz } from "@/components/learn/quiz"
-import { getCategory, getProfessor, professorForCategory } from "@/lib/learning/catalog"
+import { getCategory } from "@/lib/learning/catalog"
+import { courseProfessor } from "@/lib/teach/teacher"
 import { getAccountSummary, getCourse, getProfessorChat, isUnlocked, isUuid } from "@/lib/learning/data"
 import { getSections, sourcesLabel } from "@/lib/sources/data"
 import { PASS_MARK, type LessonBlock, type QuizQuestion } from "@/lib/learning/schemas"
@@ -30,7 +31,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   const prev = data.lessons[index - 1]
   const next = data.lessons[index + 1]
   const category = getCategory(data.course.category)
-  const professor = data.course.professor ? getProfessor(data.course.professor) : professorForCategory(data.course.category)
+  const professor = await courseProfessor(data.course)
 
   const supabase = await createClient()
   const [{ data: body }, { data: quiz }, sources] = await Promise.all([

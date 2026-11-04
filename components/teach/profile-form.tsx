@@ -44,6 +44,31 @@ export function ProfileForm({ professor }: { professor: Professor }) {
         </div>
       </fieldset>
       <div className="grid gap-2">
+        <Label htmlFor="teaching_style">How you teach (the AI follows this)</Label>
+        <Textarea
+          id="teaching_style"
+          name="teaching_style"
+          defaultValue={professor.teaching_style ?? ""}
+          rows={5}
+          maxLength={2000}
+          placeholder="e.g. I start every topic with an everyday observation, derive formulas instead of stating them, always check units, and end with a JEE-style problem. I warn students about sign mistakes in kinematics."
+        />
+        <p className="text-xs text-muted-foreground">
+          How you explain, the examples you like, how you check understanding, mistakes you warn about.
+        </p>
+      </div>
+      <label className="flex items-start gap-3 rounded-lg border p-3 text-sm">
+        <input type="checkbox" name="listing_requested" defaultChecked={professor.listing_requested} className="mt-0.5 size-4" />
+        <span>
+          <span className="block font-medium">Show my AI professor to learners</span>
+          <span className="block text-muted-foreground text-pretty">
+            Learners can then choose &ldquo;{professor.display_name} (AI)&rdquo;, an AI that teaches from your published material and
+            this description, and see your name, title, institution and bio. Krpex checks it before it goes live. Untick to
+            hide it straight away.
+          </span>
+        </span>
+      </label>
+      <div className="grid gap-2">
         <Label htmlFor="credentials">Qualifications and experience (seen only by Krpex)</Label>
         <Textarea
           id="credentials"

@@ -56,6 +56,8 @@ export async function updateProfile(_: TeachResult, formData: FormData): Promise
     p_bio: text("bio", 1200),
     p_languages: [...new Set(languages)],
     p_credentials: text("credentials", 1200),
+    p_teaching_style: text("teaching_style", 2000),
+    p_listing_requested: formData.get("listing_requested") === "on",
   })
   if (error) {
     console.error("professor_update_profile failed:", error.message)

@@ -17,6 +17,8 @@ import {
 import type { LessonBlock } from "@/lib/learning/schemas"
 import { sectionLabel, sectionText, toSections } from "@/lib/learning/sections"
 import { createClient } from "@/lib/supabase/server"
+import { getTeacherContext } from "@/lib/teach/teacher"
+import { searchQuery } from "@/lib/teach/teaching"
 
 const DAILY_BUDGET_USD = Number(process.env.PROFESSOR_DAILY_BUDGET_USD || 2)
 
@@ -131,10 +133,12 @@ export async function askProfessorAction(
     .slice(0, 3)
     .reverse()
     .map((t) => ({ question: t.question, reply: t.reply }))
-  const [{ data: profile }, sources, { data: quiz }] = await Promise.all([
+  const [{ data: profile }, sources, { data: quiz }, teacher] = await Promise.all([
     supabase.from("learner_profiles").select("background").maybeSingle(),
     getSections(courseId, lesson.source_sections ?? []),
     supabase.rpc("lesson_quiz_questions", { p_lesson: lessonId }),
+    // Small: chat answers are kept cheap.
+    getTeacherContext(data.course.professor, searchQuery(question, lesson.title), 4000),
   ])
   // Practice and quiz questions (never their answers), so the professor recognises them when asked.
   const checkpoints: GradedQuestion[] = (blocks ?? []).flatMap((b) =>
@@ -161,6 +165,7 @@ export async function askProfessorAction(
       gradedQuestions: graded.length ? gradedQuestionsText(checkpoints, quizQuestions) : undefined,
       lessonPassed,
       hintsOnly,
+      teacher,
     })
     let { reply, usage } = await ask(false)
     // Answers to graded questions stay hidden, except this lesson's own questions once its quiz is passed.

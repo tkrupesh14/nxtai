@@ -227,3 +227,67 @@ test("a professor uploads a lecture recording, corrects the transcript and adds 
   await expect(page.getByText(/Lecture transcript, 1 part/)).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test("a live professor's AI version teaches a learner's course from their material", async ({ page }) => {
+  test.setTimeout(180_000)
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  const professorId = localSql("select id from public.professors limit 1")
+
+  // The professor describes how they teach and asks to be shown to learners.
+  await page.goto("/teach")
+  await page.getByLabel("How you teach (the AI follows this)").fill("I start from an everyday observation and always check units.")
+  await page.getByLabel(/Show my AI professor to learners/).check()
+  await page.getByRole("button", { name: "Save profile" }).click()
+  await expect(page.getByText("Saved.")).toBeVisible()
+  await expect(page.getByText(/You asked to show your AI professor to learners\. Krpex will check/)).toBeVisible()
+
+  // Material matching the fake AI's first lesson ("First steps", module "Getting started").
+  await page.getByRole("button", { name: "Paste text instead" }).click()
+  await page.getByLabel("Material title").fill("Getting started notes")
+  await page.getByLabel("Material topic").fill("Mechanics")
+  await page.getByLabel("Text", { exact: true }).fill("First steps in mechanics: start from what you see, then measure it. ".repeat(8))
+  await page.getByRole("button", { name: "Add this text" }).click()
+  await page.getByRole("button", { name: "Publish Getting started notes" }).click()
+  await expect(page.getByRole("list", { name: "Your material" }).getByText(/Published · English · Mechanics/)).toBeVisible()
+
+  // Not public until Krpex makes it live.
+  expect((await page.request.get(`/professors/${professorId}`)).status()).toBe(404)
+  await page.goto("/admin")
+  await expect(page.getByText(/asked to go live/)).toBeVisible()
+  await page.getByRole("button", { name: "Make Dr. Test Professor live" }).click()
+  await expect(page.getByText(/live for learners/)).toBeVisible()
+
+  // The public page, then a course with the professor's AI version.
+  await page.goto(`/professors/${professorId}`)
+  await expect(page.getByRole("heading", { name: "Dr. Test Professor", exact: true })).toBeVisible()
+  await expect(page.getByText(/is an AI tutor, not Dr\. Test Professor/)).toBeVisible()
+  localSql("delete from public.course_creations") // earlier tests used today's course allowance (local test DB only)
+  await page.getByRole("link", { name: "Start a Physics course with Dr. Test Professor (AI)" }).click()
+  await expect(page).toHaveURL(/\/onboarding\?teacher=/)
+  await expect(page.getByRole("radio", { name: /Dr\. Test Professor \(AI\)/ })).toBeChecked()
+  await page.getByLabel("What do you want to learn or achieve?").fill("Mechanics from first principles")
+  await page.getByLabel("Completely new to it").check()
+  await page.getByRole("button", { name: "Continue" }).click()
+  await page.getByRole("button", { name: "Continue" }).click()
+  await page.getByRole("button", { name: "Build my course" }).click()
+
+  await expect(page).toHaveURL(/\/learn\/[0-9a-f-]{36}$/)
+  const courseUrl = new URL(page.url()).pathname
+  await expect(page.getByRole("link", { name: "Dr. Test Professor (AI)" })).toBeVisible()
+  await expect(page.getByText("AI version", { exact: true })).toBeVisible()
+  expect(localSql("select professor from public.courses order by created_at desc limit 1")).toBe(`p:${professorId}`)
+
+  // The lesson prompt had the professor, their matching material and their model lesson.
+  await page.getByRole("link", { name: "Start first lesson" }).click()
+  await expect(page.getByText(/Taught as Dr\. Test Professor \(AI\), with [1-9]\d* excerpts? of their material and a model lesson\./).first()).toBeVisible({ timeout: 60_000 })
+
+  // Hidden again: the page is gone and the course falls back to the AI professor.
+  await page.goto("/admin")
+  await page.getByRole("button", { name: "Hide Dr. Test Professor from learners" }).click()
+  await expect(page.getByText(/asked to go live/)).toBeVisible()
+  expect((await page.request.get(`/professors/${professorId}`)).status()).toBe(404)
+  await page.goto(courseUrl)
+  await expect(page.getByText("Dr. Test Professor (AI)")).toHaveCount(0)
+  expect(errors).toEqual([])
+})
