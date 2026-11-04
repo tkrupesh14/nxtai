@@ -33,6 +33,8 @@ export async function acceptInvite(_: TeachResult, formData: FormData): Promise<
     if (!known) console.error("accept_professor_invite failed:", error.message)
     return { message: known ?? "Something went wrong. Please try again." }
   }
+  // The header (in the layout) gains a "Teaching" link, so refresh the layout too.
+  revalidatePath("/", "layout")
   redirect("/teach?welcome=1")
 }
 
