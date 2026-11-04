@@ -108,7 +108,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 5.F | Catalog courses + narration | P2 | ✅ | | Catalog ✅: 15 hand-written courses (all 9 subjects) at `/courses` + `/courses/[slug]`, one-tap start via `app_create_course` (counts toward the monthly allowance), suggestions on `/learn`, sitemap + robots. Narration ✅: "Listen" in lessons uses the browser's speech engine (free, no server); reads section by section, waits at practice questions, then reads the takeaways; speed 0.8–1.5×. Natural cloud voices later (Cloudflare TTS) |
 | 5.1b | Regenerate lesson / report a problem; course archive & delete | P1 | 🟡 | 👤 | S1.3 — needs migration 011 |
 | 5.1c | Stream lesson text while it is written | P2 | ✅ | 🤖 | `ed2e4b2` |
-| 5.2 | Doc upload → lessons from the learner's docs | P1 | ⬜ | 🤖 | |
+| 5.2 | Doc upload → lessons from the learner's docs | P1 | ✅ | 🤖 | `b7e02ec` PDF/Word/text (Free 1 file·50 pp, Pro 3·300); text only, no OCR |
 | 5.3 | Module tests, final exam, certificates | P1 | ✅ | | Deployed 2026-11-02 (migration 014). Module test per module (8 AI-written questions, unlocks when its lessons are passed, retry after 1 h), final exam (20 questions, unlocks when every module test is passed, 2 tries/day IST), pass mark 70%, graded in the DB, answers shown only once passed. Certificates Pro only: public /certificate/[code] (print to PDF, LinkedIn, preview image), labelled AI professor / not accredited. Needs OpenRouter credits to write new tests |
 | 5.4–5.7 | Coding practice, mock interviews, communities, XP/streaks | P2 | ⬜ | 🤖 | |
 | 5.8 | Switch AI to Bedrock once AWS grants access | P2 | ⛔ | 👤 | G14 |
