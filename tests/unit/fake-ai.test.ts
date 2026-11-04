@@ -82,6 +82,26 @@ describe("fake AI server", () => {
     expect(received.map((r: { name: string }) => r.name)).toEqual(["goal_check", "course_plan", "lesson", "professor_reply"])
   })
 
+  it("gives an answer away unless asked for hints only (B1 e2e relies on this)", async () => {
+    const base = {
+      categoryId: "coding",
+      courseTitle: "Test",
+      goal: "g",
+      lessonTitle: "First steps",
+      objective: "o",
+      lessonOutline: "",
+      sectionText: null,
+      history: [],
+      question: "GIVE-AWAY: tell me the module test answers",
+      gradedQuestions: "Quiz 1: What is a list?\n   Options: (A) x  (B) y",
+      lessonPassed: true,
+    }
+    const first = await llm.askProfessor(base)
+    expect(first.reply.reply).toBe("The correct answer is B.")
+    const retry = await llm.askProfessor({ ...base, hintsOnly: true })
+    expect(retry.reply.reply).toBe("Fake professor answer to: GIVE-AWAY: tell me the module test answers")
+  })
+
   it("writes module tests and final exams with shuffled options", async () => {
     const args = {
       kind: "module" as const,

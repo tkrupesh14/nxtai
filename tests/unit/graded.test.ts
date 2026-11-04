@@ -35,6 +35,8 @@ describe("matchesGraded", () => {
   it("ignores unrelated questions", () => {
     expect(matchesGraded("Why is the sky blue?", quiz)).toBe(false)
     expect(matchesGraded("orbit", quiz)).toBe(false)
+    // Too short to tell apart from any other question.
+    expect(matchesGraded("which option is right in the module test?", [{ question: "Which option is right?", options: [] }])).toBe(false)
   })
 })
 

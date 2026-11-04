@@ -45,8 +45,9 @@ export function matchesGraded(question: string, graded: GradedQuestion[]): boole
   const asked = words(question)
   if (asked.size < 3) return false
   return graded.some((g) => {
+    // Very short questions ("Which option is right?") are too generic to recognise reliably.
     const target = words(g.question)
-    if (target.size < 3) return false
+    if (target.size < 4) return false
     let shared = 0
     for (const w of target) if (asked.has(w)) shared++
     return shared / target.size >= 0.6
