@@ -105,6 +105,34 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 2. Next 16; drop `auth-helpers-nextjs`; update `recharts`; clear audit highs. **(G12, G15)**
 3. Playwright e2e tests and CI on pull requests.
 
+### Phase 8 — Professor portal (pilot: Physics, English + Hindi)
+Real professors volunteer to teach Krpex's AI. They feed in material, a teaching style and corrections; the AI uses them each time it writes a lesson (no model retraining until there's enough reviewed data). Each pilot professor becomes a **named AI professor**, e.g. "Prof. Sharma (AI)": always labelled AI, with the real professor credited and consenting.
+
+**Decisions (2026-11-04):** volunteers (no payouts for now); named AI professors; pilot = Physics (Science → Physics) in English and Hindi; 2–3 professors.
+
+**How the AI uses professors' data**
+1. *Knowledge:* their approved material (notes, slides, lecture transcripts, question banks) is split into sections (reusing 5.2) and searched for each lesson/test/chat; the AI teaches from the closest passages.
+2. *Teaching style:* a teaching profile per professor (how they open a topic, favourite analogies, common mistakes they warn about, pacing, tone, language), written by the professor with AI help, plus their best explanations as examples in the prompt.
+3. *Corrections:* professors review AI lessons in their subject (rate, edit, comment). Edits become examples and test cases; this is also the dataset for retraining later.
+
+**Portal (`/teach`), invite only**
+- Professor accounts: invite link from `/admin`, profile (name, photo, title, institution, subjects, languages, short bio), credentials checked by admin, contributor agreement accepted in the portal.
+- Inputs: upload documents (PDF/Word/PPT, from 5.2), upload lecture audio/video (transcribed by an outside service; only the transcript is kept), write a model lesson in the lesson-block editor, question bank (question, options, answer, explanation, common wrong answer), teaching profile form.
+- Review queue: AI-written Physics lessons (from learners' courses, anonymised) to rate 1–5, edit inline and comment; "approve as example".
+- Everything is tagged with language (en/hi) and topic, and is a draft until the professor publishes it; admin can unpublish.
+- Withdrawal: a professor can remove any item or leave; their content stops being used immediately.
+
+**Learner side**
+- Onboarding for Physics: choose a professor (photo, bio, "AI version of Prof. X, trained on their material"), and a teaching language: English or हिन्दी.
+- Lessons, quizzes, tests and chat in the chosen language (formulas stay as maths; Devanagari font added); the course page and lessons say "Taught by Prof. X (AI)", with a link to the professor's page.
+- Learners can rate a lesson and flag it for the professor.
+
+**Measuring it:** professor ratings of AI lessons, learner lesson ratings, quiz pass rates and course completion for professor-backed vs. generic Physics courses.
+
+**Before inviting anyone (👤):** contributor agreement (licence to use uploads, their name, photo and teaching style for an AI professor; right to withdraw; only upload material they own or may share), reviewed by a lawyer; a short page explaining the programme.
+
+**Phases:** 8.1 portal + profiles + uploads + review queue → 8.2 professor-backed lessons (style, search, examples) + professor choice + "Taught by" → 8.3 Hindi teaching language → 8.4 lecture transcription + question banks + flagged questions inbox → 8.5 (later) retraining an open model once ~5,000 reviewed items exist.
+
 ## Decisions log
 
 | Date | Decision |
@@ -119,6 +147,7 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 | 2026-11-01 | Email/password auth runs in the browser (per-learner rate limits) |
 | 2026-11-01 | Brand shown on the site renamed NxtAI → **Krpex** (company name on the AWS Activate application). Internal IDs (`nxtai` professor id, `nxtai:lecture` keys, repo name) unchanged |
 | 2026-11-01 | Free / Pro plans + one-time credit packs (₹49/100, ₹99/250, Pro ₹499/month); limits enforced in Postgres |
+| 2026-11-04 | Professor portal: volunteer professors; named AI professors (labelled AI, with consent); pilot Physics in English + Hindi; their data used at lesson time (no retraining until ~5,000 reviewed items) |
 
 ## Next up (proposed 2026-11-01)
 

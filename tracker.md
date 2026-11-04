@@ -135,6 +135,19 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 7.3 | Playwright e2e + visual regression tests | P1 | ✅ | | Unit (Vitest), database (PGlite: RLS, server key, limits, payments), Playwright smoke tests, and signed-in browser tests (onboarding → course, lesson taught + quiz passed, AI professor, My courses progress, catalog limits/delete, account) against a local Supabase + fake AI in CI: `pnpm test`, `pnpm test:e2e`, `pnpm test:e2e:signed-in`. Supabase CLI pinned to 2.122.1 in CI. Visual regression optional, not done |
 | 7.4 | CI on pull requests | P1 | ✅ | | `.github/workflows/ci.yml`: typecheck → tests → build → smoke tests, on push to dev/main and PRs |
 
+## Phase 8 — Professor portal (pilot: Physics, English + Hindi)
+
+| ID | Task | Pri | Status | Owner | Notes |
+|----|------|-----|--------|-------|-------|
+| 8.0 | Contributor agreement (licence, name/photo/style consent, withdrawal, own-material rule) + programme page; lawyer review | P1 | ⬜ | 👤 | Before inviting professors |
+| 8.0b | Recruit 2–3 Physics professors (volunteers) | P1 | ⬜ | 👤 | |
+| 8.1 | Portal `/teach`: invites from `/admin`, professor profile, agreement, uploads (reuse 5.2), model-lesson editor, review queue (rate/edit/comment), drafts + publish, withdraw | P1 | ⬜ | 🤖 | Needs a migration |
+| 8.2 | Professor-backed lessons: teaching profile + examples + search over their material in lessons, tests and chat; professor choice in onboarding; "Taught by Prof. X (AI)" + professor page | P1 | ⬜ | 🤖 | |
+| 8.3 | Hindi teaching language: onboarding choice, lessons/quizzes/tests/chat in Hindi, Devanagari font | P1 | ⬜ | 🤖 | |
+| 8.4 | Lecture audio/video transcription; question banks; flagged learner questions → professor inbox | P2 | ⬜ | 🤖 | Outside transcription service (~₹0.5/min) |
+| 8.5 | Measure: professor ratings, learner ratings, pass rates, completion (professor-backed vs. generic) | P2 | ⬜ | 🤖 | |
+| 8.6 | Retrain an open model on reviewed data | P3 | ⬜ | 🤖 | Only after ~5,000 reviewed items |
+
 ## Bugs
 
 | ID | Bug | Pri | Status | Owner | Notes |
