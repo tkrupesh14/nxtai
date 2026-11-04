@@ -140,6 +140,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | ID | Bug | Pri | Status | Owner | Notes |
 |----|-----|-----|--------|-------|-------|
 | B1 | Ask the professor gives away quiz, checkpoint and test answers | P1 | ⬜ | 🤖 | Reported 2026-11-04. The chat should hint and guide the learner's reasoning, never state the correct option, until that question is answered. Current prompt rule (`PROFESSOR_SYSTEM` in `lib/ai/llm.ts`) only says "guide their reasoning instead of just giving the letter" — too weak. Fix: stronger rule, keep answer keys out of the chat context, refuse while a module test / final exam is in progress, and a test with the fake AI |
+| B2 | Multi-line maths in lessons shows as raw red LaTeX | P1 | ⬜ | 🤖 | Reported 2026-11-04 (worked example "Distributive law, fully worked"). A `$$\begin{aligned}…&\iff…\\…\end{aligned}$$` block starting mid-paragraph or spanning lines isn't turned into display maths (`displayMath()` in `components/learn/lesson-blocks.tsx` only handles one-line `$$…$$`), so KaTeX fails on `&`/`\\` and, with `throwOnError: false`, prints the source in red; the next `$$x$$` pairs wrongly, so the rest of the paragraph turns red too. Fix: normalise multi-line/mid-line `$$` blocks (and `\[…\]`, `\begin{…}` without `$$`) before remark-math, tell the AI to put display maths on its own lines, and show a plain-text fallback instead of red source; unit tests with this sample |
 
 ## Next up — Sprint 1: ready for real users (proposed)
 
