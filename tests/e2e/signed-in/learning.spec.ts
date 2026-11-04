@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process"
+import { readFileSync } from "node:fs"
 
 import { expect, test, type Page } from "@playwright/test"
 
@@ -253,6 +254,17 @@ test("a course is built from the learner's own material (Pro)", async ({ page })
   const material = page.getByRole("list", { name: "Your material" })
   await expect(material.getByText("photosynthesis.pdf")).toBeVisible()
   await expect(material.getByText("· 3 pages")).toBeVisible()
+
+  // A long file name is cut short on a phone instead of widening the page.
+  const longName = "A-very-long-file-name-for-my-biology-notes-chapter-one-to-three.pdf"
+  await upload.setInputFiles({ name: longName, mimeType: "application/pdf", buffer: readFileSync("tests/fixtures/photosynthesis.pdf") })
+  await expect(material.getByText(longName)).toBeVisible()
+  const desktop = page.viewportSize()!
+  await page.setViewportSize({ width: 360, height: 800 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360)
+  await page.setViewportSize(desktop)
+  await page.getByRole("button", { name: `Remove ${longName}` }).click()
+  await expect(material.getByText(longName)).toHaveCount(0)
 
   // Pasted text can be added and removed again.
   await page.getByRole("button", { name: "Paste text instead" }).click()

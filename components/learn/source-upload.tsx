@@ -79,7 +79,7 @@ export function SourceUpload({
   }
 
   return (
-    <div className="grid gap-3 rounded-lg border border-dashed p-4">
+    <div className="grid min-w-0 gap-3 rounded-lg border border-dashed p-4">
       <div>
         <p className="text-sm font-medium">Teach from my own material (optional)</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
@@ -91,10 +91,10 @@ export function SourceUpload({
       </div>
 
       {sources.length > 0 && (
-        <ul className="grid gap-2" aria-label="Your material">
+        <ul className="grid min-w-0 gap-2" aria-label="Your material">
           {sources.map((s) => (
-            <li key={s.id} className="flex items-center justify-between gap-3 rounded-md bg-muted/50 px-3 py-2 text-sm">
-              <span className="min-w-0 truncate">
+            <li key={s.id} className="flex min-w-0 items-center justify-between gap-3 rounded-md bg-muted/50 px-3 py-2 text-sm">
+              <span className="min-w-0 flex-1 truncate" title={s.filename}>
                 <span aria-hidden>📄 </span>
                 {s.filename}
                 <span className="text-muted-foreground"> · {s.pages} page{s.pages === 1 ? "" : "s"}{s.kind === "pdf" ? "" : " (approx.)"}</span>
