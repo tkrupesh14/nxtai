@@ -325,6 +325,9 @@ test("a course taught in Hindi: plan, lessons and answers in Hindi, and the defa
   // Hindi text uses the Devanagari font (Geist has no Devanagari letters).
   expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).toMatch(/Noto Sans Devanagari/i)
 
+  // Questions open from the lecture, once the lesson is saved and the class has started.
+  await page.getByRole("button", { name: "Start the class" }).first().click()
+  await expect(page.getByText(/^Section 1 of \d+$/)).toBeVisible({ timeout: 12_000 })
   await page.getByRole("button", { name: /Ask about this section/ }).first().click()
   await page.getByLabel("Your question").fill("बल क्या है?")
   await page.getByRole("button", { name: "Ask", exact: true }).click()
