@@ -148,12 +148,24 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 8.5 | Measure: professor ratings, learner ratings, pass rates, completion (professor-backed vs. generic) | P2 | ⬜ | 🤖 | |
 | 8.6 | Retrain an open model on reviewed data | P3 | ⬜ | 🤖 | Only after ~5,000 reviewed items |
 
+## Phase 9 — Live updates and notifications
+
+| ID | Task | Pri | Status | Owner | Notes |
+|----|------|-----|--------|-------|-------|
+| 9.1 | Live updates: pages change without a refresh | P1 | ⬜ | 🤖 | One `notifications` table filled by database triggers; each signed-in tab listens to its own rows over Supabase Realtime and refreshes the data on screen. Also refreshes when you come back to a tab, and polls every 60 s if the live connection drops. No new dependencies |
+| 9.2 | In-app notifications: bell with unread count, list, mark as read, pop-up for new ones | P1 | ⬜ | 🤖 | Same table as 9.1. Kept 90 days |
+| 9.3 | Email for important notifications, as a digest, with per-type settings and unsubscribe | P2 | ⬜ | 👤🤖 | Through the Spacemail mailbox. Needs one mail library (to approve) |
+| 9.4 | Phone/browser push notifications (opt-in) | P2 | ⬜ | 👤🤖 | Web Push through the existing `sw.js`. Needs VAPID keys + one library |
+| 9.5 | Reminders: "continue your course", streak about to break | P3 | ⬜ | 🤖 | Needs a scheduler (cron on the server) |
+| 9.6 | WhatsApp notifications through AiSensy | P3 | ⬜ | 👤🤖 | After 9.3; templates need Meta approval |
+
 ## Bugs
 
 | ID | Bug | Pri | Status | Owner | Notes |
 |----|-----|-----|--------|-------|-------|
 | B1 | Ask the professor gives away quiz, checkpoint and test answers | P1 | ✅ | 🤖 | `148d799`. Reported 2026-11-04. The chat should hint and guide the learner's reasoning, never state the correct option, until that question is answered. Current prompt rule (`PROFESSOR_SYSTEM` in `lib/ai/llm.ts`) only says "guide their reasoning instead of just giving the letter" — too weak. Fix: stronger rule, keep answer keys out of the chat context, refuse while a module test / final exam is in progress, and a test with the fake AI |
 | B2 | Multi-line maths in lessons shows as raw red LaTeX | P1 | ✅ | 🤖 | Fixed by `tidyMath` (`lib/learning/math.ts`). Reported 2026-11-04 (worked example "Distributive law, fully worked"). A `$$\begin{aligned}…&\iff…\\…\end{aligned}$$` block starting mid-paragraph or spanning lines isn't turned into display maths (`displayMath()` in `components/learn/lesson-blocks.tsx` only handles one-line `$$…$$`), so KaTeX fails on `&`/`\\` and, with `throwOnError: false`, prints the source in red; the next `$$x$$` pairs wrongly, so the rest of the paragraph turns red too. Fix: normalise multi-line/mid-line `$$` blocks (and `\[…\]`, `\begin{…}` without `$$`) before remark-math, tell the AI to put display maths on its own lines, and show a plain-text fallback instead of red source; unit tests with this sample |
+| B3 | Chat answers show raw `*` instead of bullet points | P1 | 🟡 | 🤖 | Reported 2026-11-05 ("Distance vs displacement" answer on a phone). The AI sometimes writes a list marker Markdown doesn't recognise (`*` + non-breaking space, escaped `\*`, `•`). Fix (local, not pushed): `tidyLists` in `lib/learning/math.ts`, run by the shared Markdown renderer for chat, lessons, quizzes and the inbox; `tests/unit/lists.test.ts` |
 
 ## Next up — Sprint 1: ready for real users (proposed)
 

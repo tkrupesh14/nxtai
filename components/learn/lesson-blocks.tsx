@@ -10,7 +10,7 @@ import { DiagramView } from "@/components/learn/diagram-view"
 import { Checkpoint } from "@/components/learn/lecture"
 import { ProfessorAvatar } from "@/components/learn/professor"
 import type { Professor } from "@/lib/learning/catalog"
-import { tidyMath } from "@/lib/learning/math"
+import { tidyMarkdown } from "@/lib/learning/math"
 import type { LessonBlock } from "@/lib/learning/schemas"
 import { cn } from "@/lib/utils"
 
@@ -29,7 +29,7 @@ export function Md({ children, className, compact }: { children: string; classNa
         rehypePlugins={REHYPE}
         components={{ pre: (props) => <CodeBlock {...props} /> }}
       >
-        {tidyMath(children)}
+        {tidyMarkdown(children)}
       </ReactMarkdown>
     </div>
   )

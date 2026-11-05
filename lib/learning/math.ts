@@ -55,3 +55,34 @@ export function tidyMath(md: string): string {
   const pieces = md.split(/(```[\s\S]*?(?:```|$)|`[^`\n]*`)/g)
   return pieces.map((p, i) => (i % 2 === 1 ? p : tidyText(p))).join("").trim()
 }
+
+// Spaces Markdown doesn't count as a space after a list marker (non-breaking, en/em, thin, narrow, zero-width).
+const ODD_SPACE = "[\\u00a0\\u2000-\\u200b\\u202f\\u3000]"
+const BULLET_LINE = new RegExp(`^([ \\t]*)(?:\\\\?([*+-])|[•·▪◦‣●○])(?:[ \\t]|${ODD_SPACE})+`)
+const NUMBER_LINE = new RegExp(`^([ \\t]*)(\\d{1,3})\\\\?([.)])${ODD_SPACE}+`)
+
+/**
+ * Make AI-written lists render as lists. Models sometimes write "*" plus a non-breaking space, an escaped "\*",
+ * or "•" characters, which Markdown shows as plain text with a stray "*". Code is left exactly as written.
+ */
+export function tidyLists(md: string): string {
+  if (!/[*+\-•·▪◦‣●○]|\d[.)]/.test(md)) return md
+  let fenced = false
+  return md
+    .split("\n")
+    .map((line) => {
+      if (/^[ \t]*(```|~~~)/.test(line)) fenced = !fenced
+      if (fenced) return line
+      const b = BULLET_LINE.exec(line)
+      if (b) return `${b[1]}${b[2] === "+" || b[2] === "-" ? b[2] : "*"} ${line.slice(b[0].length)}`
+      const n = NUMBER_LINE.exec(line)
+      if (n) return `${n[1]}${n[2]}${n[3]} ${line.slice(n[0].length)}`
+      return line
+    })
+    .join("\n")
+}
+
+/** Everything the lesson Markdown renderer does to AI text before parsing it. */
+export function tidyMarkdown(md: string): string {
+  return tidyMath(tidyLists(md))
+}
