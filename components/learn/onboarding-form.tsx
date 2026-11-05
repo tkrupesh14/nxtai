@@ -19,7 +19,11 @@ type Defaults = {
   hours_per_week?: number | null
   learning_style?: string | null
   timeline?: string | null
+  language?: string | null
 }
+
+/** Lessons, quizzes, tests and chat are written in this language (8.3). */
+const LANGUAGE_LABELS: Record<string, string> = { en: "English", hi: "हिन्दी (Hindi)" }
 
 const STEPS = ["Category", "Subject & goal", "About you", "Schedule"] as const
 
@@ -120,6 +124,7 @@ export function OnboardingForm({
   const [style, setStyle] = useState(defaults?.learning_style ?? "mixed")
   const [hours, setHours] = useState(String(defaults?.hours_per_week ?? 5))
   const [timeline, setTimeline] = useState(defaults?.timeline ?? "1_month")
+  const [language, setLanguage] = useState(defaults?.language === "hi" ? "hi" : "en")
   const [sources, setSources] = useState<UploadedSource[]>(pendingSources)
 
   const category = getCategory(categoryId)
@@ -173,6 +178,7 @@ export function OnboardingForm({
       <input type="hidden" name="learning_style" value={style} />
       <input type="hidden" name="hours_per_week" value={hours} />
       <input type="hidden" name="timeline" value={timeline} />
+      <input type="hidden" name="language" value={language} />
       <input type="hidden" name="sources" value={sources.map((s) => s.id).join(",")} />
       <input type="hidden" name="teacher" value={teacher?.realId ?? ""} />
 
@@ -320,6 +326,14 @@ export function OnboardingForm({
 
       {step === 2 && (
         <div className="grid gap-6">
+          <div className="grid gap-2">
+            <Label>Teach me in</Label>
+            <ChoiceGroup name="language-choice" options={LANGUAGE_LABELS} value={language} onChange={setLanguage} />
+            <p className="text-xs text-muted-foreground">
+              Lessons, quizzes, tests and your professor&apos;s answers. In Hindi, technical terms keep their English name
+              in brackets, and formulas stay as usual.
+            </p>
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="background-input">Your background</Label>
             <Textarea

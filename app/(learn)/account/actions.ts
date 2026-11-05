@@ -41,6 +41,7 @@ const LearningSchema = z.object({
   hours_per_week: z.coerce.number().int().min(1, "At least 1 hour a week.").max(80, "At most 80 hours a week."),
   learning_style: z.enum(keys(STYLE_LABELS)),
   timeline: z.enum(keys(TIMELINE_LABELS)),
+  language: z.enum(["en", "hi"]),
 })
 
 /** Learning preferences, used for every new course and lesson. The row is created during onboarding. */

@@ -79,12 +79,15 @@ function teacherNote(prompt) {
   return `Taught as ${name} (AI), with ${excerpts} excerpt${excerpts === 1 ? "" : "s"} of their material${prompt.includes("<example_lesson>") ? " and a model lesson" : ""}.`
 }
 
+/** Hindi courses (8.3): the prompt's <language> block asks for Hindi. */
+const hindi = (prompt) => /This course is taught in Hindi/.test(prompt)
+
 function contentFor(name, prompt) {
   switch (name) {
     case "goal_check":
       return { verdict: "ok", message: "", better_category: "" }
     case "course_plan":
-      return FAKE_PLAN
+      return hindi(prompt) ? { ...FAKE_PLAN, welcome_message: `नमस्ते! ${FAKE_PLAN.welcome_message}` } : FAKE_PLAN
     case "source_course_plan": {
       // One lesson per section (at most 4), so tests can follow a section into its lesson.
       const n = Number(/S numbers \(1-(\d+)\)/.exec(prompt)?.[1] ?? 1)
@@ -97,12 +100,16 @@ function contentFor(name, prompt) {
       return { ...FAKE_PLAN, title: "Course from your material", modules: [{ title: "Your material", summary: "From your file.", lessons }] }
     }
     case "lesson":
-      return fakeLesson(/Today's lesson: "([^"]+)"/.exec(prompt)?.[1], /<section ref="([^"]+)">/.exec(prompt)?.[1] ?? null, teacherNote(prompt))
+      return fakeLesson(
+        /Today's lesson: "([^"]+)"/.exec(prompt)?.[1],
+        /<section ref="([^"]+)">/.exec(prompt)?.[1] ?? null,
+        [teacherNote(prompt), hindi(prompt) ? "यह पाठ हिन्दी में है।" : null].filter(Boolean).join(" ") || null,
+      )
     case "module_test":
     case "final_exam": {
       const count = Number(/Exactly (\d+) multiple-choice/.exec(prompt)?.[1] ?? 8)
       const label = name === "module_test" ? "Module test" : "Final exam"
-      return { questions: Array.from({ length: count }, (_, i) => q(`${label} question ${i + 1}?`)) }
+      return { questions: Array.from({ length: count }, (_, i) => q(`${hindi(prompt) ? "प्रश्न · " : ""}${label} question ${i + 1}?`)) }
     }
     case "professor_reply": {
       const question = /<question>([\s\S]*?)<\/question>/.exec(prompt)?.[1]?.trim() ?? ""
@@ -110,7 +117,7 @@ function contentFor(name, prompt) {
       if (/GIVE-AWAY/.test(question) && !/hints only/.test(prompt)) {
         return { verdict: "answer", graded_question: true, reply: "The correct answer is B." }
       }
-      return { verdict: "answer", graded_question: false, reply: `Fake professor answer to: ${question}` }
+      return { verdict: "answer", graded_question: false, reply: `${hindi(prompt) ? "हिन्दी में: " : ""}Fake professor answer to: ${question}` }
     }
     default:
       return null

@@ -9,6 +9,7 @@ import { OfflineScreen } from "@/components/site/offline-screen"
 import { CursorTrail } from "@/components/site/cursor-trail"
 import { Footer } from "@/components/site/footer"
 import { Navbar } from "@/components/site/navbar"
+import { devanagari } from "@/lib/fonts"
 import "./site.css"
 
 const DESCRIPTION =
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans antialiased ${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`font-sans antialiased ${GeistSans.variable} ${GeistMono.variable} ${devanagari.variable}`}>
         <Navbar />
         {children}
         <Footer />

@@ -33,6 +33,7 @@ const onboarding = {
   hours_per_week: 5,
   learning_style: "mixed",
   timeline: "1_month",
+  language: "en",
 } as const
 
 const lessonArgs = {

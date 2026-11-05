@@ -37,6 +37,7 @@ export async function startCatalogCourse(_prev: StartState, formData: FormData):
     .maybeSingle()
   if (existing) redirect(`/learn/${existing.id}`)
 
+  const { data: profile } = await supabase.from("learner_profiles").select("language").maybeSingle()
   const { data: allowance, error: allowanceError } = await supabase
     .rpc("course_allowance")
     .single<{ allowed: boolean; reason: string | null }>()
@@ -60,6 +61,8 @@ export async function startCatalogCourse(_prev: StartState, formData: FormData):
       subcategory: course.subcategory,
       professor: professorForCategory(course.category).id,
       welcome: course.welcome,
+      // Ready-made syllabuses are English; lessons are taught in the learner's default language (8.3).
+      language: profile?.language === "hi" ? "hi" : "en",
     },
     p_modules: course.modules,
   })

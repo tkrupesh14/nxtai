@@ -1,6 +1,7 @@
 "use server"
 
 import { AIError, askProfessor, PRICE_PER_M } from "@/lib/ai/llm"
+import { courseLanguage } from "@/lib/learning/language"
 import { getCourse, isUnlocked, isUuid } from "@/lib/learning/data"
 import { gradedQuestionsText, HINT_FALLBACK, matchesGraded, revealsAnswer, type GradedQuestion } from "@/lib/learning/graded"
 import { getSections } from "@/lib/sources/data"
@@ -166,6 +167,7 @@ export async function askProfessorAction(
       lessonPassed,
       hintsOnly,
       teacher,
+      language: courseLanguage(data.course.language),
     })
     let { reply, usage } = await ask(false)
     // Answers to graded questions stay hidden, except this lesson's own questions once its quiz is passed.

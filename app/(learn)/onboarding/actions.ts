@@ -64,6 +64,7 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
     hours_per_week: input.hours_per_week,
     learning_style: input.learning_style,
     timeline: input.timeline,
+    language: input.language,
     updated_at: new Date().toISOString(),
   })
   if (profileError) {
@@ -114,6 +115,7 @@ export async function createCourse(_prev: OnboardingState, formData: FormData): 
       subcategory: input.subcategory,
       professor: teacher ? teacherRef(teacher.id) : professorForCategory(input.category).id,
       welcome: plan.welcome_message,
+      language: input.language,
     },
     p_modules: plan.modules.map((m) => ({
       title: m.title,

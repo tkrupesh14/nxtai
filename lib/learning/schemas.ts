@@ -155,6 +155,8 @@ export const OnboardingSchema = z
   hours_per_week: z.coerce.number().int().min(1).max(80),
   learning_style: z.enum(["reading", "examples", "projects", "mixed"]),
   timeline: z.enum(["2_weeks", "1_month", "3_months", "no_rush"]),
+  /** The language the course is taught in (8.3). */
+  language: z.enum(["en", "hi"]).optional().default("en"),
   })
   .refine((v) => getSubcategory(v.category, v.subcategory) !== null, { message: "Choose a subject from the list." })
 export type Onboarding = z.infer<typeof OnboardingSchema>

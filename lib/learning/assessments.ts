@@ -1,4 +1,5 @@
 import "server-only"
+import { courseLanguage } from "@/lib/learning/language"
 
 import { AIError, generateAssessment, type AssessmentArgs } from "@/lib/ai/llm"
 import { getCourse, isUuid, type LessonRow, type ModuleRow } from "@/lib/learning/data"
@@ -129,6 +130,7 @@ export async function prepareAssessment(courseId: string, moduleId: string | nul
       lessons: covered.map((l) => ({ title: l.title, objective: l.objective, takeaways: (byId.get(l.id) ?? []).slice(0, 5) })),
       sourceText: sources.length ? sourceExcerpt(sources, moduleId ? 30000 : 40000) : null,
       teacher,
+      language: courseLanguage(data.course.language),
     }
     const questions = await generateAssessment(args)
     const { data: saved, error: saveError } = await supabase.rpc("app_save_assessment", {

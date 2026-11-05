@@ -83,7 +83,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   )
 
   const page = (
-    <main className="mx-auto max-w-3xl px-4 pt-10 pb-28 md:pt-14">
+    <main className="mx-auto max-w-3xl px-4 pt-10 pb-28 md:pt-14" lang={data.course.language === "hi" ? "hi" : undefined}>
       <nav className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
         <Link href={`/learn/${courseId}`} className="hover:text-foreground">
           {data.course.title}

@@ -48,7 +48,7 @@ export function NameForm({ name }: { name: string }) {
 export function LearningForm({
   values,
 }: {
-  values: { level: string; background: string | null; hours_per_week: number | null; learning_style: string | null; timeline: string | null }
+  values: { level: string; background: string | null; hours_per_week: number | null; learning_style: string | null; timeline: string | null; language: string | null }
 }) {
   const [state, action, pending] = useActionState(updateLearning, {})
   return (
@@ -82,6 +82,13 @@ export function LearningForm({
         <div className="grid gap-2">
           <Label htmlFor="hours_per_week">Hours per week</Label>
           <Input id="hours_per_week" name="hours_per_week" type="number" min={1} max={80} defaultValue={values.hours_per_week ?? 5} />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="language">Teaching language for new courses</Label>
+          <select id="language" name="language" defaultValue={values.language === "hi" ? "hi" : "en"} className={selectClass}>
+            <option value="en">English</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+          </select>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="timeline">Usual timeline</Label>

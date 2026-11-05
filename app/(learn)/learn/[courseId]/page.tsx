@@ -28,7 +28,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   const examOpen = finalExamUnlocked(modules, byModule)
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10 md:py-14">
+    <main className="mx-auto max-w-4xl px-4 py-10 md:py-14" lang={course.language === "hi" ? "hi" : undefined}>
       <Link href="/learn" className="text-sm text-muted-foreground hover:text-foreground">
         ← My courses
       </Link>
@@ -43,6 +43,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           {course.level}
         </Badge>
         {course.estimated_weeks ? <span className="text-xs text-muted-foreground">~{course.estimated_weeks} weeks</span> : null}
+        {course.language === "hi" ? <Badge variant="outline">Taught in हिन्दी</Badge> : null}
         {course.status === "archived" ? <Badge variant="secondary">Archived</Badge> : null}
       </div>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance">{course.title}</h1>

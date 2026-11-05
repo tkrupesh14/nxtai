@@ -7,6 +7,7 @@ import { ErrorReporter } from "@/components/error-reporter"
 import { NavigationProgress } from "@/components/site/navigation-progress"
 import { OfflineScreen } from "@/components/site/offline-screen"
 import { LearnHeader } from "@/components/learn/learn-header"
+import { devanagari } from "@/lib/fonts"
 import "katex/dist/katex.min.css"
 import "../(site)/site.css"
 import "./learn.css"
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 export default function LearnLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`min-h-screen font-sans antialiased ${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`min-h-screen font-sans antialiased ${GeistSans.variable} ${GeistMono.variable} ${devanagari.variable}`}>
         <LearnHeader />
         {children}
         <ErrorReporter />

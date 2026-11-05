@@ -33,6 +33,8 @@ export type CourseRow = {
   subcategory: string | null
   professor: string | null
   welcome: string | null
+  /** "en" or "hi" (migration 021). */
+  language: string | null
 }
 
 const LESSON_COLUMNS =
@@ -52,7 +54,7 @@ export async function listCourses() {
   const supabase = await createClient()
   const { data: courses, error } = await supabase
     .from("courses")
-    .select("id, title, summary, level, estimated_weeks, goal, status, created_at, category, subcategory, professor, welcome")
+    .select("id, title, summary, level, estimated_weeks, goal, status, created_at, category, subcategory, professor, welcome, language")
     .order("created_at", { ascending: false })
   if (error) throw error
   if (!courses?.length) return []
@@ -96,7 +98,7 @@ export async function getCourse(courseId: string) {
   const supabase = await createClient()
   const { data: course } = await supabase
     .from("courses")
-    .select("id, title, summary, level, estimated_weeks, goal, status, created_at, category, subcategory, professor, welcome")
+    .select("id, title, summary, level, estimated_weeks, goal, status, created_at, category, subcategory, professor, welcome, language")
     .eq("id", courseId)
     .maybeSingle()
   if (!course) return null
@@ -156,7 +158,7 @@ export async function getAccountOverview() {
   const [{ data: learning }, { data: today }, coursesTotal, lessonsDone] = await Promise.all([
     supabase
       .from("learner_profiles")
-      .select("level, background, hours_per_week, learning_style, timeline")
+      .select("level, background, hours_per_week, learning_style, timeline, language")
       .maybeSingle(),
     supabase.from("professor_questions").select("status, kind").eq("paid", false).gte("created_at", istDayStart()),
     supabase.from("courses").select("id", { count: "exact", head: true }),
@@ -172,6 +174,7 @@ export async function getAccountOverview() {
       hours_per_week: number | null
       learning_style: string | null
       timeline: string | null
+      language: string | null
     } | null,
     usage: {
       questionsToday: count(rows.filter((r) => r.kind === "ask")),

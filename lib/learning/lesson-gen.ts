@@ -1,6 +1,7 @@
 import "server-only"
 
 import type { generateLesson } from "@/lib/ai/llm"
+import { courseLanguage } from "@/lib/learning/language"
 import { getCourse, isUnlocked, isUuid } from "@/lib/learning/data"
 import type { LessonContent } from "@/lib/learning/schemas"
 import { getSections } from "@/lib/sources/data"
@@ -77,6 +78,7 @@ export async function prepareLessonGeneration(courseId: string, lessonId: string
       learningStyle: profile?.learning_style,
       sourceText: sources.length ? sourceExcerpt(sources, 40000) : null,
       teacher,
+      language: courseLanguage(data.course.language),
     },
   }
 }

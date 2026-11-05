@@ -13,7 +13,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const { teacher } = await searchParams
   const supabase = await createClient()
   const [{ data: profile }, { data: allowance }, account, pendingSources, live] = await Promise.all([
-    supabase.from("learner_profiles").select("level, background, hours_per_week, learning_style, timeline").maybeSingle(),
+    supabase.from("learner_profiles").select("level, background, hours_per_week, learning_style, timeline, language").maybeSingle(),
     supabase
       .rpc("course_allowance")
       .maybeSingle<{ allowed: boolean; reason: string | null; free_left: number; credits: number; cost: number }>(),

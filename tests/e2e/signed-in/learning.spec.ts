@@ -298,3 +298,46 @@ test("a course is built from the learner's own material (Pro)", async ({ page })
   // onboarding can't be revisited here because this is the learner's third course today.)
   expect(errors).toEqual([])
 })
+
+test("a course taught in Hindi: plan, lessons and answers in Hindi, and the default can be changed back", async ({ page }) => {
+  test.setTimeout(120_000)
+  const errors = watchErrors(page)
+  localSql("delete from public.course_creations") // the daily allowance is used up by now (local test database only)
+  await page.goto("/onboarding")
+  await page.getByRole("button", { name: /Science/ }).click()
+  await page.getByRole("radio", { name: "Physics" }).click()
+  await page.getByLabel("What do you want to learn or achieve?").fill("गति और बल समझना (motion and force)")
+  await page.getByLabel("Completely new to it").check()
+  await page.getByRole("button", { name: "Continue" }).click()
+  await expect(page.getByRole("radio", { name: "English" })).toBeChecked()
+  await page.getByRole("radio", { name: "हिन्दी (Hindi)" }).click()
+  await page.getByRole("button", { name: "Continue" }).click()
+  await page.getByRole("button", { name: "Build my course" }).click()
+
+  // The fake AI marks what it wrote for a Hindi prompt (tests/support/fake-ai.mjs).
+  await expect(page).toHaveURL(new RegExp(`/learn/${UUID}$`))
+  await expect(page.getByText("Taught in हिन्दी")).toBeVisible()
+  await expect(page.getByText(/नमस्ते! Welcome!/).first()).toBeVisible()
+  await expect(page.locator("main")).toHaveAttribute("lang", "hi")
+
+  await page.getByRole("link", { name: "Start first lesson" }).click()
+  await expect(page.getByText(/यह पाठ हिन्दी में है।/).first()).toBeVisible({ timeout: 60_000 })
+  // Hindi text uses the Devanagari font (Geist has no Devanagari letters).
+  expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).toMatch(/Noto Sans Devanagari/i)
+
+  await page.getByRole("button", { name: /Ask about this section/ }).first().click()
+  await page.getByLabel("Your question").fill("बल क्या है?")
+  await page.getByRole("button", { name: "Ask", exact: true }).click()
+  await expect(page.getByText("हिन्दी में: Fake professor answer to: बल क्या है?")).toBeVisible()
+
+  // Onboarding saved Hindi as the default for new courses; Account changes it back.
+  await page.goto("/account")
+  const language = page.getByLabel("Teaching language for new courses")
+  await expect(language).toHaveValue("hi")
+  await language.selectOption("en")
+  await page.getByRole("button", { name: "Save preferences" }).click()
+  await expect(page.getByText("Saved. New lessons will use these.")).toBeVisible()
+  await page.reload()
+  await expect(page.getByLabel("Teaching language for new courses")).toHaveValue("en")
+  expect(errors).toEqual([])
+})

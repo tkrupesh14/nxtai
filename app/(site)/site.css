@@ -81,7 +81,8 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  /* Devanagari letters (Hindi courses) come from Noto Sans Devanagari: lib/fonts.ts. */
+  --font-sans: var(--font-geist-sans), var(--font-devanagari, ui-sans-serif), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);

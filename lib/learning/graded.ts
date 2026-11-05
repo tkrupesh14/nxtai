@@ -29,13 +29,17 @@ const REVEAL_PATTERNS = [
   /\b(?:[Pp]ick|[Cc]hoose|[Ss]elect|[Gg]o\s+with|[Tt]ick|[Mm]ark)\s+(?:[Oo]ption\s*)?(?:\(\s*[A-D1-4]\s*\)|[A-D](?=[\s.,;:)!]|$))/,
   // Hindi: सही उत्तर / सही जवाब / सही विकल्प
   /सही\s*(?:उत्तर|जवाब|विकल्प)/,
+  // Hindi: "विकल्प B सही है", "(C) सही है", "B ही सही है"
+  /(?:विकल्प\s*\(?\s*[A-D1-4]|\(\s*[A-D1-4]\s*\)|(?<![A-Za-z])[A-D]\)?)\s*(?:ही\s*)?सही/u,
+  // Hindi: "उत्तर B है", "उत्तर: (C)", "जवाब है B"
+  /(?:उत्तर|जवाब)\s*(?:है\s*)?(?:[:：—=-]\s*)?(?:विकल्प\s*)?(?:\(\s*[A-D1-4]\s*\)|[A-D](?![A-Za-z]))/u,
 ]
 
 const words = (s: string) =>
   new Set(
     s
       .toLowerCase()
-      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .replace(/[^\p{L}\p{M}\p{N}\s]/gu, " ") // \p{M}: Devanagari vowel signs are part of the word
       .split(/\s+/)
       .filter((w) => w.length > 2),
   )

@@ -16,6 +16,10 @@ describe("revealsAnswer", () => {
     "You should pick B here.",
     "Go with (A).",
     "इसका सही उत्तर B है।",
+    "विकल्प B सही है।",
+    "(C) ही सही है क्योंकि…",
+    "उत्तर: D",
+    "तो जवाब है (A)।",
   ])("flags %j", (reply) => expect(revealsAnswer(reply)).toBe(true))
 
   it.each([
@@ -24,6 +28,9 @@ describe("revealsAnswer", () => {
     "Gravity is a force between any two masses.",
     "Pick a similar example: a ball on a string.",
     "Let's check each option against Newton's law.",
+    "सोचिए, कौन-सा विकल्प सही लगता है और क्यों?",
+    "उत्तर देने से पहले न्यूटन का दूसरा नियम याद कीजिए।",
+    "गुरुत्वाकर्षण (gravity) दो द्रव्यमानों के बीच का बल है।",
   ])("allows %j", (reply) => expect(revealsAnswer(reply)).toBe(false))
 })
 
@@ -31,6 +38,11 @@ describe("matchesGraded", () => {
   it("spots a pasted or reworded quiz question", () => {
     expect(matchesGraded("Which force keeps the moon in orbit around earth??", quiz)).toBe(true)
     expect(matchesGraded("what force keeps the Moon in its orbit around the Earth", quiz)).toBe(true)
+  })
+  it("works for Hindi questions (vowel signs are part of words)", () => {
+    const hi = [{ question: "पृथ्वी के चारों ओर चंद्रमा को कक्षा में कौन-सा बल रखता है?", options: [] }]
+    expect(matchesGraded("चंद्रमा को पृथ्वी के चारों ओर कक्षा में कौन-सा बल रखता है", hi)).toBe(true)
+    expect(matchesGraded("आकाश नीला क्यों दिखता है?", hi)).toBe(false)
   })
   it("ignores unrelated questions", () => {
     expect(matchesGraded("Why is the sky blue?", quiz)).toBe(false)
