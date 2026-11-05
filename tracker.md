@@ -60,10 +60,10 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 1.6 | Email/password in the new design; retire `/auth/*` pages | P1 | ✅ | | D19 |
 | 1.7 | Signed-in state in the site navbar | P1 | ✅ | 🤖 | Navbar since `ed2e4b2`; home and pricing buttons follow the signed-in state |
 | 1.8 | Verify GitHub sign-in end to end on a phone | P0 | ✅ | 👤 | Used on a phone 2026-11-01 |
-| 1.9 | Custom SMTP for auth emails (confirm / reset) | P0 | ⬜ | 👤 | G21 — Hostinger `info@krpex.in`, Resend or SES |
-| 1.10 | Email provider settings: confirm email ON, min password 8, redirect `https://krpex.in/**` | P0 | ⬜ | 👤 | Supabase → Authentication |
-| 1.11 | Test email sign-up and password reset on a phone | P0 | ⬜ | 👤 | After 1.9 |
-| 1.12 | Cross-device email links (`token_hash` templates) | P2 | ⬜ | 👤🤖 | G22 |
+| 1.9 | Custom SMTP for auth emails (confirm / reset) | P0 | ✅ | 👤 | Spacemail `info@krpex.in` (mail.spacemail.com:465); SPF, DKIM (`spacemail`), DMARC set. Branded templates in `supabase/templates` (2026-11-05) |
+| 1.10 | Email provider settings: confirm email ON, min password 8, redirect `https://krpex.in/**` | P0 | ✅ | 👤 | Supabase → Authentication |
+| 1.11 | Test email sign-up and password reset on a phone | P0 | ✅ | 👤 | 2026-11-05 |
+| 1.12 | Cross-device email links (`token_hash` templates) | P2 | ✅ | 👤🤖 | G22 — templates link to `/auth/confirm` (`3999a4b`) |
 
 ## Phase 2 — Production hosting
 
