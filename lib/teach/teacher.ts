@@ -4,6 +4,7 @@ import { cache } from "react"
 
 import { getProfessor, professorForCategory, type Professor } from "@/lib/learning/catalog"
 import { createClient } from "@/lib/supabase/server"
+import type { QuizQuestion } from "@/lib/learning/schemas"
 import { serverKey } from "@/lib/supabase/server-key"
 import {
   teacherContext,
@@ -65,4 +66,31 @@ export async function getTeacherContext(professor: string | null, query: string,
     return null
   }
   return data ? teacherContext(data as TeacherContextRow) : null
+}
+
+/**
+ * Up to `limit` published questions from the course professor's bank that match `query`, in the course's
+ * language (8.4). Empty for AI personas, professors who aren't live, and on errors.
+ */
+export async function getTeacherQuestions(professor: string | null, query: string, language: "en" | "hi", limit: number): Promise<QuizQuestion[]> {
+  const id = teacherIdOf(professor)
+  if (!id || limit <= 0) return []
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("app_teacher_questions", {
+    p_key: serverKey(),
+    p_professor: id,
+    p_query: query,
+    p_language: language,
+    p_limit: limit,
+  })
+  if (error) {
+    console.error("app_teacher_questions failed:", error.message)
+    return []
+  }
+  return (Array.isArray(data) ? data : []).map((q: QuizQuestion) => ({
+    question: q.question,
+    options: q.options,
+    answer_index: q.answer_index,
+    explanation: q.explanation,
+  }))
 }

@@ -1,8 +1,9 @@
 "use server"
 
 import { AIError, askProfessor, PRICE_PER_M } from "@/lib/ai/llm"
-import { courseLanguage } from "@/lib/learning/language"
 import { getCourse, isUnlocked, isUuid } from "@/lib/learning/data"
+import { courseLanguage } from "@/lib/learning/language"
+import { FLAG_ERRORS } from "@/lib/teach/bank"
 import { gradedQuestionsText, HINT_FALLBACK, matchesGraded, revealsAnswer, type GradedQuestion } from "@/lib/learning/graded"
 import { getSections } from "@/lib/sources/data"
 import { sourceExcerpt } from "@/lib/sources/sections"
@@ -212,4 +213,22 @@ export async function askProfessorAction(
         (credit.paid ? " Credits for failed answers are refunded (up to 2 a day)." : ""),
     }
   }
+}
+
+/** Send one AI answer from this lesson's chat to the real professor whose AI version teaches the course (8.4). */
+export async function flagForProfessorAction(
+  courseId: string,
+  lessonId: string,
+  questionId: string,
+  note: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (!isUuid(courseId) || !isUuid(lessonId) || !isUuid(questionId)) return { ok: false, message: FLAG_ERRORS.not_found }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("flag_for_professor", { p_question: questionId, p_note: String(note ?? "").slice(0, 500) })
+  if (error) {
+    const known = FLAG_ERRORS[error.message]
+    if (!known) console.error("flag_for_professor failed:", error.message)
+    return { ok: false, message: known ?? "We couldn't send that. Please try again." }
+  }
+  return { ok: true }
 }

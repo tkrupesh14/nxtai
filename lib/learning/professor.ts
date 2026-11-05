@@ -18,6 +18,8 @@ export type ChatTurn = {
   question: string
   reply: string
   verdict: "answer" | "off_topic" | "not_allowed"
+  /** Sent to the real professor to check (8.4), with their reply once they've answered. */
+  flag?: { status: "open" | "answered" | "confirmed"; reply: string | null } | null
 }
 
 export type AskResult =

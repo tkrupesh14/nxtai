@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { AccountSection } from "@/components/learn/account-section"
 import { AgreementText } from "@/components/teach/agreement-text"
+import { Inbox } from "@/components/teach/inbox"
 import { LessonList } from "@/components/teach/lesson-list"
 import { MaterialList } from "@/components/teach/material-list"
 import { Button } from "@/components/site/ui/button"
@@ -9,8 +10,18 @@ import { MaterialUpload } from "@/components/teach/material-upload"
 import { RecordingList } from "@/components/teach/recording-list"
 import { RecordingUpload } from "@/components/teach/recording-upload"
 import { ProfileForm } from "@/components/teach/profile-form"
+import { QuestionBank } from "@/components/teach/question-bank"
 import { PublicProfile } from "@/components/teach/public-profile"
-import { getMyLessons, getMyMaterials, getMyProfessor, getMyRecordings, getReviewQueue, refreshMyRecordings } from "@/lib/teach/data"
+import {
+  getMyBankQuestions,
+  getMyInbox,
+  getMyLessons,
+  getMyMaterials,
+  getMyProfessor,
+  getMyRecordings,
+  getReviewQueue,
+  refreshMyRecordings,
+} from "@/lib/teach/data"
 import { languageName, subjectName } from "@/lib/teach/subjects"
 
 export const metadata = { title: "Teaching — Krpex" }
@@ -39,13 +50,16 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
   }
   // Finished transcriptions are collected first, so the lists below are up to date.
   await refreshMyRecordings()
-  const [{ welcome }, materials, lessons, queue, recordings] = await Promise.all([
+  const [{ welcome }, materials, lessons, queue, recordings, bank, inbox] = await Promise.all([
     searchParams,
     getMyMaterials(),
     getMyLessons(),
     professor.status === "approved" ? getReviewQueue() : Promise.resolve([]),
     getMyRecordings(),
+    getMyBankQuestions(),
+    getMyInbox(),
   ])
+  const openQuestions = inbox.filter((i) => i.status === "open").length
   const published = materials.filter((m) => m.status === "published").length
   const live = professor.status === "approved" && professor.listing_requested && professor.live_at !== null
   const listing = !professor.listing_requested
@@ -108,6 +122,15 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
         </details>
       </AccountSection>
 
+      {live || inbox.length ? (
+        <AccountSection
+          title={`Learner questions${openQuestions ? ` (${openQuestions} to answer)` : ""}`}
+          description="Learners in courses your AI version teaches can ask you to check one of its answers. You don't see who they are."
+        >
+          <Inbox items={inbox} />
+        </AccountSection>
+      ) : null}
+
       {professor.status !== "suspended" ? (
         <AccountSection
           title="Add material"
@@ -143,6 +166,13 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           </Button>
         ) : null}
         <LessonList lessons={lessons} canPublish={professor.status === "approved"} />
+      </AccountSection>
+
+      <AccountSection
+        title={`Question bank (${bank.length}${bank.length ? `, ${bank.filter((q) => q.status === "published").length} published` : ""})`}
+        description="Multiple-choice questions the way you'd set them. In courses your AI version teaches, up to half of each module test and final exam comes from your published questions on that topic."
+      >
+        <QuestionBank questions={bank} languages={professor.languages} canPublish={professor.status === "approved"} />
       </AccountSection>
 
       <AccountSection

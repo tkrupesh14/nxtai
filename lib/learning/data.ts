@@ -138,6 +138,12 @@ export async function getProfessorChat(lessonId: string) {
       .eq("paid", false)
       .gte("created_at", istDayStart()),
   ])
+  // Answers sent to the real professor, with their replies (8.4).
+  const ids = (turns ?? []).filter((t) => t.kind === "ask").map((t) => t.id as string)
+  const { data: flags } = ids.length
+    ? await supabase.from("professor_flags").select("question_id, status, professor_reply").in("question_id", ids)
+    : { data: [] }
+  const flagOf = new Map((flags ?? []).map((f) => [f.question_id as string, { status: f.status, reply: f.professor_reply }]))
   const all = today ?? []
   const rows = all.filter((r) => r.kind === "ask")
   const quick = all.filter((r) => r.kind !== "ask")
@@ -145,7 +151,7 @@ export async function getProfessorChat(lessonId: string) {
   const count = (list: typeof rows) =>
     list.filter((r) => r.status !== "failed").length + Math.max(list.filter((r) => r.status === "failed").length - 2, 0)
   return {
-    turns: (turns ?? []) as ChatTurn[],
+    turns: (turns ?? []).map((t) => ({ ...t, flag: flagOf.get(t.id as string) ?? null })) as ChatTurn[],
     usedToday: count(rows),
     usedLesson: count(rows.filter((r) => r.lesson_id === lessonId)),
     usedQuick: count(quick),

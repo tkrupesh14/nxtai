@@ -125,6 +125,34 @@ describe("fake AI server", () => {
     expect(exam.every((q) => q.options[q.answer_index] === "The right answer")).toBe(true)
     expect(received.slice(-2).map((r: { name: string }) => r.name)).toEqual(["module_test", "final_exam"])
   })
+
+  it("mixes the professor's own questions into a test and the AI writes the rest", async () => {
+    const own = [0, 1, 2, 3].map((i) => ({
+      question: `Professor question ${i}?`,
+      options: ["Own right", "Own wrong 1", "Own wrong 2", "Own wrong 3"],
+      answer_index: 0,
+      explanation: "Because.",
+    }))
+    const args = {
+      kind: "module" as const,
+      categoryId: "science",
+      courseTitle: "Test",
+      courseLevel: "beginner",
+      goal: "g",
+      moduleTitle: "Getting started",
+      lessons: [{ title: "First steps", objective: "o", takeaways: [] }],
+      bank: own,
+    }
+    const prompt = llm.assessmentPrompt(args)
+    expect(prompt).toMatch(/Exactly 4 multiple-choice questions/)
+    expect(prompt).toContain("<professor_questions>")
+    expect(prompt).toContain("1. Professor question 0?")
+    const test = await llm.generateAssessment(args)
+    expect(test).toHaveLength(8)
+    const mine = test.filter((q) => q.question.startsWith("Professor question"))
+    expect(mine).toHaveLength(4)
+    expect(mine.every((q) => q.options[q.answer_index] === "Own right")).toBe(true)
+  })
 })
 
 describe("courses from the learner's material", () => {

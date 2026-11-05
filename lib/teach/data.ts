@@ -4,6 +4,7 @@ import { cache } from "react"
 
 import { createClient } from "@/lib/supabase/server"
 import { serverKey } from "@/lib/supabase/server-key"
+import type { BankQuestion, InboxItem } from "@/lib/teach/bank"
 import { checkTranscription } from "@/lib/teach/sarvam"
 
 export type Professor = {
@@ -212,4 +213,25 @@ export async function getMyRecording(id: string): Promise<(Recording & { transcr
   const supabase = await createClient()
   const { data } = await supabase.from("professor_recordings").select(`${RECORDING_COLUMNS}, transcript`).eq("id", id).maybeSingle()
   return (data as (Recording & { transcript: string | null }) | null) ?? null
+}
+
+export async function getMyBankQuestions(): Promise<BankQuestion[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("professor_bank_questions")
+    .select("id, topic, language, question, options, answer_index, explanation, status, updated_at")
+    .order("created_at", { ascending: false })
+    .limit(1000)
+  return (data ?? []) as BankQuestion[]
+}
+
+/** Learners' questions sent to this professor (open ones first). Never says who sent them. */
+export async function getMyInbox(): Promise<InboxItem[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("professor_inbox")
+  if (error) {
+    console.error("professor_inbox failed:", error.message)
+    return []
+  }
+  return (data ?? []) as InboxItem[]
 }

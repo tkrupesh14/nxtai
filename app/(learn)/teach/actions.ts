@@ -7,6 +7,7 @@ import { isUuid } from "@/lib/learning/data"
 import { createClient } from "@/lib/supabase/server"
 import { serverKey } from "@/lib/supabase/server-key"
 import { AGREEMENT_VERSION } from "@/lib/teach/agreement"
+import { BankQuestionSchema } from "@/lib/teach/bank"
 import { firstProblem, ModelLessonSchema, toLessonBlocks } from "@/lib/teach/lessons"
 import { transcriptSections } from "@/lib/teach/recordings"
 import { ReviewSchema } from "@/lib/teach/reviews"
@@ -249,6 +250,80 @@ export async function removeRecording(id: string): Promise<TeachResult> {
   if (error) {
     console.error("remove recording failed:", error.message)
     return { message: "Couldn't remove it. Please try again." }
+  }
+  revalidatePath("/teach")
+  return { ok: true }
+}
+
+// ── Question bank (8.4) ─────────────────────────────────────────────────────────────────────────────────────
+const BANK_ERRORS: Record<string, string> = {
+  not_professor: "Only Krpex professors can add questions.",
+  not_approved: "You can publish questions once Krpex has approved your profile.",
+  bank_full: "Your question bank is full (1000 questions). Remove some to add more.",
+  not_found: "That question isn't there any more.",
+}
+
+export async function saveBankQuestion(id: string | null, input: unknown): Promise<TeachResult & { id?: string }> {
+  if (id !== null && !isUuid(id)) return { message: "Something went wrong." }
+  const parsed = BankQuestionSchema.safeParse(input)
+  if (!parsed.success) return { message: parsed.error.issues[0]?.message ?? "Please check the question." }
+  const q = parsed.data
+  if (new Set(q.options.map((o) => o.toLowerCase())).size < 4) return { message: "The four options must be different." }
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("professor_save_question", {
+    p_id: id,
+    p_topic: q.topic,
+    p_language: q.language,
+    p_question: q.question,
+    p_options: q.options,
+    p_answer_index: q.answer_index,
+    p_explanation: q.explanation,
+  })
+  if (error) {
+    const known = BANK_ERRORS[error.message]
+    if (!known) console.error("professor_save_question failed:", error.message)
+    return { message: known ?? "We couldn't save that question. Please try again." }
+  }
+  revalidatePath("/teach")
+  return { ok: true, id: data as string, message: "Saved." }
+}
+
+export async function setBankQuestionStatus(id: string, status: "draft" | "published"): Promise<TeachResult> {
+  if (!isUuid(id) || (status !== "draft" && status !== "published")) return { message: "Something went wrong." }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("professor_set_question_status", { p_id: id, p_status: status })
+  if (error) {
+    const known = BANK_ERRORS[error.message]
+    if (!known) console.error("professor_set_question_status failed:", error.message)
+    return { message: known ?? "We couldn't change that. Please try again." }
+  }
+  revalidatePath("/teach")
+  return { ok: true }
+}
+
+export async function removeBankQuestion(id: string): Promise<TeachResult> {
+  if (!isUuid(id)) return { message: "Something went wrong." }
+  const supabase = await createClient()
+  const { error, count } = await supabase.from("professor_bank_questions").delete({ count: "exact" }).eq("id", id)
+  if (error || !count) {
+    if (error) console.error("remove bank question failed:", error.message)
+    return { message: "We couldn't remove that. Please try again." }
+  }
+  revalidatePath("/teach")
+  return { ok: true }
+}
+
+// ── Inbox (8.4) ─────────────────────────────────────────────────────────────────────────────────────────────
+export async function replyToLearner(id: string, status: "answered" | "confirmed", reply: string): Promise<TeachResult> {
+  if (!isUuid(id) || (status !== "answered" && status !== "confirmed")) return { message: "Something went wrong." }
+  const text = String(reply ?? "").trim()
+  if (status === "answered" && text.length < 2) return { message: "Write your reply first." }
+  if (text.length > 3000) return { message: "Keep your reply under 3000 characters." }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("professor_reply_flag", { p_id: id, p_status: status, p_reply: text })
+  if (error) {
+    if (error.message !== "not_found") console.error("professor_reply_flag failed:", error.message)
+    return { message: error.message === "not_found" ? "That question isn't there any more." : "We couldn't send that. Please try again." }
   }
   revalidatePath("/teach")
   return { ok: true }

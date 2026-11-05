@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState, useTransition } from "react"
 import Link from "next/link"
 
-import { askProfessorAction } from "@/app/(learn)/learn/[courseId]/[lessonId]/professor-actions"
+import { askProfessorAction, flagForProfessorAction } from "@/app/(learn)/learn/[courseId]/[lessonId]/professor-actions"
 import { Md } from "@/components/learn/lesson-blocks"
 import { ProfessorAvatar } from "@/components/learn/professor"
 import { Button } from "@/components/site/ui/button"
@@ -16,6 +16,90 @@ const ChatContext = createContext<{ open: (section?: number) => void } | null>(n
 type Note = { id: string; note: string }
 type Entry = ChatTurn | Note
 const isNote = (e: Entry): e is Note => "note" in e
+
+/**
+ * Under an AI answer in a course taught by a real professor's AI version (8.4): send it to the professor to check,
+ * then show their reply. The professor sees the question, the answer and the note, never who sent it.
+ */
+function CheckWithProfessor({
+  courseId,
+  lessonId,
+  turn,
+  name,
+  onSent,
+}: {
+  courseId: string
+  lessonId: string
+  turn: ChatTurn
+  name: string
+  onSent: (id: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [note, setNote] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [pending, start] = useTransition()
+
+  if (turn.flag?.status === "open") {
+    return <p className="text-[11px] text-muted-foreground">Sent to {name}. Their reply will appear here.</p>
+  }
+  if (turn.flag) {
+    return (
+      <div className="rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+        <p className="text-[11px] font-medium text-primary">
+          {turn.flag.status === "confirmed" ? `✓ ${name} checked this answer: it's right` : `Reply from ${name}, the real professor`}
+        </p>
+        {turn.flag.reply ? <p className="mt-1 break-words whitespace-pre-line">{turn.flag.reply}</p> : null}
+      </div>
+    )
+  }
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="justify-self-start text-[11px] text-muted-foreground hover:text-foreground hover:underline">
+        Ask {name} to check this answer
+      </button>
+    )
+  }
+  return (
+    <form
+      className="grid gap-2 rounded-xl border px-3 py-2"
+      onSubmit={(e) => {
+        e.preventDefault()
+        start(async () => {
+          setError(null)
+          const r = await flagForProfessorAction(courseId, lessonId, turn.id, note)
+          if (r.ok) onSent(turn.id)
+          else setError(r.message)
+        })
+      }}
+    >
+      <label className="text-[11px] text-muted-foreground" htmlFor={`flag-${turn.id}`}>
+        What should {name} look at? (optional)
+      </label>
+      <textarea
+        id={`flag-${turn.id}`}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        maxLength={500}
+        rows={2}
+        className="min-w-0 resize-none rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+      <p className="text-[11px] text-muted-foreground">{name} sees your question, this answer and your note, not your name.</p>
+      {error ? (
+        <p role="alert" className="text-xs text-destructive-foreground">
+          {error}
+        </p>
+      ) : null}
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" loading={pending}>
+          Send to {name}
+        </Button>
+        <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  )
+}
 
 /** Wraps the lesson so "Ask about this section" links can open the professor panel. */
 export function ProfessorChat({
@@ -62,6 +146,8 @@ export function ProfessorChat({
   const canAsk = freeLeft || credits > 0
   const leftQuick = Math.max(limits.quickDay - usedQuick, 0)
   const firstName = professor.name.replace(/^(Prof\.|Dr\.)\s*/, "").split(" ")[0]
+  // A live professor's AI version: their real name, for "Ask … to check this answer".
+  const realName = professor.realId ? professor.name.replace(/\s*\(AI\)$/, "") : null
 
   function open(s?: number) {
     if (typeof s === "number") setSection(s)
@@ -170,6 +256,19 @@ export function ProfessorChat({
                       <div className="mr-4 min-w-0 rounded-2xl rounded-tl-sm border bg-card px-3 py-2">
                         <Md compact>{e.reply}</Md>
                       </div>
+                      {realName && e.kind === "ask" && e.verdict === "answer" ? (
+                        <div className="mr-4 grid">
+                          <CheckWithProfessor
+                            courseId={courseId}
+                            lessonId={lessonId}
+                            turn={e}
+                            name={realName}
+                            onSent={(id) =>
+                              setEntries((prev) => prev.map((x) => (!isNote(x) && x.id === id ? { ...x, flag: { status: "open", reply: null } } : x)))
+                            }
+                          />
+                        </div>
+                      ) : null}
                     </div>
                   ),
                 )}

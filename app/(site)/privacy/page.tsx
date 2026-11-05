@@ -37,7 +37,9 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Learning activity:</strong> the courses and lessons generated for you, quiz answers and scores, lesson
-            progress, and the questions you ask your AI professors with their answers.
+            progress, and the questions you ask your AI professors with their answers. In a course taught by a real
+            professor&apos;s AI version, if you choose to send an answer to that professor to check, they see the lesson
+            title, your question, the AI&apos;s answer and your note, never your name or email, and we keep their reply.
           </li>
           <li>
             <strong>Your material:</strong> if you build a course from your own files or pasted text, the text extracted
@@ -47,8 +49,9 @@ export default function PrivacyPage() {
             <strong>Professors who teach with us:</strong> if you join by invitation as a professor, your profile (name,
             title, institution, bio, languages), the qualifications you tell us about (seen only by Krpex), the version and
             date of the agreement you accepted, the text of material you upload (never the file), and the model lessons and
-            lesson reviews you write (reviews are seen only by Krpex), and transcripts of lecture recordings you upload
-            (recordings are sent to Sarvam AI for transcription and not kept by us). Removing material deletes it from our database.
+            lesson reviews you write (reviews are seen only by Krpex), the questions you add to your question bank, your
+            replies to learners, and transcripts of lecture recordings you upload or record here (recordings are sent to
+            Sarvam AI for transcription and not kept by us). Removing material deletes it from our database.
           </li>
           <li>
             <strong>Usage and billing:</strong> daily usage counts, plan, credit balance and payment records (order and

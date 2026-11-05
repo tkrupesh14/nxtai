@@ -1,13 +1,15 @@
 import "server-only"
-import { courseLanguage } from "@/lib/learning/language"
 
 import { AIError, generateAssessment, type AssessmentArgs } from "@/lib/ai/llm"
 import { getCourse, isUuid, type LessonRow, type ModuleRow } from "@/lib/learning/data"
+import { courseLanguage } from "@/lib/learning/language"
+import { ASSESSMENT_QUESTIONS } from "@/lib/learning/schemas"
 import { getSections } from "@/lib/sources/data"
 import { sourceExcerpt } from "@/lib/sources/sections"
 import { createClient } from "@/lib/supabase/server"
 import { serverKey } from "@/lib/supabase/server-key"
-import { getTeacherContext } from "@/lib/teach/teacher"
+import { bankShare } from "@/lib/teach/bank"
+import { getTeacherContext, getTeacherQuestions } from "@/lib/teach/teacher"
 import { searchQuery } from "@/lib/teach/teaching"
 
 // Module tests and the final exam (migration 014). The database decides what's unlocked and grades every try;
@@ -111,17 +113,22 @@ export async function prepareAssessment(courseId: string, moduleId: string | nul
   try {
     const covered = moduleId ? data.lessons.filter((l) => l.module_id === moduleId) : data.lessons
     const refs = [...new Set(covered.flatMap((l) => l.source_sections ?? []))].sort((a, b) => a - b)
-    const [{ data: takeaways }, sources, teacher] = await Promise.all([
+    const language = courseLanguage(data.course.language)
+    const kind = moduleId ? "module" : "final"
+    const topics = searchQuery(...covered.flatMap((l) => [l.title, l.objective]))
+    const [{ data: takeaways }, sources, teacher, bank] = await Promise.all([
       supabase
         .from("lessons")
         .select("id, key_takeaways")
         .in("id", covered.map((l) => l.id)),
       getSections(courseId, refs),
       getTeacherContext(data.course.professor, searchQuery(...covered.map((l) => l.title)), 8000),
+      // The professor's own questions on these lessons (8.4): up to half of the test.
+      getTeacherQuestions(data.course.professor, topics, language, bankShare(ASSESSMENT_QUESTIONS[kind])),
     ])
     const byId = new Map((takeaways ?? []).map((t) => [t.id as string, (t.key_takeaways ?? []) as string[]]))
     const args: AssessmentArgs = {
-      kind: moduleId ? "module" : "final",
+      kind,
       categoryId: data.course.category,
       courseTitle: data.course.title,
       courseLevel: data.course.level,
@@ -130,7 +137,8 @@ export async function prepareAssessment(courseId: string, moduleId: string | nul
       lessons: covered.map((l) => ({ title: l.title, objective: l.objective, takeaways: (byId.get(l.id) ?? []).slice(0, 5) })),
       sourceText: sources.length ? sourceExcerpt(sources, moduleId ? 30000 : 40000) : null,
       teacher,
-      language: courseLanguage(data.course.language),
+      language,
+      bank,
     }
     const questions = await generateAssessment(args)
     const { data: saved, error: saveError } = await supabase.rpc("app_save_assessment", {

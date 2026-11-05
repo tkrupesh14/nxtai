@@ -251,6 +251,17 @@ test("a live professor's AI version teaches a learner's course from their materi
   await page.getByRole("button", { name: "Publish Getting started notes" }).click()
   await expect(page.getByRole("list", { name: "Your material" }).getByText(/Published · English · Mechanics/)).toBeVisible()
 
+  // A question for the bank (used in module tests of courses the AI version teaches).
+  const bank = page.getByRole("form", { name: "New question" })
+  await bank.getByLabel("Question").fill("A ball is thrown straight up. What is its acceleration at the top?")
+  for (const [i, o] of ["Zero", "g, downwards", "g, upwards", "It depends on the speed"].entries()) await bank.getByLabel(`Option ${"ABCD"[i]}`, { exact: true }).fill(o)
+  await bank.getByLabel("Option B is correct").check()
+  await bank.getByLabel("Topic").fill("First steps in mechanics")
+  await bank.getByRole("button", { name: "Add question" }).click()
+  await expect(page.getByText(/Question added as a draft/)).toBeVisible()
+  await page.getByRole("button", { name: /^Publish question: A ball is thrown/ }).click()
+  await expect(page.getByRole("list", { name: "Your questions" }).getByText(/Published · English · First steps in mechanics · Answer: B\) g, downwards/)).toBeVisible()
+
   // Not public until Krpex makes it live.
   expect((await page.request.get(`/professors/${professorId}`)).status()).toBe(404)
   await page.goto("/admin")
@@ -281,6 +292,34 @@ test("a live professor's AI version teaches a learner's course from their materi
   // The lesson prompt had the professor, their matching material and their model lesson.
   await page.getByRole("link", { name: "Start first lesson" }).click()
   await expect(page.getByText(/Taught as Dr\. Test Professor \(AI\), with [1-9]\d* excerpts? of their material and a model lesson\./).first()).toBeVisible({ timeout: 60_000 })
+
+  // The learner asks the real professor to check an AI answer; the professor replies without seeing who asked.
+  const lessonUrl = new URL(page.url()).pathname
+  await page.getByRole("button", { name: "Start the class" }).first().click()
+  await expect(page.getByText(/^Section 1 of \d+$/)).toBeVisible({ timeout: 12_000 })
+  await page.getByRole("button", { name: /Ask about this section/ }).first().click()
+  await page.getByLabel("Your question").fill("Why do we measure before we explain?")
+  await page.getByRole("button", { name: "Ask", exact: true }).click()
+  await expect(page.getByText("Fake professor answer to: Why do we measure before we explain?")).toBeVisible()
+  await page.getByRole("button", { name: "Ask Dr. Test Professor to check this answer" }).click()
+  await page.getByLabel("What should Dr. Test Professor look at? (optional)").fill("Is this how you'd explain it?")
+  await page.getByRole("button", { name: "Send to Dr. Test Professor" }).click()
+  await expect(page.getByText("Sent to Dr. Test Professor. Their reply will appear here.")).toBeVisible()
+
+  await page.goto("/teach")
+  await expect(page.getByRole("heading", { name: "Learner questions (1 to answer)" })).toBeVisible()
+  const inbox = page.getByRole("list", { name: "Learner questions" })
+  await expect(inbox.getByText("Why do we measure before we explain?")).toBeVisible()
+  await expect(inbox.getByText("Is this how you'd explain it?")).toBeVisible()
+  await expect(inbox.getByText(/^A learner · lesson/)).toBeVisible()
+  await inbox.getByLabel(/Your reply/).fill("Because a number keeps us honest: guesses feel right until we check.")
+  await inbox.getByRole("button", { name: "Send reply" }).click()
+  await expect(inbox.getByText(/You replied/)).toBeVisible()
+
+  await page.goto(lessonUrl)
+  await page.getByRole("button", { name: /^Ask / }).last().click()
+  await expect(page.getByText("Reply from Dr. Test Professor, the real professor")).toBeVisible()
+  await expect(page.getByText("Because a number keeps us honest: guesses feel right until we check.")).toBeVisible()
 
   // Hidden again: the page is gone and the course falls back to the AI professor.
   await page.goto("/admin")
