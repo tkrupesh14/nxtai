@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>You're invited to Krpex</title>
+<style>
+  body { margin:0; padding:0; }
+  a { color:#2563eb; }
+  @media (max-width:600px) {
+    .card-pad { padding:32px 24px !important; }
+    .h1 { font-size:24px !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .bg { background:#09090b !important; }
+    .card { background:#141417 !important; border-color:#27272a !important; }
+    .h1, .strong, .brand, .code { color:#fafafa !important; }
+    .body { color:#d4d4d8 !important; }
+    .muted, .foot { color:#a1a1aa !important; }
+    .note, .code { background:#1c1c21 !important; border-color:#2e2e35 !important; color:#d4d4d8 !important; }
+    .step { background:#172554 !important; color:#93c5fd !important; }
+    .eyebrow { color:#60a5fa !important; }
+    .rule { border-color:#27272a !important; }
+  }
+</style>
+</head>
+<body class="bg" style="margin:0;padding:0;background:#f5f6f8;-webkit-text-size-adjust:100%;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Accept your invite and get a personal AI professor.&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg" style="background:#f5f6f8;">
+  <tr>
+    <td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+        <!-- Logo -->
+        <tr>
+          <td style="padding:0 4px 22px;">
+            <a href="{{ .SiteURL }}" target="_blank" style="text-decoration:none;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                <td width="26" height="26" bgcolor="#2563eb" style="width:26px;height:26px;border-radius:7px;background:#2563eb;background-image:linear-gradient(135deg,#3b82f6,#1d4ed8);font-size:0;line-height:0;">&nbsp;</td>
+                <td class="brand" style="padding-left:10px;font-family:'Geist','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:600;letter-spacing:-.02em;color:#18181b;">Krpex</td>
+              </tr></table>
+            </a>
+          </td>
+        </tr>
+        <!-- Card -->
+        <tr>
+          <td class="card" style="background:#ffffff;border:1px solid #e7e7ec;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.04),0 12px 32px -12px rgba(16,24,40,.12);">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr><td height="4" style="height:4px;font-size:0;line-height:0;background:#2563eb;background-image:linear-gradient(90deg,#2563eb,#6366f1 55%,#60a5fa);">&nbsp;</td></tr>
+              <tr>
+                <td class="card-pad" style="padding:40px 40px 36px;">
+                  <p class="eyebrow" style="margin:0;font-family:'Geist','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2563eb;">You&rsquo;re invited</p>
+                  <h1 class="h1" style="margin:10px 0 0;font-family:'Geist','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:27px;font-weight:600;letter-spacing:-.025em;line-height:1.25;color:#18181b;">Join Krpex, your personal AI professor</h1>
+                  <p class="body" style="margin:14px 0 0;font-family:'Geist','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#3f3f46;">You&rsquo;ve been invited to create a Krpex account with <strong class="strong" style="color:#18181b;">{{ .Email }}</strong>. Krpex builds a course for whatever you want to learn, with class-style lessons, quizzes and answers to your questions.</p><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 8px;">
+  <tr>
+    <td class="btn" bgcolor="#2563eb" style="border-radius:10px;background:#2563eb;box-shadow:0 1px 2px rgba(37,99,235,.25),0 6px 16px -6px rgba(37,99,235,.55);">
+      <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next={{ .RedirectTo }}" target="_blank" style="display:inline-block;padding:14px 26px;font-family:'Geist','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1;color:#ffffff;text-decoration:none;border-radius:10px;">Accept the invite&nbsp;&rarr;</a>
+    </td>
+  </tr>
+</table><p class="muted" style="margin:20px 0 0;font-family:'Geist','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#71717a;">
+  Button not working? Copy this link into your browser:<br>
+  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next={{ .RedirectTo }}" target="_blank" class="muted" style="font-size:12px;color:#8b8b95;text-decoration:underline;word-break:break-all;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next={{ .RedirectTo }}</a>
+</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td class="foot" style="padding:26px 8px 0;font-family:'Geist','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.7;color:#8b8b95;text-align:center;">
+            You got this email because someone invited this address to Krpex. Not expecting it? You can ignore it.<br>
+            <a href="{{ .SiteURL }}" target="_blank" style="color:#8b8b95;text-decoration:underline;">krpex.in</a> &middot; Your personal AI professor &middot;
+            <a href="mailto:info@krpex.in" style="color:#8b8b95;text-decoration:underline;">info@krpex.in</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
