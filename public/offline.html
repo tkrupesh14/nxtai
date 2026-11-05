@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>You're offline — Krpex</title>
+<style>
+  :root { --bg: #ffffff; --fg: #1a1a1a; --muted: #6b7280; --soft: #f3f4f6; --primary: #2563eb; --on-primary: #ffffff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0a0a0a; --fg: #f5f5f5; --muted: #a1a1aa; --soft: #1f1f23; --primary: #60a5fa; --on-primary: #0a0a0a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); color: var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; gap: 8px; padding: 14px 16px; font-weight: 600; font-size: 18px; }
+  .logo { width: 24px; height: 24px; border-radius: 6px; background: var(--primary); }
+  main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .box { max-width: 28rem; text-align: center; }
+  .icon { width: 56px; height: 56px; margin: 0 auto; border-radius: 999px; background: var(--soft); color: var(--muted);
+    display: flex; align-items: center; justify-content: center; }
+  h1 { margin: 20px 0 8px; font-size: 24px; letter-spacing: -0.01em; }
+  p { margin: 0; color: var(--muted); line-height: 1.6; }
+  button { margin-top: 28px; height: 40px; padding: 0 24px; border: 0; border-radius: 6px; font: inherit; font-weight: 500;
+    font-size: 14px; background: var(--primary); color: var(--on-primary); cursor: pointer; transition: opacity .15s, transform .15s; }
+  button:hover { opacity: .85; }
+  button:active { transform: scale(.97); }
+  button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 50%, transparent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<header><span class="logo" aria-hidden="true"></span>Krpex</header>
+<main>
+  <div class="box">
+    <div class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.8M19 12.9a10 10 0 0 0-2.3-1.6M1.4 9a15 15 0 0 1 4.4-2.7M22.6 9A15 15 0 0 0 11 5.1"/>
+        <circle cx="12" cy="20" r="0.6" fill="currentColor"/>
+      </svg>
+    </div>
+    <h1>You're offline</h1>
+    <p>Krpex can't reach the internet. Check your Wi-Fi or mobile data. Your progress is saved, so you can pick up where you left off.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </div>
+</main>
+<script>window.addEventListener("online", function () { location.reload() })</script>
+</body>
+</html>

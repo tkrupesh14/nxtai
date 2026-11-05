@@ -294,7 +294,7 @@ export function LessonEditor({ id, initial, professorName }: { id: string | null
       )}
 
       <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur">
-        <Button type="button" onClick={save} disabled={saving}>
+        <Button type="button" onClick={save} disabled={saving} loading={saving}>
           {saving ? "Saving…" : id ? "Save changes" : "Save draft"}
         </Button>
         {message ? (

@@ -90,7 +90,7 @@ export function BuyButton({
 
   return (
     <div className="grid gap-2">
-      <Button type="button" variant={variant} size="sm" className="w-full" onClick={buy} disabled={busy}>
+      <Button type="button" variant={variant} size="sm" className="w-full" onClick={buy} disabled={busy} loading={busy}>
         {busy ? "Please wait…" : label}
       </Button>
       {message && (

@@ -86,7 +86,7 @@ export function MaterialUpload({ languages }: { languages: string[] }) {
         </div>
       )}
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={busy}>
+        <Button type="submit" disabled={busy} loading={busy}>
           {busy ? "Reading…" : pasting ? "Add this text" : "Upload"}
         </Button>
         <Button type="button" variant="ghost" onClick={() => setPasting((p) => !p)} disabled={busy}>

@@ -205,7 +205,7 @@ export function LessonTools({ courseId, lessonId, credits }: { courseId: string;
             />
           </div>
           <div>
-            <Button type="submit" variant="outline" disabled={pending || !reason}>
+            <Button type="submit" variant="outline" disabled={pending || !reason} loading={pending}>
               {pending ? "Sending…" : "Send report"}
             </Button>
           </div>

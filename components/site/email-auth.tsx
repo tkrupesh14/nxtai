@@ -185,7 +185,7 @@ export function EmailLoginForm({ next }: { next: string }) {
         </Alert>
       )}
       {info && <Alert tone="info">{info}</Alert>}
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button type="submit" disabled={pending} loading={pending} className="w-full">
         {pending ? "Signing in…" : "Log in"}
       </Button>
     </form>
@@ -253,7 +253,7 @@ export function EmailSignupForm({ next = "/onboarding" }: { next?: string }) {
         <p className="text-xs text-muted-foreground">At least {MIN_PASSWORD} characters, with letters and numbers.</p>
       </div>
       {error && <Alert>{error}</Alert>}
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button type="submit" disabled={pending} loading={pending} className="w-full">
         {pending ? "Creating your account…" : "Create account"}
       </Button>
     </form>
@@ -304,7 +304,7 @@ export function ForgotPasswordForm() {
         />
       </div>
       {error && <Alert>{error}</Alert>}
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button type="submit" disabled={pending} loading={pending} className="w-full">
         {pending ? "Sending…" : "Send reset link"}
       </Button>
     </form>
@@ -345,7 +345,7 @@ export function ResetPasswordForm() {
         <PasswordInput id="reset-confirm" value={confirm} onChange={setConfirm} autoComplete="new-password" />
       </div>
       {error && <Alert>{error}</Alert>}
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button type="submit" disabled={pending} loading={pending} className="w-full">
         {pending ? "Saving…" : "Save new password"}
       </Button>
     </form>

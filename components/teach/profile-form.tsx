@@ -80,7 +80,7 @@ export function ProfileForm({ professor }: { professor: Professor }) {
         />
       </div>
       <div className="flex items-center gap-4">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} loading={pending}>
           {pending ? "Saving…" : "Save profile"}
         </Button>
         {state.message ? (

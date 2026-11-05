@@ -225,7 +225,7 @@ export function ReviewForm({
           />
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="button" onClick={save} disabled={saving}>
+          <Button type="button" onClick={save} disabled={saving} loading={saving}>
             {saving ? "Saving…" : initial ? "Update review" : "Submit review"}
           </Button>
           {message ? (

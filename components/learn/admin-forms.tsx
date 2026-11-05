@@ -42,7 +42,7 @@ export function GrantForm() {
         <Input id="g-note" name="note" maxLength={200} placeholder="e.g. beta tester, refund, goodwill" />
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} loading={pending}>
           {pending ? "Applying…" : "Apply"}
         </Button>
         {state.message ? (
@@ -59,8 +59,8 @@ export function GrantForm() {
 export function ResolveButton({ id }: { id: string }) {
   const [pending, start] = useTransition()
   return (
-    <Button size="sm" variant="outline" disabled={pending} onClick={() => start(() => resolveReport(id))}>
-      {pending ? "…" : "Resolve"}
+    <Button size="sm" variant="outline" disabled={pending} loading={pending} onClick={() => start(() => resolveReport(id))}>
+      Resolve
     </Button>
   )
 }
@@ -84,7 +84,7 @@ export function InviteProfessorForm({ subjects }: { subjects: readonly { id: str
             ))}
           </select>
         </div>
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} loading={pending}>
           {pending ? "Creating…" : "Create invite"}
         </Button>
       </div>
@@ -109,8 +109,8 @@ export function InviteProfessorForm({ subjects }: { subjects: readonly { id: str
 export function RevokeInviteButton({ id }: { id: string }) {
   const [pending, start] = useTransition()
   return (
-    <Button size="sm" variant="ghost" disabled={pending} onClick={() => start(() => revokeInvite(id))}>
-      {pending ? "…" : "Revoke"}
+    <Button size="sm" variant="ghost" disabled={pending} loading={pending} onClick={() => start(() => revokeInvite(id))}>
+      Revoke
     </Button>
   )
 }
@@ -189,7 +189,7 @@ export function GenerateReviewLessonForm() {
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} loading={pending}>
           {pending ? "Writing the lesson…" : "Write a lesson for review"}
         </Button>
         {pending ? <span className="text-sm text-muted-foreground">This takes about a minute. Keep this page open.</span> : null}

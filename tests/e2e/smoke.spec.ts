@@ -120,3 +120,23 @@ test("lecture recording uploads need the Krpex site and a signed-in professor", 
   const signedOut = await request.post(url, { data, headers: { "content-type": "audio/mpeg", origin: new URL(baseURL!).origin } })
   expect(signedOut.status()).toBe(401)
 })
+
+test("losing the connection shows the offline screen, which goes away when it's back", async ({ page, context }) => {
+  await page.goto("/pricing")
+  await context.setOffline(true)
+  const screen = page.getByRole("alertdialog", { name: "You're offline" })
+  await expect(screen).toBeVisible()
+  await screen.getByRole("button", { name: "Keep reading this page" }).click()
+  await expect(page.getByRole("status").filter({ hasText: "You're offline" })).toBeVisible()
+  await context.setOffline(false)
+  await expect(page.getByText("You're offline")).toHaveCount(0)
+})
+
+test("the offline page and its service worker are served", async ({ request }) => {
+  const html = await request.get("/offline.html")
+  expect(html.status()).toBe(200)
+  expect(await html.text()).toContain("You're offline")
+  const sw = await request.get("/sw.js")
+  expect(sw.status()).toBe(200)
+  expect(sw.headers()["content-type"]).toMatch(/javascript/)
+})

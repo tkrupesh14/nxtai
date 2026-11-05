@@ -128,6 +128,11 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Tailwind 4 gives buttons the default arrow cursor; show the hand so they look clickable. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
   /* Keep in-page anchors (/#features etc.) clear of the sticky header. */
   html {
     scroll-padding-top: 4.5rem;

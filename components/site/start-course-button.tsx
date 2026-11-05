@@ -9,7 +9,7 @@ import { Button } from "@/components/site/ui/button"
 function Submit({ label }: { label: string }) {
   const { pending } = useFormStatus()
   return (
-    <Button type="submit" size="lg" disabled={pending}>
+    <Button type="submit" size="lg" disabled={pending} loading={pending}>
       {pending ? "Starting…" : label}
     </Button>
   )

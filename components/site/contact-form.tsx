@@ -45,7 +45,7 @@ export function ContactForm() {
             {state.message}
           </p>
         )}
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} loading={pending}>
           {pending ? "Sending..." : "Send message"}
         </Button>
       </div>

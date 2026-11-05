@@ -36,7 +36,7 @@ export function NameForm({ name }: { name: string }) {
       <Label htmlFor="full_name">Name</Label>
       <div className="flex gap-2">
         <Input id="full_name" name="full_name" defaultValue={name} maxLength={80} required autoComplete="name" />
-        <Button type="submit" variant="outline" disabled={pending}>
+        <Button type="submit" variant="outline" disabled={pending} loading={pending}>
           {pending ? "Saving…" : "Save"}
         </Button>
       </div>
@@ -95,7 +95,7 @@ export function LearningForm({
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} loading={pending}>
           {pending ? "Saving…" : "Save preferences"}
         </Button>
         <Status state={state} saved="Saved. New lessons will use these." />
@@ -149,7 +149,7 @@ export function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
       </div>
       <p className="text-xs text-muted-foreground">At least 8 characters, with letters and numbers.</p>
       <div className="flex items-center gap-3">
-        <Button type="submit" variant="outline" disabled={pending}>
+        <Button type="submit" variant="outline" disabled={pending} loading={pending}>
           {pending ? "Saving…" : hasPassword ? "Change password" : "Set password"}
         </Button>
         <Status state={state} saved={hasPassword ? "Password changed." : "Password set. You can now log in with your email too."} />
@@ -168,7 +168,7 @@ export function DeleteAccountForm() {
       </Label>
       <div className="flex flex-wrap gap-2">
         <Input id="confirm-delete" name="confirm" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" className="max-w-48" />
-        <Button type="submit" variant="destructive" disabled={pending || typed !== "DELETE"}>
+        <Button type="submit" variant="destructive" disabled={pending || typed !== "DELETE"} loading={pending}>
           {pending ? "Deleting…" : "Delete my account"}
         </Button>
       </div>

@@ -25,7 +25,7 @@ export function JoinForm({ token, defaultName }: { token: string; defaultName: s
           {state.message}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending} className="justify-self-start">
+      <Button type="submit" disabled={pending} loading={pending} className="justify-self-start">
         {pending ? "Joining…" : "Join as a professor"}
       </Button>
     </form>

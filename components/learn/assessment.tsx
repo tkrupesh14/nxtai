@@ -312,7 +312,7 @@ export function CertificateClaim({ courseId, defaultName, isPro }: { courseId: s
           {error}
         </p>
       )}
-      <Button type="submit" className="mt-4 block" disabled={pending || name.trim().length < 2}>
+      <Button type="submit" className="mt-4 block" disabled={pending || name.trim().length < 2} loading={pending}>
         {pending ? "Issuing…" : "Get my certificate"}
       </Button>
     </form>
