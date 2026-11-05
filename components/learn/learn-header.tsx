@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { NotificationBell } from "@/components/learn/notifications"
 import { UserMenu } from "@/components/learn/user-menu"
 import { ThemeToggle } from "@/components/site/theme-toggle"
 import { Button } from "@/components/site/ui/button"
@@ -10,7 +11,11 @@ import { getMyProfessor } from "@/lib/teach/data"
 export async function LearnHeader() {
   const { user, profile } = await getCurrentProfile()
   const supabase = await createClient()
-  const [{ data: isAdmin }, professor] = await Promise.all([supabase.rpc("is_admin"), getMyProfessor()])
+  const [{ data: isAdmin }, professor, { count: unread }] = await Promise.all([
+    supabase.rpc("is_admin"),
+    getMyProfessor(),
+    supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
+  ])
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
@@ -35,6 +40,7 @@ export async function LearnHeader() {
             <Link href="/onboarding">New course</Link>
           </Button>
           <ThemeToggle />
+          <NotificationBell userId={user.id} initialUnread={unread ?? 0} />
           <UserMenu
             name={profile.full_name}
             email={user.email}

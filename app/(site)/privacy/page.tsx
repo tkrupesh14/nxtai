@@ -42,6 +42,10 @@ export default function PrivacyPage() {
             title, your question, the AI&apos;s answer and your note, never your name or email, and we keep their reply.
           </li>
           <li>
+            <strong>Notifications:</strong> short messages about your account (a professor&apos;s reply, a payment, a
+            report we looked at), shown only to you and kept for 90 days.
+          </li>
+          <li>
             <strong>Your material:</strong> if you build a course from your own files or pasted text, the text extracted
             from them, split into sections, plus the file name and page count. We don&apos;t keep the file itself.
           </li>

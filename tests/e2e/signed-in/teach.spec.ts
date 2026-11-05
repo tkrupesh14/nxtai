@@ -301,14 +301,21 @@ test("a live professor's AI version teaches a learner's course from their materi
   await page.getByLabel("Your question").fill("Why do we measure before we explain?")
   await page.getByRole("button", { name: "Ask", exact: true }).click()
   await expect(page.getByText("Fake professor answer to: Why do we measure before we explain?")).toBeVisible()
+  // Live updates (9.1): the professor's portal is open in another tab and updates without a reload.
+  const teach = await page.context().newPage()
+  teach.on("pageerror", (e) => errors.push(e.message))
+  await teach.goto("/teach")
+  await expect(teach.getByRole("heading", { name: "Learner questions", exact: true })).toBeVisible()
+
   await page.getByRole("button", { name: "Ask Dr. Test Professor to check this answer" }).click()
   await page.getByLabel("What should Dr. Test Professor look at? (optional)").fill("Is this how you'd explain it?")
   await page.getByRole("button", { name: "Send to Dr. Test Professor" }).click()
   await expect(page.getByText("Sent to Dr. Test Professor. Their reply will appear here.")).toBeVisible()
 
-  await page.goto("/teach")
-  await expect(page.getByRole("heading", { name: "Learner questions (1 to answer)" })).toBeVisible()
-  const inbox = page.getByRole("list", { name: "Learner questions" })
+  await expect(teach.getByRole("heading", { name: "Learner questions (1 to answer)" })).toBeVisible({ timeout: 20_000 })
+  await expect(teach.getByRole("status").getByText("A learner asked you to check an answer")).toBeVisible()
+  await expect(teach.getByRole("button", { name: /^Notifications, \d+ unread$/ })).toBeVisible()
+  const inbox = teach.getByRole("list", { name: "Learner questions" })
   await expect(inbox.getByText("Why do we measure before we explain?", { exact: true })).toBeVisible()
   await expect(inbox.getByText("Fake professor answer to: Why do we measure before we explain?")).toBeVisible()
   await expect(inbox.getByText("Is this how you'd explain it?")).toBeVisible()
@@ -317,10 +324,23 @@ test("a live professor's AI version teaches a learner's course from their materi
   await inbox.getByRole("button", { name: "Send reply" }).click()
   await expect(inbox.getByText(/You replied/)).toBeVisible()
 
-  await page.goto(lessonUrl)
-  await page.getByRole("button", { name: /^Ask / }).last().click()
-  await expect(page.getByText("Reply from Dr. Test Professor, the real professor")).toBeVisible()
+  // The learner's open chat shows the reply without a reload.
+  await expect(page.getByText("Reply from Dr. Test Professor, the real professor")).toBeVisible({ timeout: 20_000 })
   await expect(page.getByText("Because a number keeps us honest: guesses feel right until we check.")).toBeVisible()
+  await teach.close()
+
+  // Notifications (9.2): the bell lists them; one opens the lesson with the chat.
+  await page.getByRole("button", { name: /^Notifications/ }).click()
+  const panel = page.getByRole("dialog", { name: "Notifications" })
+  await expect(panel.getByText("A learner asked you to check an answer")).toBeVisible()
+  await panel.getByRole("link", { name: /Dr\. Test Professor replied to your question/ }).click()
+  await expect(page.getByRole("dialog", { name: "Ask Dr. Test Professor (AI)" })).toBeVisible()
+  await page.goto("/notifications")
+  await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible()
+  await page.getByRole("button", { name: "Mark all as read" }).click()
+  await expect(page.getByRole("button", { name: "Notifications", exact: true })).toBeVisible()
+  await expect(page.getByText(/unread/)).toHaveCount(0)
+  expect(lessonUrl).toMatch(/^\/learn\//)
 
   // Hidden again: the page is gone and the course falls back to the AI professor.
   await page.goto("/admin")

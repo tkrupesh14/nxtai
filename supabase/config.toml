@@ -38,8 +38,9 @@ enabled = false
 [storage]
 enabled = false
 
+# Live updates and notifications (9.1).
 [realtime]
-enabled = false
+enabled = true
 
 [edge_runtime]
 enabled = false

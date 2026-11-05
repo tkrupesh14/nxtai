@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState, useTransition } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 
 import { askProfessorAction, flagForProfessorAction } from "@/app/(learn)/learn/[courseId]/[lessonId]/professor-actions"
 import { Md } from "@/components/learn/lesson-blocks"
@@ -153,6 +154,26 @@ export function ProfessorChat({
     if (typeof s === "number") setSection(s)
     setIsOpen(true)
   }
+
+  // After a live refresh (the professor replied), show the new replies without losing anything typed or asked here.
+  useEffect(() => {
+    const flags = new Map(initialTurns.map((t) => [t.id, t.flag]))
+    setEntries((prev) =>
+      prev.map((e) => {
+        if (isNote(e) || !flags.has(e.id)) return e
+        const flag = flags.get(e.id) ?? null
+        return JSON.stringify(flag) === JSON.stringify(e.flag ?? null) ? e : { ...e, flag }
+      }),
+    )
+  }, [initialTurns])
+
+  // A notification links to "…?ask=1": open the chat at the answer.
+  const askParam = useSearchParams().get("ask")
+  useEffect(() => {
+    if (askParam !== "1") return
+    setIsOpen(true)
+    window.history.replaceState(null, "", window.location.pathname)
+  }, [askParam])
 
   useEffect(() => {
     if (!isOpen) return

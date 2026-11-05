@@ -124,6 +124,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
 
       {live || inbox.length ? (
         <AccountSection
+          id="inbox"
           title={`Learner questions${openQuestions ? ` (${openQuestions} to answer)` : ""}`}
           description="Learners in courses your AI version teaches can ask you to check one of its answers. You don't see who they are."
         >
@@ -176,6 +177,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
       </AccountSection>
 
       <AccountSection
+        id="reviews"
         title={`Review AI lessons${queue.length ? ` (${queue.filter((q) => !q.reviewed_at).length} to review)` : ""}`}
         description="Sample Physics lessons written by the AI. Rate them, say what's wrong, and show how you'd put it. Your reviews teach the AI."
       >
