@@ -4,14 +4,10 @@ import { codeRoute, requestHost } from '@/lib/code-host'
 import { shareAuthCookies, updateSession } from '@/lib/supabase/middleware'
 
 export async function proxy(request: NextRequest) {
-  // code.krpex.in pages live under /code (lib/code-host.ts).
+  // code.krpex.in pages live under /code (lib/code-host.ts). Redirects happen here; the subdomain's rewrite
+  // onto /code is in next.config.mjs (see the note there on why not here).
   const route = codeRoute(requestHost(request.headers), request.nextUrl.pathname, request.nextUrl.search)
   if (route?.kind === 'redirect') return shareAuthCookies(request, NextResponse.redirect(route.url, 308))
-  if (route?.kind === 'rewrite') {
-    const url = request.nextUrl.clone()
-    url.pathname = route.pathname
-    return await updateSession(request, (r) => NextResponse.rewrite(url, { request: r }))
-  }
   return await updateSession(request)
 }
 

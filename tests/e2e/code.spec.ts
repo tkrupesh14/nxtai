@@ -11,13 +11,13 @@ test("krpex.in/code moves to code.krpex.in", async ({ request }) => {
 })
 
 test("the playground runs JavaScript and Python in the browser", async ({ page }) => {
-  test.skip(live, "the subdomain is checked separately")
   test.setTimeout(120_000)
+  const base = live ? "https://code.krpex.in" : "/code"
   const errors: string[] = []
   page.on("pageerror", (e) => errors.push(e.message))
-  await page.goto("/code")
+  await page.goto(base)
   await expect(page.getByRole("heading", { name: /practise coding/i })).toBeVisible()
-  await page.goto("/code/playground")
+  await page.goto(`${base}/playground`)
 
   const output = page.getByRole("region", { name: "Output" })
   await page.getByRole("tab", { name: "JavaScript" }).click()

@@ -42,8 +42,8 @@ export function mainHref(path: string, host: string | null | undefined) {
   return isCodeHost(host) ? `${MAIN_ORIGIN}${path}` : path
 }
 
-/** App-wide files served from the root on both hosts (icons, manifest). */
-const SHARED_FILES = /^\/(manifest\.webmanifest|icon\.svg|apple-icon(\.png)?|favicon\.ico)$/
+/** App-wide files served from the root on both hosts (icons, manifest, the code runner). */
+const SHARED_FILES = /^\/(manifest\.webmanifest|icon\.svg|apple-icon(\.png)?|favicon\.ico|code-runner\.html)$/
 
 /**
  * Where proxy.ts sends a request: rewrite subdomain paths onto /code/*, redirect krpex.in/code/* to the subdomain.

@@ -13,6 +13,34 @@ describe("code.krpex.in routing", () => {
     expect(codeRoute("code.krpex.in", "/code/playground", "?a=1")).toEqual({ kind: "redirect", url: "https://code.krpex.in/playground?a=1" })
   })
 
+  it("next.config.mjs rewrites the subdomain the same way as codeRoute()", async () => {
+    // @ts-expect-error Next's bundled copy has no types
+    const ptr = await import("next/dist/compiled/path-to-regexp")
+    const { compile, pathToRegexp } = ptr as {
+      pathToRegexp: (s: string, keys: { name: string; modifier: string }[]) => RegExp
+      compile: (s: string, o: object) => (p: object) => string
+    }
+    const config = (await import("../../next.config.mjs")).default
+    const { beforeFiles } = (await config.rewrites!()) as { beforeFiles: { source: string; destination: string; has: unknown }[] }
+    const rewrite = (path: string) => {
+      for (const r of beforeFiles) {
+        expect(r.has).toEqual([{ type: "host", value: "code.krpex.in" }])
+        const keys: { name: string; modifier: string }[] = []
+        const m = pathToRegexp(r.source, keys).exec(path)
+        if (!m) continue
+        const params = Object.fromEntries(keys.map((k, i) => [k.name, k.modifier === "*" ? m[i + 1]?.split("/") : m[i + 1]]))
+        return compile(r.destination, { validate: false })(params)
+      }
+      return null
+    }
+    for (const path of ["/", "/playground", "/p/two-sum", "/robots.txt", "/sitemap.xml", "/api/health", "/api/code/run",
+      "/_next/static/x.js", "/manifest.webmanifest", "/icon.svg", "/apple-icon", "/apple-icon.png", "/favicon.ico",
+      "/code-runner.html", "/coder", "/apix"]) {
+      const route = codeRoute("code.krpex.in", path, "")
+      expect(rewrite(path), path).toBe(route?.kind === "rewrite" ? route.pathname : null)
+    }
+  })
+
   it("sends krpex.in/code to the subdomain, but serves /code directly elsewhere", () => {
     expect(codeRoute("krpex.in", "/code", "")).toEqual({ kind: "redirect", url: "https://code.krpex.in/" })
     expect(codeRoute("www.krpex.in", "/code/p/two-sum", "")).toEqual({ kind: "redirect", url: "https://code.krpex.in/p/two-sum" })
