@@ -90,7 +90,23 @@ Next.js 15.2.4 had a React Server Components remote-code-execution flaw. Between
 4. **F — Catalog courses and narration** (ready-made courses per category; audio narration).
 5. Regenerate lesson / report a problem; course archive and delete; stream lesson text.
 6. Doc upload → lessons from the learner's material; module tests, final exam, certificates.
-7. Coding practice with AI review; mock interviews; communities; XP and streaks.
+7. ✅ XP and levels (5.7, migration 026). Next: streak freeze + level rewards (5.7b), then coding practice in the browser (5.4), communities (5.6). Mock interviews (5.5) parked until we plan a real interview experience. See **XP and rewards** below.
+
+### XP and rewards (planned 2026-11-07)
+
+XP is a score that never goes down; it is not spent. Levels unlock rewards. Only the database awards XP (graded actions, each reward once), so it can't be farmed.
+
+**Jobs for XP:** protect what you built → unlock real value → show off → compete.
+
+1. **Now (5.7b)**
+   - **Streak freeze:** earned at level 2 and for every 7-day streak; hold at most 2. A missed day uses one automatically (the server checks every 10 minutes) and the learner is told; the 7 pm reminder counts frozen days.
+   - **Level rewards ladder** (given automatically, once each, with a notification): L2 streak freeze · L3 10 credits · L5 20 credits (one extra course) · L7 25 credits · L10 7-day Pro pass + one free certificate · L15 50 credits · L20 100 credits. Lifetime cost is capped at about 205 credits + one week of Pro per account.
+   - **Share card** (next): "Level 6 · 18-day streak · 3 courses" image for WhatsApp / LinkedIn.
+2. **With coding practice (5.4):** challenges worth 10 / 20 / 40 XP by difficulty, a first-run bonus, a daily challenge at double XP, and hard problems unlocked by level.
+3. **With communities (5.6):** posting from level 2 and links from level 4 (spam control), level badges next to names, opt-in weekly leagues (~20 learners of a similar level in the same subject; top 3 move up; display names only).
+4. **Later, with a few hundred active learners:** a monthly scholarship (top XP earned that month wins a free Pro month), real-professor time for top learners (an answer from a real professor or a live doubt session, Phase 8), quiz duels with a friend over WhatsApp invite links, and referral XP (50 XP each once the friend finishes a first lesson).
+
+**Guardrails:** anything that costs money is capped or once per account; leagues and duels count only graded XP; leaderboards are opt-in and never show emails.
 
 ### Phase 6 — Payments (Razorpay)
 1. ✅ Plans, limits and credit ledger in the database (migration 007); account page shows plan, limits and credits.

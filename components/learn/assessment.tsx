@@ -95,7 +95,7 @@ export function AssessmentQuiz({
   /** Where "Continue" goes after passing a module test (the final exam, or the course page). */
   nextHref: string
   /** Final exam: shown right after a first pass, without waiting for the page to refresh. */
-  certificate?: { isPro: boolean; defaultName: string }
+  certificate?: { isPro: boolean; free?: boolean; defaultName: string }
 }) {
   const router = useRouter()
   const [answers, setAnswers] = useState<Record<number, number>>({})
@@ -169,7 +169,7 @@ export function AssessmentQuiz({
       {result && <style>{".assessment-summary{display:none}"}</style>}
 
       {result?.passed && kind === "final" && !alreadyPassed && certificate && (
-        <CertificateClaim courseId={courseId} defaultName={certificate.defaultName} isPro={certificate.isPro} />
+        <CertificateClaim courseId={courseId} defaultName={certificate.defaultName} isPro={certificate.isPro} free={certificate.free} />
       )}
 
       {!result && (
@@ -260,7 +260,18 @@ export function AssessmentQuiz({
 }
 
 /** After the final exam: claim the certificate (Pro) or see how to get one. */
-export function CertificateClaim({ courseId, defaultName, isPro }: { courseId: string; defaultName: string; isPro: boolean }) {
+export function CertificateClaim({
+  courseId,
+  defaultName,
+  isPro,
+  free = false,
+}: {
+  courseId: string
+  defaultName: string
+  /** Pro, or holding the level-10 free certificate (`free`). */
+  isPro: boolean
+  free?: boolean
+}) {
   const router = useRouter()
   const [name, setName] = useState(defaultName)
   const [error, setError] = useState<string | null>(null)
@@ -295,6 +306,7 @@ export function CertificateClaim({ courseId, defaultName, isPro }: { courseId: s
       <h2 className="text-lg font-semibold">Get your certificate</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Check your name as it should appear on the certificate. It can&apos;t be changed afterwards.
+        {free && " This uses your free certificate from reaching level 10."}
       </p>
       <label className="mt-4 block text-sm font-medium" htmlFor="cert-name">
         Name on certificate

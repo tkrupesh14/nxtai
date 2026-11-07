@@ -9,6 +9,25 @@ export const XP_RULES = [
   { label: "Study on a new day", points: 5 },
 ] as const
 
+/** A learner holds at most this many streak freezes (migration 027). */
+export const MAX_FREEZES = 2
+
+/** Rewards given automatically when a level is reached. Same ladder as migration 027 (grant_level_rewards). */
+export const LEVEL_REWARDS = [
+  { level: 2, reward: "A streak freeze" },
+  { level: 3, reward: "10 bonus credits" },
+  { level: 5, reward: "20 bonus credits" },
+  { level: 7, reward: "25 bonus credits" },
+  { level: 10, reward: "7 days of Pro + a free certificate" },
+  { level: 15, reward: "50 bonus credits" },
+  { level: 20, reward: "100 bonus credits" },
+] as const
+
+/** The next reward above this level, or null once the ladder is done. */
+export function nextReward(level: number) {
+  return LEVEL_REWARDS.find((r) => r.level > level) ?? null
+}
+
 const levelStart = (level: number) => 25 * level * (level - 1)
 
 export type XpLevel = { level: number; total: number; into: number; span: number; toNext: number }

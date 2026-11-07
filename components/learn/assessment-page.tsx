@@ -11,7 +11,7 @@ import {
   moduleTestUnlocked,
 } from "@/lib/learning/assessments"
 import { getCategory } from "@/lib/learning/catalog"
-import { getAccountSummary, getCourse, isUuid } from "@/lib/learning/data"
+import { getAccountSummary, getCourse, getStreakExtras, isUuid } from "@/lib/learning/data"
 import { ASSESSMENT_PASS_MARK, ASSESSMENT_QUESTIONS } from "@/lib/learning/schemas"
 import { getCurrentProfile } from "@/lib/supabase/profile"
 
@@ -40,8 +40,13 @@ export async function AssessmentPage({ courseId, moduleId }: { courseId: string;
   const nextHref = othersPassed ? `/learn/${courseId}/exam` : `/learn/${courseId}`
 
   // Final exam: what the certificate panel needs (shown by the server once passed, or by the quiz right after passing).
-  const [account, current] = moduleId ? [null, null] : await Promise.all([getAccountSummary(), getCurrentProfile()])
-  const claim = account && current ? { isPro: account.plan === "pro", defaultName: current.profile.full_name } : undefined
+  const [account, current, extras] = moduleId
+    ? [null, null, null]
+    : await Promise.all([getAccountSummary(), getCurrentProfile(), getStreakExtras()])
+  // Without Pro, the level-10 free certificate (migration 027) can be used instead.
+  const free = account?.plan !== "pro" && Boolean(extras?.freeCertificate)
+  const claim =
+    account && current ? { isPro: account.plan === "pro" || free, free, defaultName: current.profile.full_name } : undefined
 
   let certificate: React.ReactNode = null
   if (!moduleId && final?.passed_at) {
@@ -54,7 +59,7 @@ export async function AssessmentPage({ courseId, moduleId }: { courseId: string;
         </Button>
       </div>
     ) : (
-      claim && <CertificateClaim courseId={courseId} defaultName={claim.defaultName} isPro={claim.isPro} />
+      claim && <CertificateClaim courseId={courseId} defaultName={claim.defaultName} isPro={claim.isPro} free={claim.free} />
     )
   }
 

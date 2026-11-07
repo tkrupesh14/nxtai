@@ -1,5 +1,5 @@
 import { weekdayName, type LearningStats } from "@/lib/learning/stats";
-import { XP_RULES, xpLevel } from "@/lib/learning/xp";
+import { LEVEL_REWARDS, MAX_FREEZES, nextReward, XP_RULES, xpLevel } from "@/lib/learning/xp";
 import { cn } from "@/lib/utils";
 
 function Tile({
@@ -30,7 +30,7 @@ function studyTime(minutes: number) {
   return `${h < 10 ? h.toFixed(1).replace(/\.0$/, "") : Math.round(h)} h`;
 }
 
-/** Last 7 days: one bar per day for lessons completed; a dot marks days with only professor questions. */
+/** Last 7 days: one bar per day for lessons completed; a dot marks other study days, ❄️ a day covered by a streak freeze. */
 function Week({ week }: { week: LearningStats["week"] }) {
   const max = Math.max(1, ...week.map((d) => d.lessons));
   const total = week.reduce((s, d) => s + d.lessons, 0);
@@ -53,7 +53,7 @@ function Week({ week }: { week: LearningStats["week"] }) {
           const name = weekdayName(d.day);
           const today = i === week.length - 1;
           const label = `${today ? "Today" : name}: ${d.lessons} lesson${d.lessons === 1 ? "" : "s"}${
-            d.active && !d.lessons ? " (asked the professor)" : ""
+            d.frozen ? " (streak freeze used)" : d.active && !d.lessons ? " (studied)" : ""
           }`;
           return (
             <li
@@ -82,6 +82,8 @@ function Week({ week }: { week: LearningStats["week"] }) {
                       height: `${Math.max(14, (d.lessons / max) * 100)}%`,
                     }}
                   />
+                ) : d.frozen ? (
+                  <span aria-hidden className="mb-0.5 text-[11px] leading-none">❄️</span>
                 ) : d.active ? (
                   <div className="mb-0.5 size-1.5 rounded-full bg-primary/60" />
                 ) : (
@@ -105,9 +107,10 @@ function Week({ week }: { week: LearningStats["week"] }) {
 }
 
 /** Level, XP and progress to the next level, with how XP is earned. */
-function Level({ xp }: { xp: { total: number; week: number } }) {
+function Level({ xp, freeCertificate }: { xp: { total: number; week: number }; freeCertificate: boolean }) {
   const l = xpLevel(xp.total);
   const pct = Math.round((l.into / l.span) * 100);
+  const next = nextReward(l.level);
   return (
     <div className="min-w-0 rounded-xl border bg-card p-4 lg:col-span-2">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -132,11 +135,23 @@ function Level({ xp }: { xp: { total: number; week: number } }) {
         <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
       </div>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-x-4 gap-y-2 text-xs text-muted-foreground">
-        <p className="tabular-nums">
-          {l.toNext} XP to level {l.level + 1}
-        </p>
+        <div className="grid gap-1">
+          <p className="tabular-nums">
+            {l.toNext} XP to level {l.level + 1}
+          </p>
+          {next && (
+            <p>
+              <span aria-hidden>🎁</span> Level {next.level} reward: <span className="font-medium text-foreground">{next.reward}</span>
+            </p>
+          )}
+          {freeCertificate && (
+            <p>
+              <span aria-hidden>🎓</span> You have a free certificate: pass any final exam to use it.
+            </p>
+          )}
+        </div>
         <details className="group">
-          <summary className="cursor-pointer select-none hover:text-foreground">How to earn XP</summary>
+          <summary className="cursor-pointer select-none hover:text-foreground">How XP works</summary>
           <ul className="mt-2 grid gap-1">
             {XP_RULES.map((r) => (
               <li key={r.label} className="flex justify-between gap-6">
@@ -145,6 +160,19 @@ function Level({ xp }: { xp: { total: number; week: number } }) {
               </li>
             ))}
           </ul>
+          <p className="mt-3 font-medium text-foreground">Level rewards</p>
+          <ul className="mt-1 grid gap-1">
+            {LEVEL_REWARDS.map((r) => (
+              <li key={r.level} className={cn("flex justify-between gap-6", r.level <= l.level && "line-through opacity-70")}>
+                <span>Level {r.level}</span>
+                <span className="text-right text-foreground">{r.reward}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 max-w-xs">
+            Streak freezes: you get one at level 2 and one for every 7-day streak, up to {MAX_FREEZES} at a time. If you miss
+            a day, one is used for you so your streak keeps going.
+          </p>
         </details>
       </div>
     </div>
@@ -152,7 +180,17 @@ function Level({ xp }: { xp: { total: number; week: number } }) {
 }
 
 /** Level, streak, totals and the last week, shown at the top of "My courses". */
-export function ProgressSummary({ stats, xp }: { stats: LearningStats; xp: { total: number; week: number } }) {
+export function ProgressSummary({
+  stats,
+  xp,
+  freezes = 0,
+  freeCertificate = false,
+}: {
+  stats: LearningStats;
+  xp: { total: number; week: number };
+  freezes?: number;
+  freeCertificate?: boolean;
+}) {
   const streakNote =
     stats.streak === 0
       ? "Finish a lesson today to start one"
@@ -166,7 +204,7 @@ export function ProgressSummary({ stats, xp }: { stats: LearningStats; xp: { tot
       aria-label="Your progress"
       className="mb-8 grid gap-3 lg:grid-cols-2"
     >
-      <Level xp={xp} />
+      <Level xp={xp} freeCertificate={freeCertificate} />
       <div className="grid grid-cols-2 gap-3">
         <Tile
           label="Streak"
@@ -176,7 +214,16 @@ export function ProgressSummary({ stats, xp }: { stats: LearningStats; xp: { tot
               {stats.streak === 1 ? "" : "s"}
             </>
           }
-          note={streakNote}
+          note={
+            <>
+              {streakNote}
+              {freezes > 0 && (
+                <span className="mt-0.5 block">
+                  <span aria-hidden>❄️</span> {freezes} streak freeze{freezes === 1 ? "" : "s"} saved
+                </span>
+              )}
+            </>
+          }
         />
         <Tile label="Lessons completed" value={stats.lessonsDone} />
         <Tile

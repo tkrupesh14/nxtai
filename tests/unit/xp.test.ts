@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { xpLevel } from "@/lib/learning/xp"
+import { nextReward, xpLevel } from "@/lib/learning/xp"
 
 describe("xpLevel", () => {
   it("starts level L at 25·L·(L−1) XP", () => {
@@ -19,5 +19,11 @@ describe("xpLevel", () => {
   it("treats bad input as 0", () => {
     expect(xpLevel(-5).level).toBe(1)
     expect(xpLevel(Number.NaN).total).toBe(0)
+  })
+
+  it("names the next reward on the ladder", () => {
+    expect(nextReward(1)?.level).toBe(2)
+    expect(nextReward(5)?.level).toBe(7)
+    expect(nextReward(20)).toBeNull()
   })
 })

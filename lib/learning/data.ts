@@ -89,6 +89,29 @@ export async function getMyXp(client?: Awaited<ReturnType<typeof createClient>>)
   return { total: Number(d.total) || 0, week: Number(d.week) || 0 }
 }
 
+/** Study days (XP ledger), streak freezes and unused rewards (migrations 026–027). Empty if not set up yet. */
+export async function getStreakExtras(): Promise<{
+  studyDays: string[]
+  frozenDays: string[]
+  freezesHeld: number
+  freeCertificate: boolean
+}> {
+  const supabase = await createClient()
+  const since = new Date(Date.now() - 400 * 24 * 60 * 60 * 1000).toISOString()
+  const [days, freezes, cert] = await Promise.all([
+    supabase.from("xp_events").select("key").like("key", "day:%").gte("created_at", since).limit(1000),
+    supabase.from("streak_freezes").select("used_for").limit(1000),
+    supabase.from("level_rewards").select("level").eq("level", 10).is("used_at", null).maybeSingle(),
+  ])
+  const used = (freezes.data ?? []).map((f) => f.used_for as string | null)
+  return {
+    studyDays: (days.data ?? []).map((r) => (r.key as string).slice(4)),
+    frozenDays: used.filter((d): d is string => Boolean(d)),
+    freezesHeld: used.filter((d) => !d).length,
+    freeCertificate: Boolean(cert.data),
+  }
+}
+
 /** When the learner asked the professor questions (for streaks); most recent first, up to a year. */
 export async function getQuestionTimes() {
   const supabase = await createClient()

@@ -8,7 +8,7 @@ import { ProgressSummary } from "@/components/learn/progress-summary"
 import { getCategory } from "@/lib/learning/catalog"
 import { CatalogCard } from "@/components/site/catalog-card"
 import { CATALOG } from "@/lib/learning/course-catalog"
-import { getMyXp, getQuestionTimes, listCourses } from "@/lib/learning/data"
+import { getMyXp, getQuestionTimes, getStreakExtras, listCourses } from "@/lib/learning/data"
 import { learningStats } from "@/lib/learning/stats"
 import { courseProfessor } from "@/lib/teach/teacher"
 
@@ -82,9 +82,9 @@ async function CourseGrid({ courses }: { courses: Awaited<ReturnType<typeof list
 }
 
 export default async function MyCoursesPage() {
-  const [courses, questionTimes, xp] = await Promise.all([listCourses(), getQuestionTimes(), getMyXp()])
+  const [courses, questionTimes, xp, extras] = await Promise.all([listCourses(), getQuestionTimes(), getMyXp(), getStreakExtras()])
   if (courses.length === 0) redirect("/onboarding")
-  const stats = learningStats(courses.flatMap((c) => c.lessons), questionTimes)
+  const stats = learningStats(courses.flatMap((c) => c.lessons), questionTimes, Date.now(), extras)
   const active = courses.filter((c) => c.status !== "archived")
   // Most recently studied unfinished course (or the newest one) for the "Continue" card.
   // Ready-made courses to try next: the learner's own subjects first, skipping ones already started.
@@ -109,7 +109,7 @@ export default async function MyCoursesPage() {
         </Button>
       </div>
 
-      <ProgressSummary stats={stats} xp={xp} />
+      <ProgressSummary stats={stats} xp={xp} freezes={extras.freezesHeld} freeCertificate={extras.freeCertificate} />
 
       {resume?.nextLesson && (
         <section className="mb-10 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-5">

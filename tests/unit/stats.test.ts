@@ -49,6 +49,14 @@ describe("learningStats", () => {
     expect(learningStats([L("2026-11-05T01:00:00Z", null, null)], [], now)).toMatchObject({ minutes: 30, avgScore: null })
   })
 
+  it("counts study days from the XP ledger and days covered by a streak freeze", () => {
+    // Studied Nov 1–2 (course since deleted) and Nov 4; Nov 3 was missed and frozen.
+    const s = learningStats([L("2026-11-04T05:00:00Z")], [], now, { studyDays: ["2026-11-01", "2026-11-02"], frozenDays: ["2026-11-03"] })
+    expect(s.streak).toBe(4)
+    expect(s.week[4]).toMatchObject({ lessons: 0, active: true, frozen: true }) // Nov 3
+    expect(s.week[5]).toMatchObject({ lessons: 1, frozen: false })
+  })
+
   it("names weekdays", () => {
     expect(weekdayName(istDay(now))).toBe("Thu")
   })

@@ -20,15 +20,26 @@ export type LearningStats = {
   minutes: number
   /** Average best quiz score of completed lessons, or null if none. */
   avgScore: number | null
-  /** Last 7 days, oldest first: lessons completed and whether there was any activity. */
-  week: { day: number; lessons: number; active: boolean }[]
+  /** Last 7 days, oldest first: lessons completed, whether there was any activity, and whether a freeze covered it. */
+  week: { day: number; lessons: number; active: boolean; frozen: boolean }[]
+}
+
+/** Day number of an IST calendar date ("2026-11-07"). */
+export function dateDay(date: string) {
+  return Math.floor(Date.parse(`${date}T00:00:00Z`) / DAY_MS)
 }
 
 /**
- * A day counts towards the streak if the learner completed a lesson or asked the professor something.
- * The current streak still stands if the last active day was yesterday.
+ * A day counts towards the streak if the learner completed a lesson, asked the professor something, or earned
+ * a study day in the XP ledger (`studyDays`, which also covers deleted courses and passed tests). A day covered by
+ * a streak freeze (`frozenDays`) counts too. The current streak still stands if the last active day was yesterday.
  */
-export function learningStats(lessons: StatsLesson[], questionTimes: string[], now = Date.now()): LearningStats {
+export function learningStats(
+  lessons: StatsLesson[],
+  questionTimes: string[],
+  now = Date.now(),
+  extra: { studyDays?: string[]; frozenDays?: string[] } = {},
+): LearningStats {
   const today = istDay(now)
   const done = lessons.filter((l) => l.completed_at)
   const lessonsByDay = new Map<number, number>()
@@ -38,6 +49,9 @@ export function learningStats(lessons: StatsLesson[], questionTimes: string[], n
   }
   const active = new Set<number>(lessonsByDay.keys())
   for (const t of questionTimes) active.add(istDay(t))
+  for (const d of extra.studyDays ?? []) active.add(dateDay(d))
+  const frozen = new Set((extra.frozenDays ?? []).map(dateDay))
+  for (const d of frozen) active.add(d)
 
   let streak = 0
   for (let d = active.has(today) ? today : today - 1; active.has(d); d--) streak++
@@ -61,7 +75,7 @@ export function learningStats(lessons: StatsLesson[], questionTimes: string[], n
     avgScore: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
     week: Array.from({ length: 7 }, (_, i) => {
       const day = today - 6 + i
-      return { day, lessons: lessonsByDay.get(day) ?? 0, active: active.has(day) }
+      return { day, lessons: lessonsByDay.get(day) ?? 0, active: active.has(day), frozen: frozen.has(day) }
     }),
   }
 }
