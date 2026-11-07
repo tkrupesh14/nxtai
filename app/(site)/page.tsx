@@ -61,7 +61,7 @@ function Eyebrow({ n, children }: { n: string; children: ReactNode }) {
 /** A still picture of a lesson, drawn with the app's own styles (not a screenshot). */
 function LessonPreview() {
   return (
-    <div className="relative mx-auto w-full max-w-md lg:max-w-none" aria-hidden>
+    <div className="relative mx-auto w-full max-w-md sm:mb-32 lg:max-w-none" aria-hidden>
       <div className="rounded-2xl border bg-card shadow-xl shadow-primary/5">
         <div className="flex items-center gap-1.5 border-b px-4 py-3">
           <span className="size-2.5 rounded-full bg-muted-foreground/25" />
@@ -88,7 +88,7 @@ function LessonPreview() {
         </div>
       </div>
 
-      <div className="absolute -left-6 -bottom-8 hidden w-64 rounded-xl border bg-card p-3 shadow-lg sm:block lg:-left-10">
+      <div className="absolute -bottom-32 -left-6 hidden w-64 rounded-xl border bg-card p-3 shadow-lg sm:block lg:-left-10">
         <p className="ml-auto w-fit max-w-[85%] rounded-xl rounded-br-sm bg-primary px-3 py-2 text-xs text-primary-foreground">
           Why doesn&apos;t the puck stop?
         </p>
@@ -101,7 +101,7 @@ function LessonPreview() {
       <div className="absolute -right-4 -top-5 hidden items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium shadow-md sm:flex">
         <span className="size-2 rounded-full bg-primary" /> Quiz · 4 of 5 right
       </div>
-      <div className="absolute -right-3 bottom-10 hidden items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium shadow-md sm:flex">
+      <div className="absolute -bottom-4 right-6 hidden items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium shadow-md sm:flex">
         <AwardIcon className="size-3.5 text-primary" /> Certificate on completion
       </div>
     </div>
