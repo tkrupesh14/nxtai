@@ -43,7 +43,8 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Notifications:</strong> short messages about your account (a professor&apos;s reply, a payment, a
-            report we looked at), shown only to you and kept for 90 days.
+            report we looked at), shown only to you and kept for 90 days. Ones you haven&apos;t seen in the app may also be
+            emailed to you; you choose how often, or turn this off, in your settings or from any of these emails.
           </li>
           <li>
             <strong>Your material:</strong> if you build a course from your own files or pasted text, the text extracted
@@ -78,6 +79,7 @@ export default function PrivacyPage() {
           <li>To track progress, enforce plan limits and process payments.</li>
           <li>To keep the service secure, prevent abuse and fix problems.</li>
           <li>To reply to your messages and send essential account emails (confirmation, password reset, receipts).</li>
+          <li>To email you notifications you haven&apos;t seen in the app, unless you turn this off.</li>
         </List>
         <p>
           We process your data to provide the service you asked for, based on your consent when you sign up, and to meet
@@ -109,7 +111,7 @@ export default function PrivacyPage() {
             <strong>Razorpay</strong>: payment processing, when you buy a plan or credits.
           </li>
           <li>
-            <strong>Email provider</strong>: to deliver account emails.
+            <strong>Email provider (Spacemail)</strong>: to deliver account and notification emails.
           </li>
         </List>
         <p>

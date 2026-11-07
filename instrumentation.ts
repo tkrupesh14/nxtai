@@ -1,6 +1,11 @@
 import type { Instrumentation } from "next"
 
-export async function register() {}
+export async function register() {
+  // 9.3: email people their unseen notifications (needs SMTP_USER / SMTP_PASSWORD; never in dev or tests).
+  if (process.env.NEXT_RUNTIME !== "nodejs" || process.env.NODE_ENV !== "production") return
+  const { startNotificationEmails } = await import("@/lib/email/notification-emails")
+  startNotificationEmails()
+}
 
 // Every server-side error in a page, route or server action is recorded for /admin.
 export const onRequestError: Instrumentation.onRequestError = async (error, request, context) => {

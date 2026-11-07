@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 
 import { NotificationList } from "@/components/learn/notification-list"
 import { NOTIFICATION_COLUMNS, type Notification } from "@/lib/notifications"
@@ -15,7 +16,12 @@ export default async function NotificationsPage() {
     <main className="mx-auto grid max-w-2xl gap-6 px-4 py-10 md:py-14">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Notifications</h1>
-        <p className="mt-2 text-sm text-muted-foreground">The last 90 days. New ones also pop up while you&apos;re on Krpex.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          The last 90 days. New ones also pop up while you&apos;re on Krpex, and ones you miss are emailed to you.{" "}
+          <Link href="/account/settings#email" className="text-primary hover:underline">
+            Email settings
+          </Link>
+        </p>
       </div>
       <NotificationList items={(data ?? []) as Notification[]} />
     </main>

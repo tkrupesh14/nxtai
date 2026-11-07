@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react"
 
-import { deleteAccount, updateLearning, updateName, type FormState } from "@/app/(learn)/account/actions"
+import { deleteAccount, updateEmailSettings, updateLearning, updateName, type FormState } from "@/app/(learn)/account/actions"
 import { Button } from "@/components/site/ui/button"
 import { Input } from "@/components/site/ui/input"
 import { Label } from "@/components/site/ui/label"
@@ -180,6 +180,81 @@ export function DeleteAccountForm() {
         </Button>
       </div>
       <Status state={state} />
+    </form>
+  )
+}
+
+export type EmailSettings = { frequency: "hourly" | "daily" | "off"; learning: boolean; account: boolean; teaching: boolean; admin: boolean }
+
+const FREQUENCIES = [
+  { value: "hourly", label: "As they happen", hint: "At most one email an hour" },
+  { value: "daily", label: "Once a day", hint: "One summary a day" },
+  { value: "off", label: "Off", hint: "Only in the app" },
+] as const
+
+/** 9.3: notification emails. Only notifications you haven't seen in the app are emailed. */
+export function EmailSettingsForm({
+  values,
+  isProfessor,
+  isAdmin,
+}: {
+  values: EmailSettings
+  isProfessor: boolean
+  isAdmin: boolean
+}) {
+  const [state, action, pending] = useActionState(updateEmailSettings, {})
+  const [frequency, setFrequency] = useState(values.frequency)
+  const topics = [
+    { name: "learning", label: "Your professors' replies and problem reports we looked at", show: true },
+    { name: "account", label: "Payments, credits and Pro", show: true },
+    { name: "teaching", label: "Teaching: learners' questions, account changes, lessons to review", show: isProfessor },
+    { name: "admin", label: "Admin: new professors, go-live requests, problem reports", show: isAdmin },
+  ] as const
+  return (
+    <form action={action} className="grid gap-5">
+      <fieldset className="grid gap-2">
+        <legend className="mb-2 text-sm font-medium">How often</legend>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {FREQUENCIES.map((f) => (
+            <label
+              key={f.value}
+              className="flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-sm has-checked:border-primary has-checked:bg-primary/5"
+            >
+              <input
+                type="radio"
+                name="frequency"
+                value={f.value}
+                checked={frequency === f.value}
+                onChange={() => setFrequency(f.value)}
+                className="mt-0.5 accent-primary"
+              />
+              <span>
+                <span className="block font-medium">{f.label}</span>
+                <span className="block text-xs text-muted-foreground">{f.hint}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <fieldset className={frequency === "off" ? "grid gap-2 opacity-60" : "grid gap-2"}>
+        <legend className="mb-2 text-sm font-medium">Email me about</legend>
+        {isProfessor ? <input type="hidden" name="has_teaching" value="1" /> : null}
+        {isAdmin ? <input type="hidden" name="has_admin" value="1" /> : null}
+        {topics
+          .filter((t) => t.show)
+          .map((t) => (
+            <label key={t.name} className="flex cursor-pointer items-center gap-2.5 text-sm">
+              <input type="checkbox" name={t.name} defaultChecked={values[t.name]} className="size-4 accent-primary" />
+              {t.label}
+            </label>
+          ))}
+      </fieldset>
+      <div className="flex items-center gap-3">
+        <Button type="submit" variant="outline" disabled={pending} loading={pending}>
+          {pending ? "Saving…" : "Save email settings"}
+        </Button>
+        <Status state={state} />
+      </div>
     </form>
   )
 }

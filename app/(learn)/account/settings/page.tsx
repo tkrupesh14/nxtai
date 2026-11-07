@@ -1,8 +1,10 @@
 import { signOutEverywhere } from "@/app/(learn)/account/actions"
-import { DeleteAccountForm, PasswordForm } from "@/components/learn/account-forms"
+import { DeleteAccountForm, EmailSettingsForm, PasswordForm, type EmailSettings } from "@/components/learn/account-forms"
 import { AccountSection } from "@/components/learn/account-section"
 import { Button } from "@/components/site/ui/button"
+import { createClient } from "@/lib/supabase/server"
 import { getCurrentProfile } from "@/lib/supabase/profile"
+import { getMyProfessor } from "@/lib/teach/data"
 
 const PROVIDER_LABELS: Record<string, string> = { email: "Email & password", github: "GitHub", google: "Google" }
 
@@ -10,6 +12,19 @@ export const metadata = { title: "Settings — Krpex" }
 
 export default async function SettingsPage() {
   const { user } = await getCurrentProfile()
+  const supabase = await createClient()
+  const [{ data: emailRow }, professor, { data: isAdmin }] = await Promise.all([
+    supabase.from("notification_email_settings").select("frequency, learning, account, teaching, admin").maybeSingle(),
+    getMyProfessor(),
+    supabase.rpc("is_admin"),
+  ])
+  const email: EmailSettings = (emailRow as EmailSettings | null) ?? {
+    frequency: "hourly",
+    learning: true,
+    account: true,
+    teaching: true,
+    admin: true,
+  }
   const providers = Array.from(
     new Set([...(user.identities ?? []).map((i) => i.provider), ...((user.app_metadata?.providers as string[] | undefined) ?? [])]),
   )
@@ -26,6 +41,14 @@ export default async function SettingsPage() {
         }
       >
         <PasswordForm hasPassword={hasPassword} />
+      </AccountSection>
+
+      <AccountSection
+        id="email"
+        title="Email notifications"
+        description={`We email ${user.email} about notifications you haven't seen in the app. Sign-in and password emails are always sent.`}
+      >
+        <EmailSettingsForm values={email} isProfessor={Boolean(professor)} isAdmin={Boolean(isAdmin)} />
       </AccountSection>
 
       <AccountSection title="Sign-in methods">
