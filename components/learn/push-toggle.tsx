@@ -72,6 +72,54 @@ export function PushToggle() {
     }
   }
 
+  const [test, setTest] = useState<string | null>(null)
+
+  /** Push to this device now and report what happened, step by step. */
+  async function sendTest() {
+    setBusy(true)
+    setError(null)
+    setTest("Sending…")
+    try {
+      const sub = await (await registration()).pushManager.getSubscription()
+      if (!sub) {
+        setState("off")
+        return setTest(null)
+      }
+      const received = new Promise<boolean>((resolve) => {
+        const onMessage = (e: MessageEvent) => {
+          if (e.data?.type === "krpex-push" && e.data.tag === "krpex-test") {
+            navigator.serviceWorker.removeEventListener("message", onMessage)
+            resolve(true)
+          }
+        }
+        navigator.serviceWorker.addEventListener("message", onMessage)
+        setTimeout(() => {
+          navigator.serviceWorker.removeEventListener("message", onMessage)
+          resolve(false)
+        }, 20_000)
+      })
+      const json = sub.toJSON()
+      const res = await fetch("/api/push/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endpoint: sub.endpoint, p256dh: json.keys?.p256dh, auth: json.keys?.auth }),
+      })
+      const out = (await res.json().catch(() => ({}))) as { ok?: boolean; status?: number; error?: string }
+      if (!res.ok || out.error) return setTest(out.error ?? "Couldn't send a test. Please try again.")
+      if (!out.ok) return setTest(`The push service didn't accept it (code ${out.status ?? "none"}). Turn notifications off and on again.`)
+      setTest("Sent. Waiting for this device…")
+      setTest(
+        (await received)
+          ? "This device received it. If you didn't see a notification, check Do Not Disturb and Chrome's notification settings."
+          : "The push service accepted it, but this device hasn't received it yet. Keep Chrome allowed to run in the background, and check your connection.",
+      )
+    } catch {
+      setTest("Couldn't send a test. Please try again.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function turnOff() {
     setBusy(true)
     setError(null)
@@ -105,7 +153,10 @@ export function PushToggle() {
           {state === "on" ? (
             <>
               <span className="text-sm font-medium text-green-700 dark:text-green-400">On for this device</span>
-              <Button type="button" variant="outline" size="sm" onClick={turnOff} disabled={busy} loading={busy}>
+              <Button type="button" variant="outline" size="sm" onClick={sendTest} disabled={busy}>
+                Send a test notification
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={turnOff} disabled={busy}>
                 Turn off
               </Button>
             </>
@@ -120,6 +171,11 @@ export function PushToggle() {
           {note[state]}
         </p>
       )}
+      {test ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          {test}
+        </p>
+      ) : null}
       {error ? (
         <p role="alert" className="text-sm text-destructive-foreground">
           {error}

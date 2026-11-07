@@ -42,13 +42,18 @@ self.addEventListener("push", (event) => {
   }
   const url = typeof data.url === "string" && /^\/[A-Za-z0-9]/.test(data.url) ? data.url : "/notifications"
   event.waitUntil(
-    self.registration.showNotification(data.title || "Krpex", {
-      body: data.body || "",
-      tag: data.tag,
-      icon: "/apple-icon",
-      badge: "/apple-icon",
-      data: { url },
-    }),
+    (async () => {
+      await self.registration.showNotification(data.title || "Krpex", {
+        body: data.body || "",
+        tag: data.tag,
+        icon: "/apple-icon",
+        data: { url },
+      })
+      // Lets an open settings page confirm that a test notification reached this device.
+      for (const tab of await self.clients.matchAll({ type: "window", includeUncontrolled: true })) {
+        tab.postMessage({ type: "krpex-push", tag: data.tag })
+      }
+    })(),
   )
 })
 
