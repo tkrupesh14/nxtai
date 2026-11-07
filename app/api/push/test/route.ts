@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await sendPush(
       { endpoint, p256dh, auth },
-      { title: "Test notification", body: "Notifications work on this device.", url: "/account/settings#push", tag: "krpex-test" },
+      { title: "Krpex notifications are on", body: "You'll get your professor's replies and study reminders here.", url: "/learn", tag: "krpex-test" },
       { publicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!, privateKey: process.env.VAPID_PRIVATE_KEY!, subject: "mailto:info@krpex.in" },
     )
     return NextResponse.json({ ok: result.ok, status: result.status, gone: result.gone })
