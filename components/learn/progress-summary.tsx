@@ -1,4 +1,5 @@
 import { weekdayName, type LearningStats } from "@/lib/learning/stats";
+import { XP_RULES, xpLevel } from "@/lib/learning/xp";
 import { cn } from "@/lib/utils";
 
 function Tile({
@@ -103,8 +104,55 @@ function Week({ week }: { week: LearningStats["week"] }) {
   );
 }
 
-/** Streak, totals and the last week, shown at the top of "My courses". */
-export function ProgressSummary({ stats }: { stats: LearningStats }) {
+/** Level, XP and progress to the next level, with how XP is earned. */
+function Level({ xp }: { xp: { total: number; week: number } }) {
+  const l = xpLevel(xp.total);
+  const pct = Math.round((l.into / l.span) * 100);
+  return (
+    <div className="min-w-0 rounded-xl border bg-card p-4 lg:col-span-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p className="text-2xl font-semibold tracking-tight">
+          Level {l.level}
+          <span className="ml-3 text-base font-normal text-muted-foreground tabular-nums">
+            {l.total.toLocaleString("en-IN")} XP
+          </span>
+        </p>
+        <p className="text-sm text-muted-foreground tabular-nums">
+          {xp.week > 0 ? `+${xp.week} XP in the last 7 days` : "No XP in the last 7 days"}
+        </p>
+      </div>
+      <div
+        className="mt-3 h-2 overflow-hidden rounded-full bg-muted"
+        role="progressbar"
+        aria-label={`Progress to level ${l.level + 1}`}
+        aria-valuemin={0}
+        aria-valuemax={l.span}
+        aria-valuenow={l.into}
+      >
+        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+      </div>
+      <div className="mt-2 flex flex-wrap items-start justify-between gap-x-4 gap-y-2 text-xs text-muted-foreground">
+        <p className="tabular-nums">
+          {l.toNext} XP to level {l.level + 1}
+        </p>
+        <details className="group">
+          <summary className="cursor-pointer select-none hover:text-foreground">How to earn XP</summary>
+          <ul className="mt-2 grid gap-1">
+            {XP_RULES.map((r) => (
+              <li key={r.label} className="flex justify-between gap-6">
+                <span>{r.label}</span>
+                <span className="font-medium text-foreground tabular-nums">+{r.points}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      </div>
+    </div>
+  );
+}
+
+/** Level, streak, totals and the last week, shown at the top of "My courses". */
+export function ProgressSummary({ stats, xp }: { stats: LearningStats; xp: { total: number; week: number } }) {
   const streakNote =
     stats.streak === 0
       ? "Finish a lesson today to start one"
@@ -118,6 +166,7 @@ export function ProgressSummary({ stats }: { stats: LearningStats }) {
       aria-label="Your progress"
       className="mb-8 grid gap-3 lg:grid-cols-2"
     >
+      <Level xp={xp} />
       <div className="grid grid-cols-2 gap-3">
         <Tile
           label="Streak"

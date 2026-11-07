@@ -8,7 +8,7 @@ import { ProgressSummary } from "@/components/learn/progress-summary"
 import { getCategory } from "@/lib/learning/catalog"
 import { CatalogCard } from "@/components/site/catalog-card"
 import { CATALOG } from "@/lib/learning/course-catalog"
-import { getQuestionTimes, listCourses } from "@/lib/learning/data"
+import { getMyXp, getQuestionTimes, listCourses } from "@/lib/learning/data"
 import { learningStats } from "@/lib/learning/stats"
 import { courseProfessor } from "@/lib/teach/teacher"
 
@@ -82,7 +82,7 @@ async function CourseGrid({ courses }: { courses: Awaited<ReturnType<typeof list
 }
 
 export default async function MyCoursesPage() {
-  const [courses, questionTimes] = await Promise.all([listCourses(), getQuestionTimes()])
+  const [courses, questionTimes, xp] = await Promise.all([listCourses(), getQuestionTimes(), getMyXp()])
   if (courses.length === 0) redirect("/onboarding")
   const stats = learningStats(courses.flatMap((c) => c.lessons), questionTimes)
   const active = courses.filter((c) => c.status !== "archived")
@@ -109,7 +109,7 @@ export default async function MyCoursesPage() {
         </Button>
       </div>
 
-      <ProgressSummary stats={stats} />
+      <ProgressSummary stats={stats} xp={xp} />
 
       {resume?.nextLesson && (
         <section className="mb-10 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-5">

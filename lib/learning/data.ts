@@ -80,6 +80,15 @@ export async function listCourses() {
   })
 }
 
+/** The learner's XP total and last-7-days XP (migration 026). Zero if XP isn't set up yet. */
+export async function getMyXp(client?: Awaited<ReturnType<typeof createClient>>): Promise<{ total: number; week: number }> {
+  const supabase = client ?? (await createClient())
+  const { data, error } = await supabase.rpc("my_xp")
+  if (error || !data) return { total: 0, week: 0 }
+  const d = data as { total?: number; week?: number }
+  return { total: Number(d.total) || 0, week: Number(d.week) || 0 }
+}
+
 /** When the learner asked the professor questions (for streaks); most recent first, up to a year. */
 export async function getQuestionTimes() {
   const supabase = await createClient()

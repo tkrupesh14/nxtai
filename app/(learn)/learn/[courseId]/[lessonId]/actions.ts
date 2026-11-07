@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 
 import { AIError, generateLesson } from "@/lib/ai/llm"
-import { isUuid } from "@/lib/learning/data"
+import { getMyXp, isUuid } from "@/lib/learning/data"
 import { prepareLessonGeneration, releaseLesson, saveLesson } from "@/lib/learning/lesson-gen"
 import { createClient } from "@/lib/supabase/server"
 
@@ -30,6 +30,8 @@ export type QuizResult = {
   passed: boolean
   results: { correct: boolean; answerIndex: number; explanation: string }[]
   nextLessonId: string | null
+  /** XP this submission earned (0 for retries of a passed lesson). */
+  xpGained: number
 }
 
 export async function submitQuiz(courseId: string, lessonId: string, answers: number[]): Promise<QuizResult | { error: string }> {
@@ -38,13 +40,15 @@ export async function submitQuiz(courseId: string, lessonId: string, answers: nu
     return { error: "Please answer every question." }
   }
   const supabase = await createClient()
+  const before = await getMyXp(supabase)
   // Graded in the database (migration 008): the browser never sees the answers before submitting.
   const { data, error } = await supabase.rpc("submit_quiz", { p_lesson: lessonId, p_answers: answers })
   if (error || !data) {
     console.error("submit_quiz failed:", error?.message)
     return { error: "We couldn't save your result. Please try again." }
   }
-  const result = data as QuizResult | { error: string }
+  const result = data as Omit<QuizResult, "xpGained"> | { error: string }
   revalidatePath(`/learn/${courseId}`)
-  return result
+  if ("error" in result) return result
+  return { ...result, xpGained: Math.max(0, (await getMyXp(supabase)).total - before.total) }
 }

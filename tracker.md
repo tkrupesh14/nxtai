@@ -110,7 +110,10 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 5.1c | Stream lesson text while it is written | P2 | ✅ | 🤖 | `ed2e4b2` |
 | 5.2 | Doc upload → lessons from the learner's docs | P1 | ✅ | 🤖 | `b7e02ec` PDF/Word/text (Free 1 file·50 pp, Pro 3·300); text only, no OCR |
 | 5.3 | Module tests, final exam, certificates | P1 | ✅ | | Deployed 2026-11-02 (migration 014). Module test per module (8 AI-written questions, unlocks when its lessons are passed, retry after 1 h), final exam (20 questions, unlocks when every module test is passed, 2 tries/day IST), pass mark 70%, graded in the DB, answers shown only once passed. Certificates Pro only: public /certificate/[code] (print to PDF, LinkedIn, preview image), labelled AI professor / not accredited. Needs OpenRouter credits to write new tests |
-| 5.4–5.7 | Coding practice, mock interviews, communities, XP/streaks | P2 | ⬜ | 🤖 | |
+| 5.7 | XP and levels (streaks already on `/learn`) | P2 | 🟡 | 🤖 | Built: migration 026 (ledger written only by DB triggers, once per reward, kept when a course is deleted, backfilled). Lesson passed 10, perfect quiz +5, module test 25, final exam 50, new study day 5. Level card on `/learn`, "+N XP" on quiz/test results. Needs migration 026 |
+| 5.4 | Coding practice: run code in the browser (Pyodide / JS worker), AI review | P2 | ⬜ | 🤖 | Next after 5.7. Nothing runs on our server |
+| 5.5 | Mock interviews | P2 | ⏸️ | 👤🤖 | Parked 2026-11-07: aim is a real interview experience; plan after XP and coding |
+| 5.6 | Communities | P2 | ⬜ | 🤖 | Last: needs moderation, reporting, privacy update |
 | 5.8 | Switch AI to Bedrock once AWS grants access | P2 | ⛔ | 👤 | G14 |
 
 ## Phase 6 — Payments (Razorpay)

@@ -141,6 +141,7 @@ export function Quiz({
         <div role="status" className="mt-8 flex flex-wrap items-center gap-4 rounded-lg border bg-muted/40 p-4">
           <p className="mr-auto font-medium">
             You scored {result.score}%. {result.passed ? "Lesson complete!" : `You need ${passMark}% to complete it.`}
+            {result.xpGained > 0 && <span className="ml-2 font-semibold text-primary">+{result.xpGained} XP</span>}
           </p>
           {!result.passed && (
             <Button variant="outline" onClick={retry}>

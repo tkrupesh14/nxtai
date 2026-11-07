@@ -141,6 +141,7 @@ export function AssessmentQuiz({
           <p className="text-lg font-semibold">
             You scored {result.score}% ({right} of {questions.length}).{" "}
             {result.passed ? (kind === "module" ? "Module test passed!" : "You passed the final exam!") : `You need ${passMark}% to pass.`}
+            {result.xpGained > 0 && <span className="ml-2 text-primary">+{result.xpGained} XP</span>}
           </p>
           {!result.passed && (
             <p className="mt-1 text-sm text-muted-foreground">

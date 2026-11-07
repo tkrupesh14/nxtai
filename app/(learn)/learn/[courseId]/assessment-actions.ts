@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 
 import { prepareAssessment, type PrepareResult } from "@/lib/learning/assessments"
-import { isUuid } from "@/lib/learning/data"
+import { getMyXp, isUuid } from "@/lib/learning/data"
 import { createClient } from "@/lib/supabase/server"
 
 /** Write the module test (moduleId) or final exam (null) the first time it is opened. */
@@ -20,6 +20,8 @@ export type AssessmentResult = {
   results: { i: number; correct: boolean; answerIndex?: number; explanation?: string }[]
   retryAt: string | null
   finalUnlocked: boolean
+  /** XP this submission earned. */
+  xpGained: number
 }
 
 /** answers[k] = chosen original option index for original question k. Graded in the database. */
@@ -33,18 +35,20 @@ export async function submitAssessmentAction(
     return { error: "Please answer every question." }
   }
   const supabase = await createClient()
+  const before = await getMyXp(supabase)
   const { data, error } = await supabase.rpc("submit_assessment", { p_assessment: assessmentId, p_answers: answers })
   if (error || !data) {
     console.error("submit_assessment failed:", error?.message)
     return { error: "We couldn't save your result. Please try again." }
   }
-  const result = data as AssessmentResult | { error: string; retryAt?: string }
+  const result = data as Omit<AssessmentResult, "xpGained"> | { error: string; retryAt?: string }
   revalidatePath(`/learn/${courseId}`, "layout")
   revalidatePath("/learn")
   if ("error" in result && result.error === "wait") {
     return { error: "You can't retake this test yet.", retryAt: result.retryAt }
   }
-  return result
+  if ("error" in result) return result
+  return { ...result, xpGained: Math.max(0, (await getMyXp(supabase)).total - before.total) }
 }
 
 const CERT_ERRORS: Record<string, string> = {
