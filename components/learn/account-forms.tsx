@@ -184,7 +184,14 @@ export function DeleteAccountForm() {
   )
 }
 
-export type EmailSettings = { frequency: "hourly" | "daily" | "off"; learning: boolean; account: boolean; teaching: boolean; admin: boolean }
+export type EmailSettings = {
+  frequency: "hourly" | "daily" | "off"
+  learning: boolean
+  account: boolean
+  teaching: boolean
+  admin: boolean
+  reminders: boolean
+}
 
 const FREQUENCIES = [
   { value: "hourly", label: "As they happen", hint: "At most one email an hour" },
@@ -249,9 +256,19 @@ export function EmailSettingsForm({
             </label>
           ))}
       </fieldset>
+      <fieldset className="grid gap-2">
+        <legend className="mb-2 text-sm font-medium">Study reminders</legend>
+        <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+          <input type="checkbox" name="reminders" defaultChecked={values.reminders} className="mt-0.5 size-4 accent-primary" />
+          <span>
+            Remind me at 7 pm when my streak is about to end, or after 3 days away from a course
+            <span className="block text-xs text-muted-foreground">In the app, on your devices with notifications on, and by email if you don&apos;t see them</span>
+          </span>
+        </label>
+      </fieldset>
       <div className="flex items-center gap-3">
         <Button type="submit" variant="outline" disabled={pending} loading={pending}>
-          {pending ? "Saving…" : "Save email settings"}
+          {pending ? "Saving…" : "Save notification settings"}
         </Button>
         <Status state={state} />
       </div>

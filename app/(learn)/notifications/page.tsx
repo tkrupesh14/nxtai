@@ -18,6 +18,10 @@ export default async function NotificationsPage() {
         <h1 className="text-3xl font-semibold tracking-tight">Notifications</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           The last 90 days. New ones also pop up while you&apos;re on Krpex, and ones you miss are emailed to you.{" "}
+          <Link href="/account/settings#push" className="text-primary hover:underline">
+            Get them on your phone
+          </Link>{" "}
+          ·{" "}
           <Link href="/account/settings#email" className="text-primary hover:underline">
             Email settings
           </Link>

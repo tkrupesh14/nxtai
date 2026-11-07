@@ -44,7 +44,10 @@ export default function PrivacyPage() {
           <li>
             <strong>Notifications:</strong> short messages about your account (a professor&apos;s reply, a payment, a
             report we looked at), shown only to you and kept for 90 days. Ones you haven&apos;t seen in the app may also be
-            emailed to you; you choose how often, or turn this off, in your settings or from any of these emails.
+            emailed to you; you choose how often, or turn this off, in your settings or from any of these emails. If you
+            turn on notifications on a phone or browser, we keep that device&apos;s push address and keys until you turn
+            them off. Study reminders (at most one a day) are made from your lesson and question activity; you can turn
+            them off.
           </li>
           <li>
             <strong>Your material:</strong> if you build a course from your own files or pasted text, the text extracted
@@ -112,6 +115,10 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Email provider (Spacemail)</strong>: to deliver account and notification emails.
+          </li>
+          <li>
+            <strong>Your browser&apos;s push service (Google, Apple, Mozilla or Microsoft)</strong>: delivers notifications
+            to devices where you turned them on. Messages are encrypted so the service can&apos;t read them.
           </li>
         </List>
         <p>

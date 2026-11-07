@@ -9,7 +9,6 @@ import { serverKey } from "@/lib/supabase/server-key"
 
 type Due = { user_id: string; email: string; name: string; unsubscribe_token: string; items: DigestItem[] }
 
-const EVERY_MS = 5 * 60_000
 const SITE = "https://krpex.in"
 
 let running = false
@@ -56,17 +55,4 @@ export async function sendNotificationEmails(): Promise<number> {
     running = false
   }
   return sent
-}
-
-/** Called once when the production server starts (instrumentation.ts). */
-export function startNotificationEmails() {
-  const g = globalThis as { __krpexNotificationEmails?: boolean }
-  if (g.__krpexNotificationEmails) return
-  g.__krpexNotificationEmails = true
-  if (!emailConfigured()) {
-    console.warn("notification emails: SMTP_USER / SMTP_PASSWORD not set, not sending")
-    return
-  }
-  setTimeout(() => void sendNotificationEmails(), 60_000).unref()
-  setInterval(() => void sendNotificationEmails(), EVERY_MS).unref()
 }

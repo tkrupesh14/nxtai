@@ -65,19 +65,20 @@ export async function updateLearning(_: FormState, formData: FormData): Promise<
 
 const EmailSchema = z.object({ frequency: z.enum(["hourly", "daily", "off"]) })
 
-/** 9.3: how often notifications are emailed, and which kinds. Unticked boxes are absent from the form. */
+/** 9.3 + 9.5: how often notifications are emailed, which kinds, and study reminders. Unticked boxes are absent. */
 export async function updateEmailSettings(_: FormState, formData: FormData): Promise<FormState> {
   const parsed = EmailSchema.safeParse({ frequency: formData.get("frequency") })
   if (!parsed.success) return { error: "Please choose how often to get emails." }
   const on = (k: string) => formData.get(k) === "on"
   const supabase = await createClient()
-  const { error } = await supabase.rpc("set_notification_email_settings", {
+  const { error } = await supabase.rpc("set_notification_settings", {
     p_frequency: parsed.data.frequency,
     p_learning: on("learning"),
     p_account: on("account"),
     // Only shown to professors and admins; keep their current value otherwise.
     p_teaching: formData.has("has_teaching") ? on("teaching") : null,
     p_admin: formData.has("has_admin") ? on("admin") : null,
+    p_reminders: on("reminders"),
   })
   if (error) {
     console.error("updateEmailSettings failed:", error.message)

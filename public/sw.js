@@ -1,5 +1,5 @@
-// Krpex service worker: only shows /offline.html when a page can't load because the device is offline.
-// It caches nothing else, so it never serves stale pages, data or uploads.
+// Krpex service worker: shows /offline.html when a page can't load because the device is offline, and shows
+// push notifications (9.4). It caches nothing else, so it never serves stale pages, data or uploads.
 const CACHE = "krpex-offline-v1"
 const OFFLINE = "/offline.html"
 
@@ -28,6 +28,45 @@ self.addEventListener("fetch", (event) => {
       } catch {
         return (await caches.match(OFFLINE)) || Response.error()
       }
+    })(),
+  )
+})
+
+// 9.4: show a push notification (the server sends title, body, url, tag; see lib/push/send-pushes.ts).
+self.addEventListener("push", (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = { title: "Krpex", body: event.data ? event.data.text() : "" }
+  }
+  const url = typeof data.url === "string" && /^\/[A-Za-z0-9]/.test(data.url) ? data.url : "/notifications"
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Krpex", {
+      body: data.body || "",
+      tag: data.tag,
+      icon: "/apple-icon",
+      badge: "/apple-icon",
+      data: { url },
+    }),
+  )
+})
+
+// Open the link in an existing Krpex tab if there is one, otherwise in a new one.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close()
+  const url = new URL(event.notification.data?.url || "/notifications", self.location.origin).href
+  event.waitUntil(
+    (async () => {
+      const tabs = await self.clients.matchAll({ type: "window", includeUncontrolled: true })
+      for (const tab of tabs) {
+        if (new URL(tab.url).origin === self.location.origin && "focus" in tab) {
+          await tab.focus()
+          if ("navigate" in tab) await tab.navigate(url).catch(() => {})
+          return
+        }
+      }
+      await self.clients.openWindow(url)
     })(),
   )
 })

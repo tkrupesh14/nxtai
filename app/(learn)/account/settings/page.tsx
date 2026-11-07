@@ -1,6 +1,7 @@
 import { signOutEverywhere } from "@/app/(learn)/account/actions"
 import { DeleteAccountForm, EmailSettingsForm, PasswordForm, type EmailSettings } from "@/components/learn/account-forms"
 import { AccountSection } from "@/components/learn/account-section"
+import { PushToggle } from "@/components/learn/push-toggle"
 import { Button } from "@/components/site/ui/button"
 import { createClient } from "@/lib/supabase/server"
 import { getCurrentProfile } from "@/lib/supabase/profile"
@@ -14,7 +15,7 @@ export default async function SettingsPage() {
   const { user } = await getCurrentProfile()
   const supabase = await createClient()
   const [{ data: emailRow }, professor, { data: isAdmin }] = await Promise.all([
-    supabase.from("notification_email_settings").select("frequency, learning, account, teaching, admin").maybeSingle(),
+    supabase.from("notification_email_settings").select("frequency, learning, account, teaching, admin, reminders").maybeSingle(),
     getMyProfessor(),
     supabase.rpc("is_admin"),
   ])
@@ -24,6 +25,7 @@ export default async function SettingsPage() {
     account: true,
     teaching: true,
     admin: true,
+    reminders: true,
   }
   const providers = Array.from(
     new Set([...(user.identities ?? []).map((i) => i.provider), ...((user.app_metadata?.providers as string[] | undefined) ?? [])]),
@@ -45,10 +47,18 @@ export default async function SettingsPage() {
 
       <AccountSection
         id="email"
-        title="Email notifications"
+        title="Email notifications and reminders"
         description={`We email ${user.email} about notifications you haven't seen in the app. Sign-in and password emails are always sent.`}
       >
         <EmailSettingsForm values={email} isProfessor={Boolean(professor)} isAdmin={Boolean(isAdmin)} />
+      </AccountSection>
+
+      <AccountSection
+        id="push"
+        title="Phone and browser notifications"
+        description="Get notifications on this device as they happen, even when Krpex isn't open. Turn them on for each phone or computer you use."
+      >
+        <PushToggle />
       </AccountSection>
 
       <AccountSection title="Sign-in methods">
