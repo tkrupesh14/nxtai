@@ -1,6 +1,8 @@
 // lib/supabase/server.ts
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
+
+import { authCookieDomain, requestHost } from '@/lib/code-host'
 
 type CookieItem = {
   name: string
@@ -12,16 +14,20 @@ type CookieItem = {
     sameSite?: 'strict' | 'lax' | 'none'
     expires?: Date
     maxAge?: number
+    domain?: string
   }
 }
 
 export async function createClient() {
-  const cookieStore =  await cookies()
+  const cookieStore = await cookies()
+  // One sign-in for krpex.in and code.krpex.in (see lib/code-host.ts).
+  const domain = authCookieDomain(requestHost(await headers()))
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      ...(domain ? { cookieOptions: { domain } } : {}),
       cookies: {
         getAll() {
           return cookieStore.getAll()

@@ -108,6 +108,22 @@ XP is a score that never goes down; it is not spent. Levels unlock rewards. Only
 
 **Guardrails:** anything that costs money is capped or once per account; leagues and duels count only graded XP; leaderboards are opt-in and never show emails.
 
+### Coding practice — code.krpex.in (5.4, draft 2026-11-07)
+
+Same repo and same Next.js app; `proxy.ts` sends requests for `code.krpex.in` to `app/(coding)/coding/*`. Learners' code runs only in their browser (Pyodide for Python, a Web Worker for JavaScript); nothing runs on our server.
+
+**A. Subdomain + shell (1 deploy).** 👤 DNS `A code → Elastic IP` at Spaceship; `code.krpex.in` in Nginx `server_name`; `sudo certbot --nginx -d krpex.in -d www.krpex.in -d code.krpex.in`. 🤖 Host rewrite in `proxy.ts` (`lib/code-host.ts`; `krpex.in/code/*` → subdomain with a 308); Supabase auth cookies on `.krpex.in` so one sign-in covers both (old host-only cookies are moved on the next visit, `shareAuthCookies`); sign-in from the subdomain goes through `krpex.in/login?next=/code…`; its own robots.txt and sitemap.
+
+**B. Runner + editor + playground (with A).** CodeMirror 6 editor (pinned; extra key row on phones). `public/code-runner.html` in a sandboxed iframe (opaque origin: user code can't read cookies or call our API as the learner) → a blob Web Worker. Python: Pyodide 314.0.7 (Python 3.14) from jsDelivr, loaded with `import()` (~12 MB once, then cached); JavaScript runs in the worker. 5 s limit that starts after Python has loaded (the worker is killed and restarted), output capped at 64 KB, `input()` reads from an Input box (so no cross-origin-isolation headers are needed). Playground keeps code in the browser (localStorage); saved snippets on the server come with C.
+
+**C. Problems, submissions, XP (migration 028, 2 deploys).** Tables: `coding_problems` (slug, title, topic, difficulty, statement, starter code per language, test cases as JSON, reference solution hidden by column grants), `coding_submissions` (own rows; code ≤ 20 KB; passed/total; 60 per hour), `coding_daily` (problem of the day). Tests are JSON cases (args → expected) run by one harness per language. A hand-written bank of ~60 problems (basics → strings, lists, dicts, loops, functions, recursion, sorting, searching, intro DSA), each available in Python and JavaScript; every reference solution is checked against its tests in CI. XP (trigger, once per problem): easy 10 · medium 20 · hard 40, +5 solved on the first submit, daily challenge ×2, at most 150 coding XP a day. Honesty: grading happens in the browser, so a determined learner could fake a pass; the cap, once-per-problem XP and stored code keep the damage small, and leagues later only count reviewed or capped XP.
+
+**D. AI help (1 deploy).** Hints in 3 steps (never the full solution, same rule as B1), "explain this error", and a review after solving (correctness, complexity, style, a cleaner version). Free: 3 AI helps a day; Pro: 30; then 1 credit each. Needs OpenRouter credits. Privacy page: code is sent to the AI provider only when the learner asks for help.
+
+**E. With courses (later).** "Practice" problems at the end of coding lessons and module tests with a coding question; AI-written problems for a course, checked by running the reference solution in an admin's browser before they go live.
+
+**F. Later.** SQL practice (PGlite/SQLite in the browser), an HTML/CSS/JS playground with live preview, weekly contests and leagues (5.6), C/C++/Java through a hosted runner only if learners ask for it.
+
 ### Phase 6 — Payments (Razorpay)
 1. ✅ Plans, limits and credit ledger in the database (migration 007); account page shows plan, limits and credits.
 2. Razorpay account + KYC 👤; policy pages (Phase 3.2).

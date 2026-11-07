@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Krpex code runner</title>
+<!--
+  Krpex Code (5.4): runs a learner's code in their own browser. Loaded in an iframe with sandbox="allow-scripts"
+  (no allow-same-origin), so this page has an opaque origin: code here can't read Krpex cookies or call the
+  Krpex API as the learner. Code runs in a Web Worker so a runaway loop can be stopped by killing the worker.
+  Messages from the parent:  {type: "run", id, lang: "python" | "javascript", code, stdin, timeoutMs}
+                             {type: "warm", lang}            start loading Python early
+                             {type: "stop"}                  kill the current run
+  Messages to the parent:    {type: "ready"} once, then for a run: {id, type: "status", text} · {id, type: "out" | "err", text}
+                             · {id, type: "started"} (the time limit starts) · {id, type: "done", ms, ok} · {id, type: "timeout"} · {id, type: "stopped"}
+-->
+</head>
+<body>
+<script>
+"use strict";
+var PYODIDE = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
+var MAX_OUTPUT = 64 * 1024;
+
+// The worker's source, started from a blob URL (an opaque-origin page can't load a worker from a URL).
+var WORKER = "(" + function (PYODIDE, MAX_OUTPUT) {
+  var py = null, pyLoading = null, sent = 0, capped = false, runId = null;
+
+  function post(type, text) {
+    if (type === "out" || type === "err") {
+      if (capped) return;
+      sent += text.length;
+      if (sent > MAX_OUTPUT) {
+        capped = true;
+        text = text.slice(0, Math.max(0, text.length - (sent - MAX_OUTPUT))) + "\n… output cut off at 64 KB\n";
+      }
+    }
+    self.postMessage({ id: runId, type: type, text: text });
+  }
+
+  function loadPython() {
+    if (!pyLoading) {
+      pyLoading = (async function () {
+        // An opaque-origin page can't start a module worker, and importScripts is refused here too, but import()
+        // works. Pyodide uses its import() path only when importScripts is unavailable, so switch that off.
+        self.importScripts = function () { throw new Error("importScripts is not available in the Krpex runner"); };
+        var mod = await import(PYODIDE + "pyodide.mjs");
+        py = await mod.loadPyodide({ indexURL: PYODIDE });
+        return py;
+      })();
+    }
+    return pyLoading;
+  }
+
+  // Keep the learner's frames, drop Pyodide's own ("/lib/python…/_pyodide/…").
+  function cleanTraceback(text) {
+    var lines = String(text).split("\n"), out = [], skip = false;
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i];
+      if (/^\s+File "/.test(l)) skip = !/File "<exec>"/.test(l);
+      else if (!/^\s/.test(l)) skip = false;
+      if (!skip) out.push(l);
+    }
+    return out.join("\n").replace(/\n+$/, "") + "\n";
+  }
+
+  async function runPython(code, stdin) {
+    if (!py) { post("status", "Loading Python (about 12 MB the first time)…"); }
+    await loadPython();
+    self.postMessage({ id: runId, type: "started" });
+    var lines = stdin ? String(stdin).split("\n") : [];
+    py.setStdout({ batched: function (s) { post("out", s + "\n"); } });
+    py.setStderr({ batched: function (s) { post("err", s + "\n"); } });
+    py.setStdin({ stdin: function () { return lines.length ? lines.shift() : undefined; }, autoEOF: true });
+    var globals = py.globals.get("dict")();
+    try {
+      await py.loadPackagesFromImports(code);
+      await py.runPythonAsync(code, { globals: globals, filename: "<exec>" });
+      return true;
+    } catch (e) {
+      post("err", cleanTraceback(e && e.message ? e.message : e));
+      return false;
+    } finally {
+      globals.destroy();
+    }
+  }
+
+  async function runJavaScript(code, stdin) {
+    var show = function (v) {
+      if (typeof v === "string") return v;
+      try { return JSON.stringify(v, null, 2) ?? String(v); } catch (e) { return String(v); }
+    };
+    var line = function (args) { return Array.prototype.map.call(args, show).join(" ") + "\n"; };
+    var lines = stdin ? String(stdin).split("\n") : [];
+    var con = {
+      log: function () { post("out", line(arguments)); },
+      info: function () { post("out", line(arguments)); },
+      warn: function () { post("err", line(arguments)); },
+      error: function () { post("err", line(arguments)); },
+      table: function (v) { post("out", show(v) + "\n"); },
+    };
+    var input = function () { return lines.length ? lines.shift() : null; };
+    self.postMessage({ id: runId, type: "started" });
+    try {
+      var AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+      await new AsyncFunction("console", "input", "prompt", code + "\n//# sourceURL=main.js")(con, input, input);
+      return true;
+    } catch (e) {
+      var stack = e && e.stack ? String(e.stack) : String(e);
+      // Keep the message and the learner's own lines; the function wrapper adds 2 lines before their code.
+      var out = [];
+      stack.split("\n").forEach(function (l, i) {
+        if (i === 0) return out.push(l);
+        var m = l.match(/^\s*at (?:(.+?) \()?.*main\.js:(\d+):\d+\)?$/);
+        if (!m) return;
+        var name = m[1] && m[1] !== "eval" && m[1] !== "async eval" ? m[1] + ", " : "";
+        out.push("    at " + name + "line " + (Number(m[2]) - 2));
+      });
+      post("err", out.join("\n") + "\n");
+      return false;
+    }
+  }
+
+  self.onmessage = async function (e) {
+    var m = e.data || {};
+    if (m.type === "warm") { if (m.lang === "python") loadPython().catch(function () {}); return; }
+    if (m.type !== "run") return;
+    runId = m.id; sent = 0; capped = false;
+    var t0 = Date.now(), ok = false;
+    try {
+      ok = m.lang === "python" ? await runPython(m.code, m.stdin) : await runJavaScript(m.code, m.stdin);
+    } catch (err) {
+      post("err", "Couldn't run the code: " + (err && err.message ? err.message : err) + "\n");
+    }
+    self.postMessage({ id: m.id, type: "done", ms: Date.now() - t0, ok: ok });
+  };
+} + ")(" + JSON.stringify(PYODIDE) + ", " + MAX_OUTPUT + ");";
+
+var worker = null, current = null, timer = null, limit = 5000;
+var LOAD_LIMIT = 180000; // first Python download on a slow connection
+var blobUrl = URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }));
+
+function toParent(msg) { parent.postMessage(msg, "*"); }
+
+function startWorker() {
+  worker = new Worker(blobUrl);
+  worker.onmessage = function (e) {
+    var m = e.data;
+    if (!current || m.id !== current) return;
+    if (m.type === "started") {
+      // The time limit counts from here, not while Python downloads.
+      clearTimeout(timer);
+      timer = setTimeout(function () { kill("timeout"); }, limit);
+    }
+    if (m.type === "done") { clearTimeout(timer); current = null; }
+    toParent(m);
+  };
+  worker.onerror = function (e) {
+    if (current) toParent({ id: current, type: "err", text: (e.message || "The runner stopped.") + "\n" });
+    e.preventDefault();
+  };
+  return worker;
+}
+
+function kill(type) {
+  clearTimeout(timer);
+  if (worker) worker.terminate();
+  worker = null;
+  if (current) toParent({ id: current, type: type });
+  current = null;
+}
+
+window.addEventListener("message", function (e) {
+  if (e.source !== parent) return;
+  var m = e.data || {};
+  if (m.type === "warm") { (worker || startWorker()).postMessage(m); return; }
+  if (m.type === "stop") { kill("stopped"); return; }
+  if (m.type !== "run" || typeof m.code !== "string" || m.code.length > 100000) return;
+  if (current) kill("stopped");
+  current = m.id;
+  var w = worker || startWorker();
+  limit = Math.min(Math.max(Number(m.timeoutMs) || 5000, 1000), 30000);
+  clearTimeout(timer);
+  timer = setTimeout(function () { kill("timeout"); }, LOAD_LIMIT);
+  w.postMessage({ type: "run", id: m.id, lang: m.lang === "python" ? "python" : "javascript", code: m.code, stdin: String(m.stdin || "").slice(0, 20000) });
+});
+
+toParent({ type: "ready" });
+</script>
+</body>
+</html>
