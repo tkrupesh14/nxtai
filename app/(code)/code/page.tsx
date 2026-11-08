@@ -4,14 +4,15 @@ import { Button } from "@/components/site/ui/button"
 import { codeLinks } from "@/lib/code/host"
 
 const NOW = [
+  { title: "Practice problems", body: "70 problems from first loops to sorting and searching, checked by tests as you go, with XP for every one you solve." },
+  { title: "Problem of the day", body: "One problem for everyone each day, worth double XP." },
   { title: "Python and JavaScript", body: "Python 3.14 and modern JavaScript, with the editor you'd expect: colours, brackets, indentation." },
   { title: "Runs on your device", body: "Your code runs in your own browser, so results come back instantly and nothing to install." },
   { title: "Works on your phone", body: "An extra row of keys for brackets, colons and Tab makes coding on a phone practical." },
 ]
 const NEXT = [
-  { title: "Practice problems", body: "From first loops to sorting and searching, each checked by tests as you go, with XP for every problem you solve." },
-  { title: "Problem of the day", body: "One problem for everyone each day, worth double XP." },
   { title: "Hints and code review", body: "Stuck? Hints in small steps from your AI professor, never the whole answer, and a review once you've solved it." },
+  { title: "Practice inside your courses", body: "Problems at the end of coding lessons, and coding questions in module tests." },
 ]
 
 export default async function CodeHome() {
@@ -22,14 +23,14 @@ export default async function CodeHome() {
         <p className="text-sm font-medium text-primary">Krpex Code</p>
         <h1 className="mt-3 text-balance text-4xl font-semibold tracking-tight md:text-6xl">Practise coding right in your browser</h1>
         <p className="mx-auto mt-5 max-w-2xl text-pretty text-lg text-muted-foreground">
-          Write Python or JavaScript, press Run and see the result. Practice problems with XP are coming next, linked to your Krpex courses.
+          Solve practice problems in Python or JavaScript, see your tests pass right away and earn XP for your Krpex streak.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button asChild size="lg">
-            <Link href={links.code("/playground")}>Open the playground</Link>
+            <Link href={links.code("/problems")}>Start solving</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
-            <a href={links.main("/courses")}>Browse coding courses</a>
+            <Link href={links.code("/playground")}>Open the playground</Link>
           </Button>
         </div>
         <p className="mt-4 text-sm text-muted-foreground">Free · no install · Python loads once (about 12 MB), then it&apos;s quick</p>

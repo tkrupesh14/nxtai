@@ -22,6 +22,9 @@ export async function CodeHeader() {
             </span>
           </Link>
           <nav className="hidden items-center gap-5 text-sm sm:flex">
+            <Link href={links.code("/problems")} className="text-muted-foreground transition-colors hover:text-foreground">
+              Problems
+            </Link>
             <Link href={links.code("/playground")} className="text-muted-foreground transition-colors hover:text-foreground">
               Playground
             </Link>

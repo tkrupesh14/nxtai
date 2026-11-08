@@ -1,6 +1,7 @@
 import { CODE_ORIGIN } from "@/lib/code-host"
+import { PROBLEMS } from "@/lib/code/problems"
 
-const PAGES = ["/", "/playground"]
+const PAGES = ["/", "/problems", "/playground", ...PROBLEMS.map((p) => `/p/${p.slug}`)]
 
 // sitemap.xml for code.krpex.in (proxy.ts maps /sitemap.xml there onto this route).
 export function GET() {
