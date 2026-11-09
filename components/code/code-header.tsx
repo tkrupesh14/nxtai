@@ -25,6 +25,9 @@ export async function CodeHeader() {
             <Link href={links.code("/problems")} className="text-muted-foreground transition-colors hover:text-foreground">
               Problems
             </Link>
+            <Link href={links.code("/plans")} className="text-muted-foreground transition-colors hover:text-foreground">
+              Study plans
+            </Link>
             <Link href={links.code("/playground")} className="text-muted-foreground transition-colors hover:text-foreground">
               Playground
             </Link>

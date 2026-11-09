@@ -17,7 +17,10 @@ export function TopBar({
   list,
   current,
   hrefPrefix,
+  hrefSuffix = "",
   problemsHref,
+  listTitle = "Problems",
+  listHref,
   loginHref,
   accountHref,
   user,
@@ -30,7 +33,12 @@ export function TopBar({
   list: ListItem[]
   current: string
   hrefPrefix: string
+  /** Kept on every problem link, e.g. "?plan=krpex-150" while working through a study plan. */
+  hrefSuffix?: string
   problemsHref: string
+  /** The list the arrows and drawer follow: all problems, or a study plan. */
+  listTitle?: string
+  listHref?: string
   loginHref: string
   accountHref: string
   user: { initials: string; name: string } | null
@@ -51,7 +59,7 @@ export function TopBar({
   function random() {
     const pool = list.filter((p) => p.slug !== current && p.state !== "solved")
     const from = pool.length ? pool : list.filter((p) => p.slug !== current)
-    router.push(`${hrefPrefix}${from[Math.floor(Math.random() * from.length)].slug}`)
+    router.push(`${hrefPrefix}${from[Math.floor(Math.random() * from.length)].slug}${hrefSuffix}`)
   }
 
   return (
@@ -66,13 +74,13 @@ export function TopBar({
           </span>
         </Link>
         <span aria-hidden className="mx-1 hidden h-5 w-px bg-border sm:block" />
-        <button type="button" onClick={() => setDrawer(true)} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-muted" aria-haspopup="dialog">
-          <IconList /> <span className="hidden sm:inline">Problem list</span>
+        <button type="button" onClick={() => setDrawer(true)} className="inline-flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-muted" aria-haspopup="dialog" aria-label={listTitle === "Problems" ? "Problem list" : `Problem list: ${listTitle}`}>
+          <IconList /> <span className="hidden max-w-48 truncate sm:inline">{listTitle === "Problems" ? "Problem list" : listTitle}</span>
         </button>
-        <NavIcon href={prev ? `${hrefPrefix}${prev.slug}` : null} label={prev ? `Previous: ${prev.title}` : "No previous problem"}>
+        <NavIcon href={prev ? `${hrefPrefix}${prev.slug}${hrefSuffix}` : null} label={prev ? `Previous: ${prev.title}` : "No previous problem"}>
           <IconChevronLeft />
         </NavIcon>
-        <NavIcon href={next ? `${hrefPrefix}${next.slug}` : null} label={next ? `Next: ${next.title}` : "No next problem"}>
+        <NavIcon href={next ? `${hrefPrefix}${next.slug}${hrefSuffix}` : null} label={next ? `Next: ${next.title}` : "No next problem"}>
           <IconChevronRight />
         </NavIcon>
         <button type="button" onClick={random} className="hidden rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-flex" title="Random problem you haven't solved" aria-label="Random problem">
@@ -117,7 +125,7 @@ export function TopBar({
         )}
       </div>
 
-      {drawer && <ProblemDrawer list={list} current={current} hrefPrefix={hrefPrefix} problemsHref={problemsHref} onClose={() => setDrawer(false)} />}
+      {drawer && <ProblemDrawer list={list} current={current} hrefPrefix={hrefPrefix} hrefSuffix={hrefSuffix} title={listTitle} titleHref={listHref ?? problemsHref} onClose={() => setDrawer(false)} />}
     </header>
   )
 }
@@ -136,7 +144,7 @@ function NavIcon({ href, label, children }: { href: string | null; label: string
   )
 }
 
-function ProblemDrawer({ list, current, hrefPrefix, problemsHref, onClose }: { list: ListItem[]; current: string; hrefPrefix: string; problemsHref: string; onClose: () => void }) {
+function ProblemDrawer({ list, current, hrefPrefix, hrefSuffix, title, titleHref, onClose }: { list: ListItem[]; current: string; hrefPrefix: string; hrefSuffix: string; title: string; titleHref: string; onClose: () => void }) {
   const [q, setQ] = useState("")
   const panel = useRef<HTMLDivElement>(null)
   const rows = useMemo(() => {
@@ -159,8 +167,8 @@ function ProblemDrawer({ list, current, hrefPrefix, problemsHref, onClose }: { l
       <div ref={panel} className="absolute inset-y-0 left-0 flex w-[min(440px,92vw)] flex-col border-r bg-background shadow-2xl">
         <div className="flex items-center justify-between gap-2 border-b px-4 py-3">
           <div>
-            <Link href={problemsHref} className="font-semibold hover:text-primary">
-              Problems
+            <Link href={titleHref} className="font-semibold hover:text-primary">
+              {title}
             </Link>
             <p className="text-xs text-muted-foreground">
               {solved} of {list.length} solved
@@ -179,7 +187,7 @@ function ProblemDrawer({ list, current, hrefPrefix, problemsHref, onClose }: { l
           {rows.map((p) => (
             <li key={p.slug}>
               <Link
-                href={`${hrefPrefix}${p.slug}`}
+                href={`${hrefPrefix}${p.slug}${hrefSuffix}`}
                 onClick={onClose}
                 data-current={p.slug === current ? "" : undefined}
                 aria-current={p.slug === current ? "page" : undefined}

@@ -83,3 +83,25 @@ test("the problem set filters, and a problem runs custom cases, then submits", a
   await expect(console_.getByText("None").first()).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test("study plans list their problems, and a problem opened from a plan follows the plan", async ({ page }) => {
+  const base = live ? "https://code.krpex.in" : "/code"
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  await page.goto(`${base}/plans`)
+  await expect(page.getByRole("heading", { name: "Study plans", exact: true })).toBeVisible()
+  await expect(page.getByRole("heading", { level: 2 })).toHaveCount(5)
+  await page.getByRole("link", { name: /Python basics in 30 days/ }).click()
+
+  await expect(page.getByRole("heading", { name: "Python basics in 30 days" })).toBeVisible()
+  await expect(page.getByText("Day 30", { exact: true })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Log in to follow" })).toBeVisible()
+  await page.getByRole("link", { name: "Start" }).click()
+
+  await expect(page).toHaveURL(/\/p\/add-two-numbers\?plan=python-basics-30$/)
+  await expect(page.getByRole("button", { name: "Problem list: Python basics in 30 days" })).toBeVisible()
+  await page.getByRole("link", { name: /^Next: Even or odd$/ }).click()
+  await expect(page).toHaveURL(/\/p\/even-or-odd\?plan=python-basics-30$/)
+  await expect(page.getByRole("link", { name: /^Next: Largest of three$/ })).toBeVisible()
+  expect(errors).toEqual([])
+})

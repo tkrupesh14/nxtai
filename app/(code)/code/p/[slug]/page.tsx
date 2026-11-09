@@ -7,10 +7,11 @@ import { Workspace } from "@/components/code/workspace/workspace"
 import type { CoachAllowance, CoachTurn } from "@/lib/code/coach"
 import { getCoachAllowance, getCoachHistory, getDailyProblem, getMyProgress, getMySubmissions, getProblemStats, hasRevealed, type MySubmission } from "@/lib/code/data"
 import { codeLinks } from "@/lib/code/host"
+import { planBySlug, planProblems } from "@/lib/code/plans"
 import { PROBLEM_SUMMARIES, problemBySlug, publicProblem } from "@/lib/code/problems"
 import { displayNameFor, getSignedInUser, initialsFor } from "@/lib/supabase/profile"
 
-type Props = { params: Promise<{ slug: string }> }
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = problemBySlug((await params).slug)
@@ -18,8 +19,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: p.title, description: `${p.title}: a ${p.difficulty} ${p.topic.toLowerCase()} problem to solve in Python or JavaScript, with tests that run in your browser.` }
 }
 
-export default async function ProblemPage({ params }: Props) {
+export default async function ProblemPage({ params, searchParams }: Props) {
   const slug = (await params).slug
+  const planParam = (await searchParams).plan
   const problem = problemBySlug(slug)
   if (!problem) notFound()
   const [user, links, daily, allStats] = await Promise.all([getSignedInUser(), codeLinks(), getDailyProblem(), getProblemStats()])
@@ -40,7 +42,12 @@ export default async function ProblemPage({ params }: Props) {
   }
   const solved = new Set(solvedList)
   const tried = new Set(triedList)
-  const list = PROBLEM_SUMMARIES.map((p) => ({ ...p, state: solved.has(p.slug) ? ("solved" as const) : tried.has(p.slug) ? ("tried" as const) : ("todo" as const) }))
+  // Opened from a study plan (?plan=…): the arrows and the problem list follow the plan's order.
+  const plan = typeof planParam === "string" ? planBySlug(planParam) : null
+  const inPlan = plan && planProblems(plan).includes(slug) ? plan : null
+  const bySlug = new Map(PROBLEM_SUMMARIES.map((p) => [p.slug, p]))
+  const order = inPlan ? planProblems(inPlan).map((s) => bySlug.get(s)!) : PROBLEM_SUMMARIES
+  const list = order.map((p) => ({ ...p, state: solved.has(p.slug) ? ("solved" as const) : tried.has(p.slug) ? ("tried" as const) : ("todo" as const) }))
   const name = user ? displayNameFor(user) : ""
 
   return (
@@ -61,6 +68,7 @@ export default async function ProblemPage({ params }: Props) {
       stats={allStats[slug] ?? null}
       initialCoach={coach}
       coachAllowance={allowance}
+      plan={inPlan ? { slug: inPlan.slug, title: inPlan.title, href: links.code(`/plans/${inPlan.slug}`) } : null}
     />
   )
 }

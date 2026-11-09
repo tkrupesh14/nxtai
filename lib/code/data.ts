@@ -105,3 +105,18 @@ export async function getCoachAllowance(): Promise<CoachAllowance | null> {
   if (error || !data || !data.daily) return null
   return { usedToday: data.used_today, daily: data.daily, credits: data.credits }
 }
+
+export type PlanState = { follows: string[]; finished: Record<string, string> }
+
+/** Plans the learner follows (newest first) and the ones they've finished, with when (v2 Phase 4). */
+export async function getPlanState(): Promise<PlanState> {
+  const supabase = await createClient()
+  const [follows, done] = await Promise.all([
+    supabase.from("coding_plan_follows").select("plan").order("created_at", { ascending: false }),
+    supabase.from("xp_events").select("key, created_at").like("key", "plan:%"),
+  ])
+  if (follows.error) console.error("plan follows failed:", follows.error.message)
+  const finished: Record<string, string> = {}
+  for (const r of done.data ?? []) finished[r.key.slice(5)] = r.created_at
+  return { follows: (follows.data ?? []).map((r) => r.plan as string), finished }
+}

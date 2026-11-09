@@ -74,6 +74,7 @@ export function Workspace({
   stats,
   initialCoach,
   coachAllowance,
+  plan,
 }: {
   problem: WorkspaceProblem
   statement: React.ReactNode
@@ -90,6 +91,8 @@ export function Workspace({
   stats: Stats | null
   initialCoach: CoachTurn[]
   coachAllowance: CoachAllowance | null
+  /** Set when the problem was opened from a study plan: the arrows and list then follow the plan. */
+  plan: { slug: string; title: string; href: string } | null
 }) {
   const signedIn = Boolean(user)
   const samples = problem.tests.slice(0, problem.samples)
@@ -306,7 +309,10 @@ export function Workspace({
         list={list}
         current={problem.slug}
         hrefPrefix={hrefPrefix}
+        hrefSuffix={plan ? `?plan=${plan.slug}` : ""}
         problemsHref={problemsHref}
+        listTitle={plan?.title}
+        listHref={plan?.href}
         loginHref={loginHref}
         accountHref={accountHref}
         user={user}

@@ -1,10 +1,13 @@
 import type { Metadata } from "next"
 
+import Link from "next/link"
+
 import { ActivityCard, DailyCard, SolvedCard } from "@/components/code/progress-panel"
 import { ProblemTable, type TableFilters } from "@/components/code/problem-table"
 import { getDailyProblem, getMyProgress, getProblemStats, type MyProgress } from "@/lib/code/data"
 import { codeLinks } from "@/lib/code/host"
 import { TAGS } from "@/lib/code/meta"
+import { PLANS, planProblems } from "@/lib/code/plans"
 import { PROBLEM_SUMMARIES, TOPICS } from "@/lib/code/problems"
 import { getMyXp, getStreakExtras } from "@/lib/learning/data"
 import { learningStats } from "@/lib/learning/stats"
@@ -69,6 +72,24 @@ export default async function ProblemsPage({ searchParams }: Props) {
         {daily && <DailyCard problem={daily} href={links.code(`/p/${daily.slug}`)} solved={progress.solved.includes(daily.slug)} />}
         <SolvedCard problems={PROBLEM_SUMMARIES} solved={progress.solved} signedIn={Boolean(user)} loginHref={login} />
         {user && streak && <ActivityCard activity={progress.activity} streak={{ days: streak.streak, today: streak.activeToday }} level={level} />}
+        <nav aria-label="Study plans" className="rounded-xl border bg-card p-5">
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-semibold">Study plans</h2>
+            <Link href={links.code("/plans")} className="text-xs font-medium text-primary hover:underline">
+              All
+            </Link>
+          </div>
+          <ul className="mt-3 space-y-2 text-sm">
+            {PLANS.map((p) => (
+              <li key={p.slug}>
+                <Link href={links.code(`/plans/${p.slug}`)} className="flex items-baseline justify-between gap-2 hover:text-primary">
+                  <span className="truncate">{p.title}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{planProblems(p).length}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </aside>
     </main>
   )

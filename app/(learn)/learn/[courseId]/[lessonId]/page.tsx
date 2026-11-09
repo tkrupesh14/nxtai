@@ -8,6 +8,9 @@ import { LessonTools } from "@/components/learn/course-tools"
 import { LessonGenerator } from "@/components/learn/lesson-generator"
 import { ProfessorCard } from "@/components/learn/professor"
 import { Quiz } from "@/components/learn/quiz"
+import { DifficultyText } from "@/components/code/difficulty-badge"
+import { codeLinks } from "@/lib/code/host"
+import { practiceFor, PRACTICE_SUBCATEGORIES } from "@/lib/code/practice"
 import { getCategory } from "@/lib/learning/catalog"
 import { courseProfessor } from "@/lib/teach/teacher"
 import { getAccountSummary, getCourse, getProfessorChat, isUnlocked, isUuid } from "@/lib/learning/data"
@@ -53,6 +56,12 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   const sections = blocks?.length ? toSections(blocks) : []
   const hasContent = sections.length > 0 || Boolean(body?.content_md)
   const [chat, account] = hasContent ? await Promise.all([getProfessorChat(lessonId), getAccountSummary()]) : [null, null]
+  // Coding lessons end with matching problems on Krpex Code (v2 Phase 4).
+  const practice =
+    hasContent && data.course.category === "coding" && PRACTICE_SUBCATEGORIES.includes(data.course.subcategory ?? "")
+      ? practiceFor([lesson.title, lesson.objective, ...takeaways].join("\n"), data.course.level)
+      : null
+  const code = practice?.problems.length ? await codeLinks() : null
 
   const endOfLesson = (
     <>
@@ -64,6 +73,29 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
               <li key={i}>{t}</li>
             ))}
           </ul>
+        </aside>
+      )}
+      {practice && code && practice.problems.length > 0 && (
+        <aside className="mt-6 rounded-xl border bg-card p-6" aria-label="Practise on Krpex Code">
+          <h2 className="font-semibold">Practise this on Krpex Code</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Short problems that use today&apos;s idea. They run in your browser and earn XP for your streak.</p>
+          <ul className="mt-4 divide-y rounded-lg border">
+            {practice.problems.map((p) => (
+              <li key={p.slug}>
+                <a href={code.code(`/p/${p.slug}`)} className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted/50">
+                  <span className="min-w-0 flex-1 truncate font-medium">
+                    {p.number}. {p.title}
+                  </span>
+                  <DifficultyText difficulty={p.difficulty} className="text-xs" />
+                </a>
+              </li>
+            ))}
+          </ul>
+          {practice.tag && (
+            <a href={`${code.code("/problems")}?tag=${encodeURIComponent(practice.tag)}`} className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+              More {practice.tag.toLowerCase()} problems →
+            </a>
+          )}
         </aside>
       )}
       {questions.length > 0 && (

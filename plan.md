@@ -150,7 +150,7 @@ Same repo and same Next.js app; `proxy.ts` sends requests for `code.krpex.in` to
 
 **Phase 3 — AI coach (was D).** **Built 2026-11-09** (migration 031; the code isn't stored, only a fingerprint for free repeats). Hints in 3 steps (never the full solution), "explain this error", review after solving (correctness, complexity, style, a cleaner version). Free 3 a day, Pro 30, then 1 credit each; same quota tables as Ask the professor. Code goes to the AI provider only when the learner asks (privacy page).
 
-**Phase 4 — Study plans and courses (was E).** Plans as ordered problem lists with a progress bar and a finish badge ("Python basics in 30 days", "Placement prep: arrays and strings", "Krpex 150"). Coding lessons end with linked practice problems; module tests can include a coding question. Tags link to the matching lesson.
+**Phase 4 — Study plans and courses (was E).** **Built 2026-11-09** (migration 032). Not yet: coding questions in module tests, and tags linking to a lesson (lessons are generated per learner, so there's no fixed lesson to link). Plans as ordered problem lists with a progress bar and a finish badge ("Python basics in 30 days", "Placement prep: arrays and strings", "Krpex 150"). Coding lessons end with linked practice problems; module tests can include a coding question. Tags link to the matching lesson.
 
 **Phase 5 — Community (shared with 5.6 course communities).** Built once, generic, so courses reuse it:
 - **Identity:** `public_profiles` (user id, unique `handle`, display name, avatar, bio, visibility; emails never shown). `/u/<handle>` shows level, XP, streak, solved counts by difficulty, the activity calendar, badges, recent solves (opt-in).

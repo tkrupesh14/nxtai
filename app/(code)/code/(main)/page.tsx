@@ -1,7 +1,12 @@
 import Link from "next/link"
 
+import { PlanProgress } from "@/components/code/plan-progress"
 import { Button } from "@/components/site/ui/button"
+import { getMyProgress, getPlanState } from "@/lib/code/data"
 import { codeLinks } from "@/lib/code/host"
+import { nextInPlan, PLANS, planBySlug, planProblems } from "@/lib/code/plans"
+import { PROBLEM_SUMMARIES } from "@/lib/code/problems"
+import { getSignedInUser } from "@/lib/supabase/profile"
 
 const NOW = [
   { title: "150 practice problems", body: "From first loops to dynamic programming, stacks and grids, with filters, tags, an acceptance rate for each and a problem of the day worth double XP." },
@@ -12,15 +17,46 @@ const NOW = [
   { title: "One streak with your courses", body: "Solves count as study days and earn XP towards the same levels and rewards as your Krpex courses." },
 ]
 const NEXT = [
-  { title: "Study plans and more problems", body: "Guided plans for school and placement prep, and the bank growing to 300 problems." },
+  { title: "More problems and languages", body: "The bank growing to 300 problems, SQL practice, and a web playground for HTML, CSS and JavaScript." },
   { title: "Contests", body: "Weekly contests with a leaderboard and leagues, checked on our servers so rankings are fair." },
   { title: "Community", body: "Profiles, discussions and shared solutions for each problem — opened once you've solved it, so nothing is spoiled." },
 ]
 
+const titles = new Map(PROBLEM_SUMMARIES.map((p) => [p.slug, `${p.number}. ${p.title}`]))
+
 export default async function CodeHome() {
-  const links = await codeLinks()
+  const [links, user] = await Promise.all([codeLinks(), getSignedInUser()])
+  const [progress, state] = user ? await Promise.all([getMyProgress(), getPlanState()]) : [null, null]
+  const solved = new Set(progress?.solved ?? [])
+  const following = (state?.follows ?? []).map(planBySlug).filter((p) => p !== null)
   return (
     <main>
+      {following.length > 0 && (
+        <section className="mx-auto max-w-6xl px-4 pt-8" aria-label="Your study plans">
+          <h2 className="text-lg font-semibold tracking-tight">Continue your plans</h2>
+          <ul className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {following.map((plan) => {
+              const slugs = planProblems(plan)
+              const next = nextInPlan(plan, solved)
+              return (
+                <li key={plan.slug} className="rounded-xl border bg-card p-4">
+                  <Link href={links.code(`/plans/${plan.slug}`)} className="font-semibold hover:text-primary">
+                    {plan.title}
+                  </Link>
+                  <PlanProgress done={slugs.filter((s) => solved.has(s)).length} total={slugs.length} className="mt-3" />
+                  {next ? (
+                    <Link href={`${links.code(`/p/${next}`)}?plan=${plan.slug}`} className="mt-3 block truncate text-sm text-primary hover:underline">
+                      Next: {titles.get(next)} →
+                    </Link>
+                  ) : (
+                    <p className="mt-3 text-sm font-medium text-teal-700 dark:text-teal-400">Completed ✓</p>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
       <section className="mx-auto max-w-5xl px-4 pb-12 pt-14 text-center md:pt-20">
         <p className="text-sm font-medium text-primary">Krpex Code</p>
         <h1 className="mt-3 text-balance text-4xl font-semibold tracking-tight md:text-6xl">Practise coding right in your browser</h1>
@@ -63,6 +99,27 @@ export default async function CodeHome() {
             <li key={f.title} className="rounded-xl border bg-card p-5">
               <h3 className="font-semibold">{f.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{f.body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-8">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <h2 className="text-2xl font-semibold tracking-tight">Study plans</h2>
+          <Link href={links.code("/plans")} className="text-sm font-medium text-primary hover:underline">
+            All plans →
+          </Link>
+        </div>
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {PLANS.map((plan) => (
+            <li key={plan.slug}>
+              <Link href={links.code(`/plans/${plan.slug}`)} className="block h-full rounded-xl border bg-card p-4 transition-colors hover:border-primary/50">
+                <p className="text-xs text-muted-foreground">
+                  {plan.level} · {planProblems(plan).length} problems
+                </p>
+                <h3 className="mt-1 font-semibold">{plan.title}</h3>
+              </Link>
             </li>
           ))}
         </ul>
