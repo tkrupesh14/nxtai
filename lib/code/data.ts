@@ -1,6 +1,7 @@
 import "server-only"
 
 import type { CodeLanguage } from "@/lib/code/harness"
+import type { CoachAllowance, CoachTurn } from "@/lib/code/coach"
 import { createClient } from "@/lib/supabase/server"
 
 // Krpex Code reads (migrations 028–029). Each returns an empty answer if a migration isn't applied yet.
@@ -81,4 +82,26 @@ export async function hasRevealed(slug: string): Promise<boolean> {
   const supabase = await createClient()
   const { data } = await supabase.from("coding_reveals").select("problem").eq("problem", slug).maybeSingle()
   return Boolean(data)
+}
+
+/** The learner's answered AI coach requests for a problem, oldest first (v2 Phase 3). */
+export async function getCoachHistory(slug: string, limit = 20): Promise<CoachTurn[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("coding_coach_requests")
+    .select("id, kind, step, reply, created_at")
+    .eq("problem", slug)
+    .eq("status", "answered")
+    .order("created_at", { ascending: false })
+    .limit(limit)
+  if (error) console.error("coach history failed:", error.message)
+  return ((data ?? []) as CoachTurn[]).reverse()
+}
+
+/** Today's free coach answers used, the daily allowance and credits (null when signed out or on error). */
+export async function getCoachAllowance(): Promise<CoachAllowance | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("my_coach_allowance").maybeSingle<{ used_today: number; daily: number; credits: number }>()
+  if (error || !data || !data.daily) return null
+  return { usedToday: data.used_today, daily: data.daily, credits: data.credits }
 }

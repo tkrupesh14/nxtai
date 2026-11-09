@@ -148,7 +148,7 @@ Same repo and same Next.js app; `proxy.ts` sends requests for `code.krpex.in` to
 
 **Phase 2 — More problems (no new code).** 70 → 150 ("Krpex 150", the core path; **150 built 2026-11-09**, migration 030) → 300. Drafted with AI help, every reference solution run by the unit test in both languages, reviewed before the migration that adds their rows. Later problems get a short editorial (idea, steps, time and space cost).
 
-**Phase 3 — AI coach (was D).** Hints in 3 steps (never the full solution), "explain this error", review after solving (correctness, complexity, style, a cleaner version). Free 3 a day, Pro 30, then 1 credit each; same quota tables as Ask the professor. Code goes to the AI provider only when the learner asks (privacy page).
+**Phase 3 — AI coach (was D).** **Built 2026-11-09** (migration 031; the code isn't stored, only a fingerprint for free repeats). Hints in 3 steps (never the full solution), "explain this error", review after solving (correctness, complexity, style, a cleaner version). Free 3 a day, Pro 30, then 1 credit each; same quota tables as Ask the professor. Code goes to the AI provider only when the learner asks (privacy page).
 
 **Phase 4 — Study plans and courses (was E).** Plans as ordered problem lists with a progress bar and a finish badge ("Python basics in 30 days", "Placement prep: arrays and strings", "Krpex 150"). Coding lessons end with linked practice problems; module tests can include a coding question. Tags link to the matching lesson.
 

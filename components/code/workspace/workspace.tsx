@@ -6,10 +6,12 @@ import { expectedAction, submitSolutionAction } from "@/app/(code)/code/p/[slug]
 import { CodeEditor } from "@/components/code/editor"
 import { IconCode, IconDoc, IconFlask, IconReset } from "@/components/code/icons"
 import { useRunner } from "@/components/code/use-runner"
-import { buildProgram, parseResults, starterCode, type CodeLanguage, type HarnessCase } from "@/lib/code/harness"
+import type { CoachAllowance, CoachTurn, FailingCase } from "@/lib/code/coach"
+import { buildProgram, parseResults, starterCode, type CaseResult, type CodeLanguage, type HarnessCase } from "@/lib/code/harness"
 import { knownExpected, parseCases, summarise, toDraft, type CaseDraft } from "@/lib/code/verdict"
 import { cn } from "@/lib/utils"
 
+import { CoachPanel, type CoachFailure } from "./coach-panel"
 import { ConsolePanel, type ConsoleTab } from "./console-panel"
 import { LeftPanel, type LeftTab } from "./left-panel"
 import { TopBar } from "./top-bar"
@@ -30,6 +32,24 @@ const TIME_LIMIT_MS = 10_000
 const UNKNOWN = { __krpex_unknown__: true }
 
 type MobileTab = "problem" | "code" | "tests"
+
+const show = (v: unknown) => {
+  try {
+    return JSON.stringify(v) ?? String(v)
+  } catch {
+    return String(v)
+  }
+}
+/** A failing test as the AI coach sees it: the input by parameter name, the expected answer and what came back. */
+function toFailing(params: string[], args: unknown[], expected: unknown, result: CaseResult | null, errorText: string): FailingCase {
+  return {
+    input: params.map((p, i) => `${p} = ${show(args[i])}`).join(", "),
+    expected: expected === undefined ? undefined : show(expected),
+    got: result && !result.error && "got" in result ? show(result.got) : undefined,
+    error: result?.error ?? (errorText || undefined),
+    printed: result?.out || undefined,
+  }
+}
 
 function store(key: string, value: string) {
   try {
@@ -52,6 +72,8 @@ export function Workspace({
   initialRevealed,
   daily,
   stats,
+  initialCoach,
+  coachAllowance,
 }: {
   problem: WorkspaceProblem
   statement: React.ReactNode
@@ -66,6 +88,8 @@ export function Workspace({
   initialRevealed: boolean
   daily: boolean
   stats: Stats | null
+  initialCoach: CoachTurn[]
+  coachAllowance: CoachAllowance | null
 }) {
   const signedIn = Boolean(user)
   const samples = problem.tests.slice(0, problem.samples)
@@ -87,6 +111,9 @@ export function Workspace({
   const [solved, setSolved] = useState(initialSolved)
   const [revealed, setRevealed] = useState(initialRevealed)
   const [phase, setPhase] = useState<"idle" | "expected" | "run" | "submit">("idle")
+  const [coachTurns, setCoachTurns] = useState(initialCoach)
+  const [allowance, setAllowance] = useState(coachAllowance)
+  const [failure, setFailure] = useState<CoachFailure | null>(null)
   const [saving, startSaving] = useTransition()
   const runner = useRunner({ timeoutMs: TIME_LIMIT_MS })
   const outer = useSplit("krpex-code:split-x", 42, 25, 70, "x")
@@ -195,10 +222,17 @@ export function Workspace({
     const runs: CaseRun[] = parsed.cases.map((args, i) => ({ args, expected: expected[i], result: result.kind === "results" ? (result.results[i] ?? null) : null }))
     // Cases without an expected answer don't count towards the verdict.
     const counted = result.kind === "results" ? { kind: "results" as const, results: result.results.filter((_, i) => expected[i].known) } : result
-    setRunOutcome({ lang, cases: runs, summary: summarise(end.status, counted, counted.kind === "results" ? counted.results.length : cases.length), errorText: end.stderr.trim() })
+    const runSummary = summarise(end.status, counted, counted.kind === "results" ? counted.results.length : cases.length)
+    setRunOutcome({ lang, cases: runs, summary: runSummary, errorText: end.stderr.trim() })
+    // The first failing case (with a known expected answer), or the whole run's error, for the AI coach.
+    const bad = runs.find((r) => r.expected.known && r.result && !r.result.ok)
+    if (bad) setFailure({ lang, code: source, failing: toFailing(problem.params, bad.args, (bad.expected as { value: unknown }).value, bad.result, "") })
+    else if (runSummary.verdict === "error" || runSummary.verdict === "time_limit" || runSummary.verdict === "missing")
+      setFailure({ lang, code: source, failing: toFailing(problem.params, runs[0]?.args ?? [], undefined, null, end.stderr.trim() || (runSummary.verdict === "time_limit" ? "Time limit exceeded: the code ran for over 10 seconds." : "The function from the starting code is missing.")) })
+    else if (runSummary.verdict === "accepted") setFailure(null)
     setActiveCase((a) => Math.min(a, runs.length - 1))
     setPhase("idle")
-  }, [busy, code, lang, drafts, samples, problem.slug, problem.fn, problem.unordered, runner])
+  }, [busy, code, lang, drafts, samples, problem.slug, problem.fn, problem.params, problem.unordered, runner])
 
   const submit = useCallback(async () => {
     if (busy || saving) return
@@ -218,6 +252,10 @@ export function Workspace({
         : null
     const willSave = signedIn && result.kind === "results"
     setSubmitOutcome({ lang, summary, failing, errorText: end.stderr.trim(), save: willSave ? "saving" : null })
+    if (failing) setFailure({ lang, code: source, failing: toFailing(problem.params, failing.args, failing.expected.value, failing.result, "") })
+    else if (summary.verdict === "error" || summary.verdict === "time_limit" || summary.verdict === "missing")
+      setFailure({ lang, code: source, failing: toFailing(problem.params, problem.tests[0].args, problem.tests[0].expected, null, end.stderr.trim() || (summary.verdict === "time_limit" ? "Time limit exceeded: the code ran for over 10 seconds." : "The function from the starting code is missing.")) })
+    else if (summary.verdict === "accepted") setFailure(null)
     setPhase("idle")
     if (!willSave || result.kind !== "results") return
     startSaving(async () => {
@@ -319,6 +357,21 @@ export function Workspace({
             submissions={submissions}
             submitOutcome={submitOutcome}
             onLoadCode={loadCode}
+            coach={
+              <CoachPanel
+                slug={problem.slug}
+                lang={lang}
+                code={code[lang]}
+                failure={failure}
+                solved={solved}
+                signedIn={signedIn}
+                loginHref={loginHref}
+                turns={coachTurns}
+                setTurns={setCoachTurns}
+                allowance={allowance}
+                setAllowance={setAllowance}
+              />
+            }
           />
         </section>
 

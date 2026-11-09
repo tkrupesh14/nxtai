@@ -4,7 +4,8 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
 import { Workspace } from "@/components/code/workspace/workspace"
-import { getDailyProblem, getMyProgress, getMySubmissions, getProblemStats, hasRevealed, type MySubmission } from "@/lib/code/data"
+import type { CoachAllowance, CoachTurn } from "@/lib/code/coach"
+import { getCoachAllowance, getCoachHistory, getDailyProblem, getMyProgress, getMySubmissions, getProblemStats, hasRevealed, type MySubmission } from "@/lib/code/data"
 import { codeLinks } from "@/lib/code/host"
 import { PROBLEM_SUMMARIES, problemBySlug, publicProblem } from "@/lib/code/problems"
 import { displayNameFor, getSignedInUser, initialsFor } from "@/lib/supabase/profile"
@@ -26,8 +27,12 @@ export default async function ProblemPage({ params }: Props) {
   let solvedList: string[] = []
   let triedList: string[] = []
   let revealed = false
+  let coach: CoachTurn[] = []
+  let allowance: CoachAllowance | null = null
   if (user) {
-    const [subs, progress, rev] = await Promise.all([getMySubmissions(slug), getMyProgress(), hasRevealed(slug)])
+    const [subs, progress, rev, history, quota] = await Promise.all([getMySubmissions(slug), getMyProgress(), hasRevealed(slug), getCoachHistory(slug), getCoachAllowance()])
+    coach = history
+    allowance = quota
     submissions = subs
     solvedList = progress.solved
     triedList = progress.tried
@@ -54,6 +59,8 @@ export default async function ProblemPage({ params }: Props) {
       initialRevealed={revealed}
       daily={daily === slug}
       stats={allStats[slug] ?? null}
+      initialCoach={coach}
+      coachAllowance={allowance}
     />
   )
 }

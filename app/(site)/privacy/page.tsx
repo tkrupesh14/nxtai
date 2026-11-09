@@ -42,6 +42,12 @@ export default function PrivacyPage() {
             title, your question, the AI&apos;s answer and your note, never your name or email, and we keep their reply.
           </li>
           <li>
+            <strong>Coding practice (Krpex Code):</strong> the code you submit with its results, and the AI coach&apos;s
+            answers. Your code runs in your own browser. It goes to our AI provider only when you ask the AI coach for
+            help, and we keep the coach&apos;s answer and a fingerprint of the code (to spot repeat questions), not the
+            code you sent.
+          </li>
+          <li>
             <strong>Notifications:</strong> short messages about your account (a professor&apos;s reply, a payment, a
             report we looked at), shown only to you and kept for 90 days. Ones you haven&apos;t seen in the app may also be
             emailed to you; you choose how often, or turn this off, in your settings or from any of these emails. If you
@@ -101,7 +107,8 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>OpenRouter and the AI model providers it routes to (such as OpenAI)</strong>: your learning profile,
-            course outline, questions and the relevant parts of any material you uploaded are sent to generate content. Don&apos;t include sensitive personal information
+            course outline, questions, the relevant parts of any material you uploaded, and the code you send to the AI
+            coach are sent to generate content. Don&apos;t include sensitive personal information
             (such as health or financial details) in your goals or questions.
           </li>
           <li>

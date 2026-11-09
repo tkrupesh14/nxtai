@@ -168,3 +168,9 @@ export const PASS_MARK = 60
 export const ASSESSMENT_PASS_MARK = 70
 export const ASSESSMENT_QUESTIONS = { module: 8, final: 20 } as const
 export type AssessmentKind = keyof typeof ASSESSMENT_QUESTIONS
+
+/** Krpex Code AI coach (lib/ai/llm.ts coachCode). */
+export const CoachReplySchema = z.object({
+  reply: z.string().describe("Markdown for the learner, following the mode's rules and word limit"),
+})
+export type CoachReply = z.infer<typeof CoachReplySchema>

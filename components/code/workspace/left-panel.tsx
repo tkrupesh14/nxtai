@@ -6,7 +6,7 @@ import { useState, useTransition } from "react"
 import { revealSolutionAction } from "@/app/(code)/code/p/[slug]/actions"
 import { DifficultyBadge } from "@/components/code/difficulty-badge"
 import { CodeEditor } from "@/components/code/editor"
-import { IconBulb, IconCircleCheck, IconDoc, IconFlask, IconHistory, IconKey, IconLock, IconTag } from "@/components/code/icons"
+import { IconBulb, IconCircleCheck, IconDoc, IconFlask, IconHistory, IconKey, IconLock, IconSparkle, IconTag } from "@/components/code/icons"
 import { acceptance } from "@/components/code/problem-table"
 import type { CodeLanguage } from "@/lib/code/harness"
 import type { Editorial } from "@/lib/code/problems"
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 import { CaseView } from "./case-view"
 import type { SavedSubmission, Stats, SubmitOutcome, WorkspaceProblem } from "./types"
 
-export type LeftTab = "description" | "solution" | "submissions" | "result"
+export type LeftTab = "description" | "coach" | "solution" | "submissions" | "result"
 
 const json = (v: unknown) => JSON.stringify(v).replace(/,(?=\S)/g, ", ").replace(/:(?=\S)/g, ": ")
 const LANG_LABEL: Record<CodeLanguage, string> = { python: "Python", javascript: "JavaScript" }
@@ -38,6 +38,7 @@ export function LeftPanel({
   submissions,
   submitOutcome,
   onLoadCode,
+  coach,
 }: {
   tab: LeftTab
   setTab: (t: LeftTab) => void
@@ -54,9 +55,12 @@ export function LeftPanel({
   submissions: SavedSubmission[]
   submitOutcome: SubmitOutcome | null
   onLoadCode: (lang: CodeLanguage, code: string) => void
+  /** The AI coach panel (built by the workspace, which owns the code and the last failing test). */
+  coach: React.ReactNode
 }) {
   const tabs: { id: LeftTab; label: string; icon: React.ReactNode }[] = [
     { id: "description", label: "Description", icon: <IconDoc width={15} height={15} /> },
+    { id: "coach", label: "Coach", icon: <IconSparkle width={15} height={15} /> },
     { id: "solution", label: "Solution", icon: <IconKey width={15} height={15} /> },
     { id: "submissions", label: "Submissions", icon: <IconHistory width={15} height={15} /> },
   ]
@@ -85,9 +89,10 @@ export function LeftPanel({
         {tab === "description" && (
           <Description problem={problem} statement={statement} stats={stats} solved={solved} revealed={revealed} daily={daily} signedIn={signedIn} problemsHref={problemsHref} />
         )}
+        {tab === "coach" && coach}
         {tab === "solution" && <Solution problem={problem} solved={solved} revealed={revealed} setRevealed={setRevealed} signedIn={signedIn} />}
         {tab === "submissions" && <Submissions submissions={submissions} signedIn={signedIn} loginHref={loginHref} onLoadCode={onLoadCode} />}
-        {tab === "result" && submitOutcome && <Result outcome={submitOutcome} problem={problem} signedIn={signedIn} loginHref={loginHref} onSolution={() => setTab("solution")} />}
+        {tab === "result" && submitOutcome && <Result outcome={submitOutcome} problem={problem} signedIn={signedIn} loginHref={loginHref} onSolution={() => setTab("solution")} onCoach={() => setTab("coach")} />}
       </div>
     </div>
   )
@@ -433,12 +438,14 @@ function Result({
   signedIn,
   loginHref,
   onSolution,
+  onCoach,
 }: {
   outcome: SubmitOutcome
   problem: WorkspaceProblem
   signedIn: boolean
   loginHref: string
   onSolution: () => void
+  onCoach: () => void
 }) {
   const { summary } = outcome
   const ok = summary.verdict === "accepted"
@@ -489,7 +496,11 @@ function Result({
       )}
       {!ok && (
         <p className="mt-6 text-xs text-muted-foreground">
-          Stuck? Try the hints on the Description tab, or{" "}
+          Stuck? Ask the{" "}
+          <button type="button" onClick={onCoach} className="font-medium text-primary hover:underline">
+            AI coach
+          </button>{" "}
+          to explain this test, try the hints on the Description tab, or{" "}
           <button type="button" onClick={onSolution} className="font-medium text-primary hover:underline">
             look at the solution
           </button>

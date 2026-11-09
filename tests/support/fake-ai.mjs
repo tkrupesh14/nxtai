@@ -119,6 +119,18 @@ function contentFor(name, prompt) {
       }
       return { verdict: "answer", graded_question: false, reply: `${hindi(prompt) ? "हिन्दी में: " : ""}Fake professor answer to: ${question}` }
     }
+    case "coach_reply": {
+      // Krpex Code AI coach. Code containing "GIVE-AWAY" makes the first answer paste the reference solution, like a
+      // careless model would; the app must ask again and never show it.
+      const mode = /<mode>(Hint \d of 3|Explain the failing test|They have solved it)/.exec(prompt)?.[1] ?? "unknown"
+      const code = /<learner_code[^>]*>([\s\S]*?)<\/learner_code>/.exec(prompt)?.[1] ?? ""
+      if (/GIVE-AWAY/.test(code) && !/gave too much of the solution away/.test(prompt)) {
+        const solution = /<reference_solution[^>]*>\n([\s\S]*?)\n<\/reference_solution>/.exec(prompt)?.[1] ?? ""
+        return { reply: `Here's the answer:\n\n\`\`\`\n${solution}\n\`\`\`` }
+      }
+      const failing = /<failing_test>\nInput: ([^\n]*)/.exec(prompt)?.[1]
+      return { reply: `Fake coach (${mode})${failing ? ` about input ${failing}` : ""}: think about what each step does.` }
+    }
     default:
       return null
   }

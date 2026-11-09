@@ -165,3 +165,22 @@ describe("courses from the learner's material", () => {
     expect(lesson.blocks[0].body_markdown).toContain("Taught from your material (S2 · notes.pdf · p. 4)")
   })
 })
+
+describe("Krpex Code AI coach", () => {
+  it("asks for the right mode and gets a reply the app can check", async () => {
+    const args = { title: "Two sum", statement: "Find two numbers.", difficulty: "medium", language: "python" as const, referenceSolution: "def two_sum(nums, target):\n    seen = {}\n    for i, x in enumerate(nums):\n        if target - x in seen:\n            return [seen[target - x], i]\n        seen[x] = i" }
+    const hint = await llm.coachCode({ ...args, mode: "hint2", code: "def two_sum(nums, target):\n    pass" })
+    expect(hint.reply.reply).toBe("Fake coach (Hint 2 of 3): think about what each step does.")
+    expect((received.at(-1) as { name: string }).name).toBe("coach_reply")
+
+    const err = await llm.coachCode({ ...args, mode: "error", code: "x", failing: { input: "nums = [2, 7], target = 9", expected: "[0, 1]", got: "null" } })
+    expect(err.reply.reply).toContain("Explain the failing test) about input nums = [2, 7], target = 9")
+
+    // The fake pastes the solution for "GIVE-AWAY" code until asked strictly; the action's guard relies on that retry.
+    const { revealsSolution } = await import("@/lib/code/coach")
+    const careless = await llm.coachCode({ ...args, mode: "hint1", code: "# GIVE-AWAY" })
+    expect(revealsSolution(careless.reply.reply, args.referenceSolution)).toBe(true)
+    const strict = await llm.coachCode({ ...args, mode: "hint1", code: "# GIVE-AWAY", strict: true })
+    expect(revealsSolution(strict.reply.reply, args.referenceSolution)).toBe(false)
+  })
+})

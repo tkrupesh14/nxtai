@@ -5,15 +5,15 @@ import { codeLinks } from "@/lib/code/host"
 
 const NOW = [
   { title: "150 practice problems", body: "From first loops to dynamic programming, stacks and grids, with filters, tags, an acceptance rate for each and a problem of the day worth double XP." },
-  { title: "A real workspace", body: "Problem and code side by side, panels you can resize, your own test cases with the expected answer, and what you printed for each test." },
-  { title: "Clear results", body: "Accepted, wrong answer, runtime error or time limit — with the failing test shown in full, even a hidden one." },
+  { title: "A real workspace", body: "Problem and code side by side, your own test cases with the expected answer, and clear results — the failing test shown in full, even a hidden one." },
   { title: "Hints, then the solution", body: "Hints in small steps that never cost XP. The official solution, with a short explanation of the idea, is there when you need it; the problem just stops giving XP." },
+  { title: "An AI coach", body: "Hints in three steps that never hand over the code, help with a failing test, and a review once you've solved it. 3 free a day." },
   { title: "Runs on your device", body: "Python 3.14 and modern JavaScript run in your own browser, so results come back instantly. Works on a phone too." },
   { title: "One streak with your courses", body: "Solves count as study days and earn XP towards the same levels and rewards as your Krpex courses." },
 ]
 const NEXT = [
-  { title: "AI coach", body: "Hints from your AI professor in small steps, \"explain this error\", and a code review once you've solved it." },
   { title: "Study plans and more problems", body: "Guided plans for school and placement prep, and the bank growing to 300 problems." },
+  { title: "Contests", body: "Weekly contests with a leaderboard and leagues, checked on our servers so rankings are fair." },
   { title: "Community", body: "Profiles, discussions and shared solutions for each problem — opened once you've solved it, so nothing is spoiled." },
 ]
 
