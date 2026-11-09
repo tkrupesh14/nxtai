@@ -43,6 +43,7 @@ describe("problem bank", () => {
       expect(p.solution.javascript, p.slug).toContain(`function ${fnName(p.fn, "javascript")}(`)
       expect(p.solution.python, p.slug).toContain(`def ${p.fn}(`)
       expect("solution" in publicProblem(p)).toBe(false)
+      expect("editorial" in publicProblem(p)).toBe(false)
     }
   })
 

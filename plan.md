@@ -146,7 +146,7 @@ Same repo and same Next.js app; `proxy.ts` sends requests for `code.krpex.in` to
 - Content: every problem gets tags and 1–2 written hints (unit test checks coverage).
 - DB (029): `coding_problems.tags`; `coding_submissions.runtime_ms`; `coding_problem_stats()` (submissions, accepted, solvers per problem; public, aggregate only); `coding_reveals` + `reveal_coding_solution()`; `submit_code` pays no XP after a reveal.
 
-**Phase 2 — More problems (no new code).** 70 → 150 ("Krpex 150", the core path) → 300. Drafted with AI help, every reference solution run by the unit test in both languages, reviewed before the migration that adds their rows. Later problems get a short editorial (idea, steps, time and space cost).
+**Phase 2 — More problems (no new code).** 70 → 150 ("Krpex 150", the core path; **150 built 2026-11-09**, migration 030) → 300. Drafted with AI help, every reference solution run by the unit test in both languages, reviewed before the migration that adds their rows. Later problems get a short editorial (idea, steps, time and space cost).
 
 **Phase 3 — AI coach (was D).** Hints in 3 steps (never the full solution), "explain this error", review after solving (correctness, complexity, style, a cleaner version). Free 3 a day, Pro 30, then 1 credit each; same quota tables as Ask the professor. Code goes to the AI provider only when the learner asks (privacy page).
 

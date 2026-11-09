@@ -9,6 +9,7 @@ import { CodeEditor } from "@/components/code/editor"
 import { IconBulb, IconCircleCheck, IconDoc, IconFlask, IconHistory, IconKey, IconLock, IconTag } from "@/components/code/icons"
 import { acceptance } from "@/components/code/problem-table"
 import type { CodeLanguage } from "@/lib/code/harness"
+import type { Editorial } from "@/lib/code/problems"
 import { XP_FOR } from "@/lib/code/xp"
 import { VERDICT_LABEL } from "@/lib/code/verdict"
 import { cn } from "@/lib/utils"
@@ -251,7 +252,7 @@ function Solution({
   setRevealed: (v: boolean) => void
   signedIn: boolean
 }) {
-  const [code, setCode] = useState<{ python: string; javascript: string } | null>(null)
+  const [code, setCode] = useState<{ python: string; javascript: string; editorial: Editorial | null } | null>(null)
   const [lang, setLang] = useState<CodeLanguage>("python")
   const [failed, setFailed] = useState(false)
   const [pending, start] = useTransition()
@@ -263,7 +264,7 @@ function Solution({
       const r = await revealSolutionAction(problem.slug)
       if ("error" in r) return setFailed(true)
       setCode(r)
-      setRevealed(true)
+      if (signedIn) setRevealed(true) // signed out, nothing pays XP anyway
     })
   }
 
@@ -312,6 +313,17 @@ function Solution({
         ))}
         {!solved && revealed && <span className="ml-auto text-xs text-muted-foreground">This problem no longer gives XP.</span>}
       </div>
+      {code.editorial && (
+        <div className="space-y-2 border-b px-4 py-3 text-sm">
+          <p>
+            <span className="font-semibold">Idea. </span>
+            {code.editorial.idea}
+          </p>
+          <p className="text-muted-foreground">
+            Time: <span className="font-mono text-[13px] text-foreground">{code.editorial.time}</span> · Space: <span className="font-mono text-[13px] text-foreground">{code.editorial.space}</span>
+          </p>
+        </div>
+      )}
       <div className="min-h-[12rem] flex-1">
         <CodeEditor value={code[lang]} language={lang} readOnly label={`Official ${LANG_LABEL[lang]} solution`} />
       </div>

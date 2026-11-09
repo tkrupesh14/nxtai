@@ -3,7 +3,7 @@
 import { headers } from "next/headers"
 
 import type { CodeLanguage } from "@/lib/code/harness"
-import { problemBySlug } from "@/lib/code/problems"
+import { problemBySlug, type Editorial } from "@/lib/code/problems"
 import { allowCheck, expectedFor, validCases, type Expected } from "@/lib/code/reference"
 import { createClient } from "@/lib/supabase/server"
 
@@ -32,7 +32,7 @@ export async function submitSolutionAction(slug: string, language: CodeLanguage,
   return { id: r.id, solved: r.solved, xp: Number(r.xp) || 0, firstTry: r.first_try, daily: r.daily, revealed: Boolean(r.revealed) }
 }
 
-export type RevealResult = { python: string; javascript: string } | { error: "failed" }
+export type RevealResult = { python: string; javascript: string; editorial: Editorial | null } | { error: "failed" }
 
 /** The official solution. For a signed-in learner who hasn't solved it yet, the problem then pays no XP. */
 export async function revealSolutionAction(slug: string): Promise<RevealResult> {
@@ -44,7 +44,7 @@ export async function revealSolutionAction(slug: string): Promise<RevealResult> 
     const { error } = await supabase.rpc("reveal_coding_solution", { p_problem: slug })
     if (error) return { error: "failed" }
   }
-  return problem.solution
+  return { ...problem.solution, editorial: problem.editorial ?? null }
 }
 
 export type ExpectedResult = { expected: Expected[] } | { error: "bad_input" | "too_slow" | "rate_limited" }

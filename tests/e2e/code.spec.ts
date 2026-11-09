@@ -49,7 +49,7 @@ test("the problem set filters, and a problem runs custom cases, then submits", a
   await page.goto(`${base}/problems`)
   await expect(page.getByRole("heading", { name: "Problems", exact: true })).toBeVisible()
   await page.getByRole("searchbox", { name: "Search problems" }).fill("two sum")
-  await expect(page.getByText("1 of 70 problems")).toBeVisible()
+  await expect(page.getByText("1 of 150 problems")).toBeVisible()
   await page.getByRole("link", { name: /^\d+\. Two sum$/ }).click()
   await expect(page.getByRole("heading", { name: /^\d+\. Two sum$/ })).toBeVisible()
 

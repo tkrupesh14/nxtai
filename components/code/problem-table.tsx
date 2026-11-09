@@ -100,7 +100,7 @@ export function ProblemTable({
   return (
     <div>
       {/* Topics as chips: the learning path, in order. */}
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" role="group" aria-label="Topics">
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" role="group" aria-label="Topics">
         <Chip active={!f.topic} onClick={() => update({ topic: "" })}>
           All topics
         </Chip>

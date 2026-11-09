@@ -6,6 +6,7 @@ import "server-only"
 // Solutions never leave the server: pages pass learners publicProblem(), without them.
 
 import { META, type Tag } from "@/lib/code/meta"
+import { MORE_PROBLEMS } from "@/lib/code/problems-more"
 
 export type Difficulty = "easy" | "medium" | "hard"
 export type TestCase = { args: unknown[]; expected: unknown }
@@ -26,9 +27,13 @@ export type Problem = {
   /** The answer is a list whose order doesn't matter. */
   unordered?: boolean
   solution: { python: string; javascript: string }
+  /** Shown with the official solution: the idea in a sentence or two, and the time and space cost. */
+  editorial?: Editorial
 }
 
-export const TOPICS = ["Basics", "Strings", "Lists", "Dictionaries", "Maths and loops", "Recursion", "Sorting and searching", "Problem solving"] as const
+export type Editorial = { idea: string; time: string; space: string }
+
+export const TOPICS = ["Basics", "Strings", "Lists", "Dictionaries", "Maths and loops", "Recursion", "Sorting and searching", "Stacks and queues", "Grids", "Dynamic programming", "Problem solving"] as const
 export type Topic = (typeof TOPICS)[number]
 
 export { XP_FOR } from "@/lib/code/xp"
@@ -762,18 +767,22 @@ export const PROBLEMS: Problem[] = [
       javascript: "function trappedWater(heights) {\n  let total = 0\n  heights.forEach((h, i) => {\n    total += Math.min(Math.max(...heights.slice(0, i + 1)), Math.max(...heights.slice(i))) - h\n  })\n  return total\n}",
     },
   },
+  // Problems 71–150 (v2 Phase 2).
+  ...MORE_PROBLEMS,
 ]
 
 /** A problem's number in the list (1-based, the bank's order; same as coding_problems.position). */
 export const problemNumber = (slug: string) => PROBLEMS.findIndex((p) => p.slug === slug) + 1
 
-export type PublicProblem = Omit<Problem, "solution"> & { number: number; tags: Tag[]; hints: string[] }
+export type PublicProblem = Omit<Problem, "solution" | "editorial"> & { number: number; tags: Tag[]; hints: string[] }
 export type ProblemSummary = Pick<PublicProblem, "slug" | "number" | "title" | "topic" | "difficulty" | "tags">
 
 /** What a learner's page needs: everything but the reference solutions. */
 export function publicProblem(p: Problem): PublicProblem {
-  const { solution: _hidden, ...rest } = p
+  // The editorial gives the approach away, so it travels with the solution.
+  const { solution: _hidden, editorial: _alsoHidden, ...rest } = p
   void _hidden
+  void _alsoHidden
   const meta = META[p.slug] ?? { tags: [], hints: [] }
   return { ...rest, number: problemNumber(p.slug), tags: meta.tags, hints: meta.hints }
 }
