@@ -45,7 +45,10 @@ export function CoachPanel({
   const step = nextHintStep(turns)
   const hadLastHint = turns.some((t) => t.kind === "hint" && t.step === HINT_STEPS)
 
-  useEffect(() => end.current?.scrollIntoView({ block: "end", behavior: "smooth" }), [turns.length, pending])
+  // A block body: newer browsers return a Promise from scrollIntoView, and React would call it as a cleanup.
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end", behavior: "smooth" })
+  }, [turns.length, pending])
 
   function ask(kind: CoachKind) {
     setMessage(null)
