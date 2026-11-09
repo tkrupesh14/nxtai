@@ -2,3 +2,21 @@
 .cm-editor {
   height: 100%;
 }
+
+/* Syntax colours for dark mode (see components/code/editor.tsx); light mode uses CodeMirror's defaults. */
+.dark {
+  --cm-404740: #9aa5b1; /* meta */
+  --cm-708: #c586c0; /* keywords */
+  --cm-219: #569cd6; /* True, None, null */
+  --cm-164: #b5cea8; /* numbers */
+  --cm-a11: #ce9178; /* strings */
+  --cm-e40: #d7ba7d; /* regexps, escapes */
+  --cm-00f: #9cdcfe; /* defined names */
+  --cm-30a: #9cdcfe; /* local names */
+  --cm-085: #4ec9b0; /* types */
+  --cm-167: #4ec9b0; /* classes */
+  --cm-256: #4fc1ff; /* built-ins */
+  --cm-00c: #9cdcfe; /* defined properties */
+  --cm-940: #6a9955; /* comments */
+  --cm-f00: #f44747; /* invalid */
+}

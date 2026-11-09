@@ -99,3 +99,47 @@ describe("coding practice", () => {
     expect(await t.query(`select code from public.coding_submissions`)).toEqual([{ code: "secret code" }])
   })
 })
+
+// Krpex Code v2 (migration 029): tags, runtimes, public stats and the solution rule.
+describe("coding practice v2", () => {
+  it("mirrors the tags", async () => {
+    const { META } = await import("@/lib/code/meta")
+    await t.asAnon()
+    const rows = await t.query<{ slug: string; tags: string[] }>(`select slug, tags from public.coding_problems where active order by position`)
+    expect(rows).toEqual(PROBLEMS.map((p) => ({ slug: p.slug, tags: META[p.slug].tags })))
+  })
+
+  it("opening the solution before solving means no XP for that problem (study day still counts)", async () => {
+    const [a, b] = await notDaily("easy", 2)
+    expect((await t.one<{ r: boolean }>(`select public.reveal_coding_solution($1) as r`, [a]))!.r).toBe(true)
+    expect((await t.one<{ r: boolean }>(`select public.reveal_coding_solution($1) as r`, [a]))!.r).toBe(false) // already open
+    expect(await submit(a, "all")).toMatchObject({ solved: true, xp: 5, revealed: true }) // only the study day
+    // Solved first, then opened: keeps its XP, and opening it again costs nothing.
+    expect(await submit(b, "all")).toMatchObject({ xp: 15, revealed: false })
+    expect((await t.one<{ r: boolean }>(`select public.reveal_coding_solution($1) as r`, [b]))!.r).toBe(false)
+    expect(await xpKeys()).toEqual(["day:D=5", `code:${b}=15`])
+    // Reveals are private, and can't be written directly.
+    await t.asUser(USER_B)
+    expect(await t.query(`select * from public.coding_reveals`)).toEqual([])
+    expect(await errorOf(t.query(`insert into public.coding_reveals (user_id, problem) values ($1, $2)`, [USER_B, a]))).toMatch(/permission denied/)
+    await t.asAnon()
+    expect(await errorOf(t.query(`select public.reveal_coding_solution($1)`, [a]))).toMatch(/permission denied/)
+  })
+
+  it("saves the runtime and shares only totals", async () => {
+    const [a] = await notDaily("easy")
+    const total = testsOf(a)
+    await t.query(`select public.submit_code($1, 'python', 'x', $2, $3, 42)`, [a, total, total])
+    await t.query(`select public.submit_code($1, 'python', 'x', 0, $2, 7)`, [a, total])
+    expect(await errorOf(t.query(`select public.submit_code($1, 'python', 'x', 0, $2, -1)`, [a, total]))).toMatch(/bad_result/)
+    expect((await t.query<{ runtime_ms: number }>(`select runtime_ms from public.coding_submissions order by id`)).map((r) => r.runtime_ms)).toEqual([42, 7])
+    await t.asUser(USER_B)
+    await t.query(`select public.submit_code($1, 'javascript', 'x', 1, $2)`, [a, total])
+    await t.asAnon()
+    const stats = await t.query<{ slug: string; submissions: number; accepted: number; solvers: number; attempters: number }>(
+      `select * from public.coding_problem_stats() where submissions > 0`,
+    )
+    expect(stats).toEqual([{ slug: a, submissions: 3, accepted: 1, solvers: 1, attempters: 2 }])
+    expect((await t.query(`select * from public.coding_problem_stats()`)).length).toBe(PROBLEMS.length)
+  })
+})

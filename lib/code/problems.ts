@@ -5,6 +5,8 @@ import "server-only"
 // migration 028 (coding_problems), which awards XP; tests/db/coding.test.ts checks the two agree.
 // Solutions never leave the server: pages pass learners publicProblem(), without them.
 
+import { META, type Tag } from "@/lib/code/meta"
+
 export type Difficulty = "easy" | "medium" | "hard"
 export type TestCase = { args: unknown[]; expected: unknown }
 
@@ -29,7 +31,7 @@ export type Problem = {
 export const TOPICS = ["Basics", "Strings", "Lists", "Dictionaries", "Maths and loops", "Recursion", "Sorting and searching", "Problem solving"] as const
 export type Topic = (typeof TOPICS)[number]
 
-export const XP_FOR: Record<Difficulty, number> = { easy: 10, medium: 20, hard: 40 }
+export { XP_FOR } from "@/lib/code/xp"
 
 const T = (expected: unknown, ...args: unknown[]): TestCase => ({ args, expected })
 
@@ -762,13 +764,28 @@ export const PROBLEMS: Problem[] = [
   },
 ]
 
-export type PublicProblem = Omit<Problem, "solution">
+/** A problem's number in the list (1-based, the bank's order; same as coding_problems.position). */
+export const problemNumber = (slug: string) => PROBLEMS.findIndex((p) => p.slug === slug) + 1
+
+export type PublicProblem = Omit<Problem, "solution"> & { number: number; tags: Tag[]; hints: string[] }
+export type ProblemSummary = Pick<PublicProblem, "slug" | "number" | "title" | "topic" | "difficulty" | "tags">
 
 /** What a learner's page needs: everything but the reference solutions. */
 export function publicProblem(p: Problem): PublicProblem {
   const { solution: _hidden, ...rest } = p
   void _hidden
-  return rest
+  const meta = META[p.slug] ?? { tags: [], hints: [] }
+  return { ...rest, number: problemNumber(p.slug), tags: meta.tags, hints: meta.hints }
 }
+
+/** The list every page shows (no statements or tests). */
+export const PROBLEM_SUMMARIES: ProblemSummary[] = PROBLEMS.map((p, i) => ({
+  slug: p.slug,
+  number: i + 1,
+  title: p.title,
+  topic: p.topic,
+  difficulty: p.difficulty,
+  tags: META[p.slug]?.tags ?? [],
+}))
 
 export const problemBySlug = (slug: string) => PROBLEMS.find((p) => p.slug === slug) ?? null

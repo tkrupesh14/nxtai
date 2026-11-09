@@ -4,13 +4,16 @@
 
 export type CodeLanguage = "python" | "javascript"
 export type HarnessCase = { args: unknown[]; expected: unknown }
-export type CaseResult = { ok: boolean; got?: unknown; error?: string }
+/** One test: passed?, what came back (or the error), what the code printed during it, and how long it took. */
+export type CaseResult = { ok: boolean; got?: unknown; error?: string; out?: string; ms?: number }
 export type HarnessResult =
   | { kind: "results"; results: CaseResult[] }
   | { kind: "missing"; name: string }
   | { kind: "none" } // the program didn't get as far as printing results (error, timeout, too much output)
 
 export const RESULT_MARK = "__krpex_results__:"
+/** Printed text kept per test case. */
+export const CASE_OUTPUT_LIMIT = 2000
 
 /** two_sum → twoSum */
 export const camel = (name: string) => name.replace(/_([a-z0-9])/g, (_, c: string) => c.toUpperCase())
@@ -44,23 +47,29 @@ def _kx_eq(a, b, top=False):
         return isinstance(a, dict) and set(a) == set(b) and all(_kx_eq(a[k], b[k]) for k in b)
     return a == b
 def _kx_run():
+    import io as _kx_io, contextlib as _kx_ctx, time as _kx_time
     fn = globals().get(${JSON.stringify(fn)})
     if not callable(fn):
         print(${JSON.stringify(RESULT_MARK)} + _kx_json.dumps({"missing": ${JSON.stringify(fn)}}))
         return
     out = []
     for c in _kx_json.loads(${json}):
+        buf = _kx_io.StringIO()
+        t0 = _kx_time.perf_counter()
         try:
-            got = fn(*c["args"])
+            with _kx_ctx.redirect_stdout(buf):
+                got = fn(*c["args"])
         except Exception as e:
-            out.append({"ok": False, "error": type(e).__name__ + ": " + str(e)})
+            out.append({"ok": False, "error": type(e).__name__ + ": " + str(e), "out": buf.getvalue()[:${CASE_OUTPUT_LIMIT}], "ms": round((_kx_time.perf_counter() - t0) * 1000, 2)})
             continue
+        ms = round((_kx_time.perf_counter() - t0) * 1000, 2)
+        printed = buf.getvalue()[:${CASE_OUTPUT_LIMIT}]
         try:
             got = _kx_json.loads(_kx_json.dumps(got))
         except (TypeError, ValueError):
-            out.append({"ok": False, "error": "returned a " + type(got).__name__ + ", which can't be checked"})
+            out.append({"ok": False, "error": "returned a " + type(got).__name__ + ", which can't be checked", "out": printed, "ms": ms})
             continue
-        out.append({"ok": _kx_eq(got, c["expected"], True), "got": got})
+        out.append({"ok": _kx_eq(got, c["expected"], True), "got": got, "out": printed, "ms": ms})
     print(${JSON.stringify(RESULT_MARK)} + _kx_json.dumps({"results": out}))
 _kx_run()
 `
@@ -86,21 +95,33 @@ _kx_run()
   const __kxFn = typeof ${name} === "function" ? ${name} : undefined
   if (!__kxFn) return console.log(${JSON.stringify(RESULT_MARK)} + JSON.stringify({ missing: ${JSON.stringify(name)} }))
   const __kxOut = []
+  // What the code prints during a test is kept with that test (the Test result tab shows it per case).
+  const __kxSaved = { log: console.log, info: console.info, warn: console.warn, error: console.error, table: console.table }
+  const __kxShow = (v) => { if (typeof v === "string") return v; try { return JSON.stringify(v) ?? String(v) } catch { return String(v) } }
+  let __kxBuf = ""
+  const __kxCap = (...a) => { if (__kxBuf.length < ${CASE_OUTPUT_LIMIT}) __kxBuf = (__kxBuf + a.map(__kxShow).join(" ") + "\\n").slice(0, ${CASE_OUTPUT_LIMIT}) }
+  const __kxNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now())
   for (const c of JSON.parse(${json})) {
     let got
+    __kxBuf = ""
+    Object.assign(console, { log: __kxCap, info: __kxCap, warn: __kxCap, error: __kxCap, table: __kxCap })
+    const t0 = __kxNow()
     try {
       got = await __kxFn(...c.args)
     } catch (e) {
-      __kxOut.push({ ok: false, error: (e && e.name ? e.name + ": " : "") + (e && e.message !== undefined ? e.message : String(e)) })
+      Object.assign(console, __kxSaved)
+      __kxOut.push({ ok: false, error: (e && e.name ? e.name + ": " : "") + (e && e.message !== undefined ? e.message : String(e)), out: __kxBuf, ms: Math.round((__kxNow() - t0) * 100) / 100 })
       continue
     }
+    Object.assign(console, __kxSaved)
+    const ms = Math.round((__kxNow() - t0) * 100) / 100
     try {
       got = got === undefined ? null : JSON.parse(JSON.stringify(got))
     } catch {
-      __kxOut.push({ ok: false, error: "returned something that can't be checked" })
+      __kxOut.push({ ok: false, error: "returned something that can't be checked", out: __kxBuf, ms })
       continue
     }
-    __kxOut.push({ ok: __kxEq(got, c.expected, true), got })
+    __kxOut.push({ ok: __kxEq(got, c.expected, true), got, out: __kxBuf, ms })
   }
   console.log(${JSON.stringify(RESULT_MARK)} + JSON.stringify({ results: __kxOut }))
 })()

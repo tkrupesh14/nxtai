@@ -7,7 +7,7 @@ import { RESULT_MARK } from "@/lib/code/harness"
 
 export type OutputLine = { kind: "out" | "err" | "info"; text: string }
 export type RunState = "idle" | "loading" | "running"
-export type RunEnd = { status: "done" | "timeout" | "stopped"; ok: boolean; stdout: string }
+export type RunEnd = { status: "done" | "timeout" | "stopped"; ok: boolean; stdout: string; stderr: string }
 
 // The test harness's results line (lib/code/harness.ts) is read by the page, not shown to the learner.
 const hideResults = (text: string) => (text.includes(RESULT_MARK) ? text.replace(new RegExp(`${RESULT_MARK}[^\\n]*\\n?`), "") : text)
@@ -23,6 +23,7 @@ export function useRunner({ timeoutMs = 5000 }: { timeoutMs?: number } = {}) {
   const runId = useRef(0)
   const finish = useRef<((end: RunEnd) => void) | null>(null)
   const stdout = useRef("")
+  const stderr = useRef("")
   const [state, setState] = useState<RunState>("idle")
   const [output, setOutput] = useState<OutputLine[]>([])
   const [ms, setMs] = useState<number | null>(null)
@@ -49,6 +50,7 @@ export function useRunner({ timeoutMs = 5000 }: { timeoutMs?: number } = {}) {
         setOutput((o) => o.filter((l) => l.kind !== "info"))
       } else if (m.type === "out" || m.type === "err") {
         if (m.type === "out") stdout.current += m.text ?? ""
+        else stderr.current += m.text ?? ""
         const text = m.type === "out" ? hideResults(m.text ?? "") : (m.text ?? "")
         if (text) setOutput((o) => [...o, { kind: m.type, text } as OutputLine])
       } else if (m.type === "done" || m.type === "timeout" || m.type === "stopped") {
@@ -56,7 +58,7 @@ export function useRunner({ timeoutMs = 5000 }: { timeoutMs?: number } = {}) {
         if (m.type === "stopped") setOutput((o) => [...o, { kind: "info", text: "\nStopped.\n" }])
         setMs(m.type === "done" ? (m.ms ?? null) : null)
         setState("idle")
-        finish.current?.({ status: m.type, ok: m.type === "done" && Boolean(m.ok), stdout: stdout.current })
+        finish.current?.({ status: m.type, ok: m.type === "done" && Boolean(m.ok), stdout: stdout.current, stderr: stderr.current })
         finish.current = null
       }
     }
@@ -82,8 +84,9 @@ export function useRunner({ timeoutMs = 5000 }: { timeoutMs?: number } = {}) {
       setMs(null)
       setState("loading")
       return new Promise<RunEnd>((resolve) => {
-        finish.current?.({ status: "stopped", ok: false, stdout: stdout.current })
+        finish.current?.({ status: "stopped", ok: false, stdout: stdout.current, stderr: stderr.current })
         stdout.current = ""
+        stderr.current = ""
         finish.current = resolve
         frame.current?.contentWindow?.postMessage({ type: "run", id: String(runId.current), lang, code, stdin, timeoutMs }, "*")
       })

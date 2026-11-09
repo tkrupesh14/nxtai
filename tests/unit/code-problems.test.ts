@@ -4,8 +4,9 @@
 import { spawnSync } from "node:child_process"
 import { describe, expect, it } from "vitest"
 
-import { buildProgram, fnName, parseResults, starterCode, type CodeLanguage, type HarnessResult } from "@/lib/code/harness"
-import { PROBLEMS, TOPICS, publicProblem, type Problem } from "@/lib/code/problems"
+import { RESULT_MARK, buildProgram, fnName, parseResults, starterCode, type CodeLanguage, type HarnessResult } from "@/lib/code/harness"
+import { META, TAGS } from "@/lib/code/meta"
+import { PROBLEMS, PROBLEM_SUMMARIES, TOPICS, problemNumber, publicProblem, type Problem } from "@/lib/code/problems"
 
 async function runJs(program: string) {
   let out = ""
@@ -93,5 +94,37 @@ describe("problem bank", () => {
     const subsets = PROBLEMS.find((x) => x.slug === "all-subsets")!
     const anyOrder = await run("javascript", subsets, "function subsets(nums) { const out = [[]]; for (const n of nums) for (const s of [...out]) out.push([...s, n]); return out.reverse() }")
     expect(anyOrder.kind === "results" && anyOrder.results.every((r) => r.ok)).toBe(true)
+  })
+
+  it("every problem has known tags and at least one hint, and a stable number", () => {
+    expect(Object.keys(META).sort()).toEqual(PROBLEMS.map((p) => p.slug).sort())
+    for (const p of PROBLEMS) {
+      const m = META[p.slug]
+      expect(m.tags.length, p.slug).toBeGreaterThan(0)
+      for (const t of m.tags) expect(TAGS, p.slug).toContain(t)
+      expect(m.hints.length, p.slug).toBeGreaterThan(0)
+      for (const h of m.hints) expect(h.length, p.slug).toBeLessThan(200)
+    }
+    expect(problemNumber("add-two-numbers")).toBe(1)
+    expect(publicProblem(PROBLEMS[1]).number).toBe(2)
+    expect(PROBLEM_SUMMARIES.map((s) => s.number)).toEqual(PROBLEMS.map((_, i) => i + 1))
+  })
+
+  it.each(["javascript", "python"] as const)("%s: keeps what each test printed, and its time", async (lang) => {
+    if (lang === "python" && !hasPython) return
+    const p = PROBLEMS.find((x) => x.slug === "add-two-numbers")!
+    const code =
+      lang === "python"
+        ? 'print("loaded")\ndef add(a, b):\n    print("adding", a, b)\n    return a + b'
+        : 'console.log("loaded")\nfunction add(a, b) {\n  console.log("adding", a, b)\n  return a + b\n}'
+    const program = buildProgram(lang, code, p.fn, p.tests.slice(0, 2))
+    const stdout = lang === "python" ? runPython(program) : await runJs(program)
+    expect(stdout.startsWith("loaded\n")).toBe(true)
+    expect(stdout.split(RESULT_MARK)[0]).toBe("loaded\n")
+    const r = parseResults(stdout)
+    expect(r.kind).toBe("results")
+    if (r.kind !== "results") return
+    expect(r.results.map((x) => x.out)).toEqual(["adding 2 3\n", "adding -4 4\n"])
+    for (const x of r.results) expect(typeof x.ms).toBe("number")
   })
 })

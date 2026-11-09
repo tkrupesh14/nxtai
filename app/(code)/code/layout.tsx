@@ -3,7 +3,6 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 
-import { CodeHeader } from "@/components/code/code-header"
 import { ErrorReporter } from "@/components/error-reporter"
 import { NavigationProgress } from "@/components/site/navigation-progress"
 import { CODE_ORIGIN } from "@/lib/code-host"
@@ -33,7 +32,6 @@ export default function CodeLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`min-h-screen bg-background font-sans text-foreground antialiased ${GeistSans.variable} ${GeistMono.variable}`}>
-        <CodeHeader />
         {children}
         <ErrorReporter />
         <NavigationProgress />

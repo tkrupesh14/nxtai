@@ -118,11 +118,49 @@ Same repo and same Next.js app; `proxy.ts` sends requests for `code.krpex.in` to
 
 **C. Problems, submissions, XP (migration 028).** Built 2026-11-08. 70 hand-written problems in `lib/code/problems.ts` (Basics, Strings, Lists, Dictionaries, Maths and loops, Recursion, Sorting and searching, Problem solving; 34 easy · 27 medium · 9 hard), each with tests and Python + JavaScript reference solutions; `tests/unit/code-problems.test.ts` runs every solution through the browser harness in both languages (Python via python3). The bank stays in the repo (reviewed in PRs, never sent to the browser with solutions); `coding_problems` mirrors slug, title, topic, difficulty and test count for XP, and a DB test checks they agree — new problems need a migration with their rows. `lib/code/harness.ts` wraps the learner's code with the tests and prints one results line; type-strict, numbers within 1e-6, optional any-order lists. Pages: `/problems` (by topic, solved/tried marks, problem of the day) and `/p/<slug>` (statement + examples, Run examples / Submit with hidden tests, last submissions; drafts kept in the browser). `submit_code()` saves the code (≤ 20 KB, 60 an hour, result checked against the test count) and pays XP once per problem: easy 10 · medium 20 · hard 40, ×2 for the problem of the day, +5 if the first submission passes, at most 150 coding XP a day; a solve also counts as a study day (streak). Problem of the day: `coding_daily_problem()` picks one per IST day the first time it's asked, not repeating within 30 days. Honesty: grading happens in the browser, so a determined learner could fake a pass; the limits and stored code keep the damage small, and leagues later only count reviewed or capped XP.
 
-**D. AI help (1 deploy).** Hints in 3 steps (never the full solution, same rule as B1), "explain this error", and a review after solving (correctness, complexity, style, a cleaner version). Free: 3 AI helps a day; Pro: 30; then 1 credit each. Needs OpenRouter credits. Privacy page: code is sent to the AI provider only when the learner asks for help.
+**v1 feedback (2026-11-09):** the first problem pages felt like a form, not a coding platform. Krpex Code v2 below replaces the old D–F notes.
 
-**E. With courses (later).** "Practice" problems at the end of coding lessons and module tests with a coding question; AI-written problems for a course, checked by running the reference solution in an admin's browser before they go live.
+### Krpex Code v2 — a full practice platform (planned 2026-11-09)
 
-**F. Later.** SQL practice (PGlite/SQLite in the browser), an HTML/CSS/JS playground with live preview, weekly contests and leagues (5.6), C/C++/Java through a hosted runner only if learners ask for it.
+**Aim:** as good as the big practice sites where learners expect it (a dense problem table, a split-screen workspace, test cases you can edit, clear verdicts), and better where Krpex can be:
+
+| Better than the usual practice site | How |
+|---|---|
+| No waiting, works offline-ish | Code runs in the learner's browser (Pyodide / JS worker); results in ~100 ms after the first load |
+| Works on a phone | Problem / Code / Result tabs, an extra-keys row, nothing wider than the screen |
+| Custom test cases show the right answer | Our own reference solution computes "Expected" on the server (our code only, never the learner's; small inputs, 1 s limit) |
+| Failing test shown | A wrong hidden test shows its input, your output and the expected output |
+| `print` per test case | Each case shows what your code printed during that case |
+| Honest solutions | Hints in steps; the official solution can be opened any time, but the problem then pays no XP |
+| Learning, not just grinding | Topic tags link to lessons; AI coach in steps (Phase 3); study plans that fit Indian placement and school timelines |
+| One account, one XP | Same sign-in, XP, streak, levels and rewards as krpex.in courses |
+| Indian languages | Statements and hints in Hindi with 8.3 |
+
+**Shape of the site (code.krpex.in):** `/` home (continue, today's problem, study plans) · `/problems` problem set · `/p/<slug>` workspace · `/plans`, `/plans/<slug>` study plans (Phase 4) · `/u/<handle>` public profile (Phase 5) · `/p/<slug>/discuss`, `/p/<slug>/solutions` (Phase 5) · `/contests` (Phase 6) · `/playground`.
+
+**Phase 1 — Problem set + workspace redesign (migration 029, 1–2 deploys).** Built first.
+- `/problems`: one dense table (status · # · title · tags on wide screens · acceptance · difficulty), search, filters (difficulty, status, tag) kept in the URL, sort, "Pick one" (random unsolved). Problem of the day pinned. Side column: solved ring (easy / medium / hard), activity calendar (last 26 weeks of submissions), streak.
+- `/p/<slug>`: full-screen workspace with its own top bar (problem list drawer, previous / next / random, Run, Submit, account). Resizable panes on desktop (drag, remembered); tabs on phones.
+  - Left: **Description** (number, title, difficulty, tags, acceptance and solvers, statement, examples, hints revealed one at a time) · **Solution** (official Python + JavaScript; opening it before solving stops XP for that problem, asked once) · **Submissions** (yours, open any to see or load its code) · **Result** (appears after Submit: Accepted / Wrong answer / Runtime error / Time limit, tests passed, runtime, XP, the first failing test in full).
+  - Right: editor (language, reset, font size, shortcuts Ctrl/⌘+' run · Ctrl/⌘+Enter submit) over a console: **Testcase** (cases as chips, every argument editable, add up to 8 own cases, reset) and **Test result** (verdict, runtime, per case: input, output, expected, printed text).
+- Content: every problem gets tags and 1–2 written hints (unit test checks coverage).
+- DB (029): `coding_problems.tags`; `coding_submissions.runtime_ms`; `coding_problem_stats()` (submissions, accepted, solvers per problem; public, aggregate only); `coding_reveals` + `reveal_coding_solution()`; `submit_code` pays no XP after a reveal.
+
+**Phase 2 — More problems (no new code).** 70 → 150 ("Krpex 150", the core path) → 300. Drafted with AI help, every reference solution run by the unit test in both languages, reviewed before the migration that adds their rows. Later problems get a short editorial (idea, steps, time and space cost).
+
+**Phase 3 — AI coach (was D).** Hints in 3 steps (never the full solution), "explain this error", review after solving (correctness, complexity, style, a cleaner version). Free 3 a day, Pro 30, then 1 credit each; same quota tables as Ask the professor. Code goes to the AI provider only when the learner asks (privacy page).
+
+**Phase 4 — Study plans and courses (was E).** Plans as ordered problem lists with a progress bar and a finish badge ("Python basics in 30 days", "Placement prep: arrays and strings", "Krpex 150"). Coding lessons end with linked practice problems; module tests can include a coding question. Tags link to the matching lesson.
+
+**Phase 5 — Community (shared with 5.6 course communities).** Built once, generic, so courses reuse it:
+- **Identity:** `public_profiles` (user id, unique `handle`, display name, avatar, bio, visibility; emails never shown). `/u/<handle>` shows level, XP, streak, solved counts by difficulty, the activity calendar, badges, recent solves (opt-in).
+- **Posts:** `posts` (id, `space` such as `code:p:two-sum` / `code:discuss` / `course:<subject>`, kind `discussion | solution | question`, author, title, markdown body, optional code + language, score, comment count, status `visible | hidden | removed`), `comments` (threaded by `parent_id`), `votes` (one per user per post or comment), `reports` (reason, status) and a moderation queue in `/admin`.
+- **Rules from the XP plan:** posting from level 2, links from level 4, rate limits in the database, level badges next to names. A problem's shared solutions and spoiler discussions open only after you solve it (or open the official solution).
+- **Notifications:** replies and votes through the existing notifications and push.
+
+**Phase 6 — Contests and leagues.** Weekly 90-minute contest (4 problems) and the opt-in weekly leagues from the XP plan. Browser grading can be faked, so contest submissions are re-checked on a separate small runner box (containers, no network, CPU and memory limits) before ranking; practice stays in the browser.
+
+**Phase 7 — More languages and playgrounds (was F).** SQL practice (SQLite in the browser), an HTML/CSS/JS playground with live preview, C/C++/Java on the Phase 6 runner if learners ask for it.
 
 ### Phase 6 — Payments (Razorpay)
 1. ✅ Plans, limits and credit ledger in the database (migration 007); account page shows plan, limits and credits.

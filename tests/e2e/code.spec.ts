@@ -32,35 +32,54 @@ test("the playground runs JavaScript and Python in the browser", async ({ page }
   expect(errors).toEqual([])
 })
 
-test("a problem checks examples, then all tests on submit", async ({ page }) => {
-  test.setTimeout(120_000)
+test("the problem set filters, and a problem runs custom cases, then submits", async ({ page, isMobile }) => {
+  test.setTimeout(150_000)
   const base = live ? "https://code.krpex.in" : "/code"
   const errors: string[] = []
   page.on("pageerror", (e) => errors.push(e.message))
   // A solution waiting as an unsaved draft in this browser (typing into the editor isn't what's tested here).
   await page.addInitScript(() => {
+    if (window !== window.top) return // the sandboxed runner frame has no storage
     localStorage.setItem("krpex-code:lang", "javascript")
     localStorage.setItem(
       "krpex-code:p:two-sum:javascript",
-      "function twoSum(nums, target) {\n  for (let i = 0; i < nums.length; i++)\n    for (let j = i + 1; j < nums.length; j++) if (nums[i] + nums[j] === target) return [i, j]\n}\n",
+      "function twoSum(nums, target) {\n  console.log('size', nums.length)\n  for (let i = 0; i < nums.length; i++)\n    for (let j = i + 1; j < nums.length; j++) if (nums[i] + nums[j] === target) return [i, j]\n}\n",
     )
   })
   await page.goto(`${base}/problems`)
-  await expect(page.getByRole("heading", { name: "Practice problems" })).toBeVisible()
-  await page.getByRole("link", { name: /^Two sum/ }).click()
-  await expect(page.getByRole("heading", { name: "Two sum" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Problems", exact: true })).toBeVisible()
+  await page.getByRole("searchbox", { name: "Search problems" }).fill("two sum")
+  await expect(page.getByText("1 of 70 problems")).toBeVisible()
+  await page.getByRole("link", { name: /^\d+\. Two sum$/ }).click()
+  await expect(page.getByRole("heading", { name: /^\d+\. Two sum$/ })).toBeVisible()
 
-  await page.getByRole("button", { name: /Run examples/ }).click()
-  await expect(page.getByText("2 of 2 examples passed")).toBeVisible({ timeout: 30_000 })
+  // Run the examples, plus one case of our own: its expected answer comes from the server.
+  const run = page.getByRole("button", { name: "Run", exact: true })
+  await run.click()
+  await expect(page.getByRole("heading", { name: "Accepted" })).toBeVisible({ timeout: 30_000 })
+  await page.getByRole("tab", { name: "Testcase" }).click()
+  await page.getByRole("button", { name: "Add a test case" }).click()
+  await page.getByRole("textbox", { name: "nums =" }).fill("[5, 1, 4]")
+  await page.getByRole("textbox", { name: "target =" }).fill("6")
+  await run.click()
+  // Result chips say whether each case passed (the Testcase tab's chips don't).
+  await page.getByRole("button", { name: "Case 3 (passed)" }).click({ timeout: 30_000 })
+  const console_ = page.getByRole("region", { name: "Test cases" })
+  await expect(console_.getByText("[0,1]")).toHaveCount(2) // output and expected
+  await expect(console_.getByText("size 3")).toBeVisible()
+
+  // Submit runs every test; signed out, nothing is saved.
   await page.getByRole("button", { name: "Submit" }).click()
-  await expect(page.getByText("5 of 5 tests passed")).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByText(/to save your solutions and earn XP/)).toBeVisible()
+  const problem = page.getByRole("region", { name: "Problem" })
+  await expect(problem.getByRole("heading", { name: "Accepted" })).toBeVisible({ timeout: 30_000 })
+  await expect(problem.getByText("5 / 5 tests passed")).toBeVisible()
+  await expect(problem.getByText(/to save your solutions and earn XP/)).toBeVisible()
 
-  // A wrong answer in Python shows what came back.
-  await page.getByRole("tab", { name: "Python" }).click()
-  await page.evaluate(() => localStorage.setItem("krpex-code:lang", "python"))
-  await page.getByRole("button", { name: /Run examples/ }).click()
-  await expect(page.getByText("0 of 2 examples passed")).toBeVisible({ timeout: 90_000 })
-  await expect(page.getByText("None").first()).toBeVisible()
+  // The Python starting code gives a wrong answer and shows what came back.
+  if (isMobile) await page.getByRole("tab", { name: "Code" }).click()
+  await page.getByRole("combobox", { name: "Language" }).selectOption("python")
+  await run.click()
+  await expect(page.getByRole("heading", { name: "Wrong answer" })).toBeVisible({ timeout: 90_000 })
+  await expect(console_.getByText("None").first()).toBeVisible()
   expect(errors).toEqual([])
 })

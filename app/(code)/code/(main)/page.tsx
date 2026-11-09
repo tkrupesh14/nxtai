@@ -4,15 +4,17 @@ import { Button } from "@/components/site/ui/button"
 import { codeLinks } from "@/lib/code/host"
 
 const NOW = [
-  { title: "Practice problems", body: "70 problems from first loops to sorting and searching, checked by tests as you go, with XP for every one you solve." },
-  { title: "Problem of the day", body: "One problem for everyone each day, worth double XP." },
-  { title: "Python and JavaScript", body: "Python 3.14 and modern JavaScript, with the editor you'd expect: colours, brackets, indentation." },
-  { title: "Runs on your device", body: "Your code runs in your own browser, so results come back instantly and nothing to install." },
-  { title: "Works on your phone", body: "An extra row of keys for brackets, colons and Tab makes coding on a phone practical." },
+  { title: "70 practice problems", body: "From first loops to dynamic programming, with filters, tags, an acceptance rate for each and a problem of the day worth double XP." },
+  { title: "A real workspace", body: "Problem and code side by side, panels you can resize, your own test cases with the expected answer, and what you printed for each test." },
+  { title: "Clear results", body: "Accepted, wrong answer, runtime error or time limit — with the failing test shown in full, even a hidden one." },
+  { title: "Hints, then the solution", body: "Hints in small steps that never cost XP. The official solution is there when you need it; the problem just stops giving XP." },
+  { title: "Runs on your device", body: "Python 3.14 and modern JavaScript run in your own browser, so results come back instantly. Works on a phone too." },
+  { title: "One streak with your courses", body: "Solves count as study days and earn XP towards the same levels and rewards as your Krpex courses." },
 ]
 const NEXT = [
-  { title: "Hints and code review", body: "Stuck? Hints in small steps from your AI professor, never the whole answer, and a review once you've solved it." },
-  { title: "Practice inside your courses", body: "Problems at the end of coding lessons, and coding questions in module tests." },
+  { title: "AI coach", body: "Hints from your AI professor in small steps, \"explain this error\", and a code review once you've solved it." },
+  { title: "Study plans and more problems", body: "Guided plans for school and placement prep, and the bank growing to 150, then 300 problems." },
+  { title: "Community", body: "Profiles, discussions and shared solutions for each problem — opened once you've solved it, so nothing is spoiled." },
 ]
 
 export default async function CodeHome() {
@@ -23,7 +25,7 @@ export default async function CodeHome() {
         <p className="text-sm font-medium text-primary">Krpex Code</p>
         <h1 className="mt-3 text-balance text-4xl font-semibold tracking-tight md:text-6xl">Practise coding right in your browser</h1>
         <p className="mx-auto mt-5 max-w-2xl text-pretty text-lg text-muted-foreground">
-          Solve practice problems in Python or JavaScript, see your tests pass right away and earn XP for your Krpex streak.
+          Solve problems in Python or JavaScript with a proper workspace, see your tests pass instantly and earn XP for your Krpex streak.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button asChild size="lg">
