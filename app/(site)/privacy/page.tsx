@@ -48,6 +48,13 @@ export default function PrivacyPage() {
             code you sent.
           </li>
           <li>
+            <strong>Public profile (optional):</strong> if you claim a handle, we store it with the display name and bio
+            you choose. Your profile is private unless you make it public. A public profile at code.krpex.in/u/your-handle
+            shows that name and bio, your level, XP, streak, how many coding problems you solved, your coding activity,
+            the study plans you finished and, only if you choose, the problems you solved recently. It never shows your
+            email or your code. You can make it private again at any time, and it is deleted with your account.
+          </li>
+          <li>
             <strong>Notifications:</strong> short messages about your account (a professor&apos;s reply, a payment, a
             report we looked at), shown only to you and kept for 90 days. Ones you haven&apos;t seen in the app may also be
             emailed to you; you choose how often, or turn this off, in your settings or from any of these emails. If you

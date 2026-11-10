@@ -9,13 +9,27 @@ import type { Difficulty, ProblemSummary } from "@/lib/code/problems"
 const RING: Record<Difficulty, string> = { easy: "stroke-teal-500", medium: "stroke-amber-500", hard: "stroke-rose-500" }
 const BAR: Record<Difficulty, string> = { easy: "bg-teal-500", medium: "bg-amber-500", hard: "bg-rose-500" }
 
-export function SolvedCard({ problems, solved, signedIn, loginHref }: { problems: ProblemSummary[]; solved: string[]; signedIn: boolean; loginHref: string }) {
-  const done = new Set(solved)
-  const by = (["easy", "medium", "hard"] as const).map((d) => ({
-    d,
-    total: problems.filter((p) => p.difficulty === d).length,
-    solved: problems.filter((p) => p.difficulty === d && done.has(p.slug)).length,
-  }))
+export function SolvedCard({
+  problems,
+  solved,
+  signedIn,
+  loginHref,
+}: {
+  problems: ProblemSummary[]
+  /** Solved slugs, or counts per difficulty (public profiles). */
+  solved: string[] | Record<Difficulty, number>
+  signedIn: boolean
+  loginHref: string
+}) {
+  const done = new Set(Array.isArray(solved) ? solved : [])
+  const by = (["easy", "medium", "hard"] as const).map((d) => {
+    const total = problems.filter((p) => p.difficulty === d).length
+    return {
+      d,
+      total,
+      solved: Array.isArray(solved) ? problems.filter((p) => p.difficulty === d && done.has(p.slug)).length : Math.min(total, solved[d] ?? 0),
+    }
+  })
   const total = problems.length
   const count = by.reduce((s, x) => s + x.solved, 0)
   // One ring, one arc per difficulty, each sized by solved / all problems, with a 2-unit gap between arcs.
@@ -111,7 +125,20 @@ const IST_MS = 330 * 60 * 1000
 const DAY_MS = 86_400_000
 
 /** Submissions per day for the last 26 weeks (IST), GitHub-style: a column per week, Monday at the top. */
-export function ActivityCard({ activity, streak, level, now = Date.now() }: { activity: Record<string, number>; streak: { days: number; today: boolean }; level: { level: number; into: number; span: number }; now?: number }) {
+export function ActivityCard({
+  activity,
+  streak,
+  level,
+  now = Date.now(),
+  self = true,
+}: {
+  activity: Record<string, number>
+  streak: { days: number; today: boolean }
+  level: { level: number; into: number; span: number }
+  now?: number
+  /** False on someone else's public profile (changes the wording only). */
+  self?: boolean
+}) {
   const today = Math.floor((now + IST_MS) / DAY_MS)
   const weekday = (today + 3) % 7 // 0 = Monday (1970-01-01 was a Thursday)
   const start = today - weekday - (WEEKS - 1) * 7
@@ -129,7 +156,7 @@ export function ActivityCard({ activity, streak, level, now = Date.now() }: { ac
         <h2 id="activity-h" className="text-sm font-semibold">
           Activity
         </h2>
-        <span className="flex items-center gap-1 text-sm font-medium" title={streak.today ? "You've studied today" : "Study today to keep your streak"}>
+        <span className="flex items-center gap-1 text-sm font-medium" title={streak.today ? (self ? "You've studied today" : "Studied today") : self ? "Study today to keep your streak" : undefined}>
           <IconFlame className={streak.days > 0 ? "text-orange-500" : "text-muted-foreground"} />
           <span className="tabular-nums">{streak.days}</span>
           <span className="font-normal text-muted-foreground">day streak</span>

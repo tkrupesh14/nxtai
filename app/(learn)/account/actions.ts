@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 
+import { BIO_MAX, NAME_MAX, handleProblem, profileError } from "@/lib/community/profile"
 import { LEVEL_LABELS, STYLE_LABELS, TIMELINE_LABELS } from "@/lib/learning/labels"
 import { createClient } from "@/lib/supabase/server"
 
@@ -106,4 +107,38 @@ export async function deleteAccount(_: FormState, formData: FormData): Promise<F
   }
   await supabase.auth.signOut()
   redirect("/?deleted=1")
+}
+
+const PublicProfileSchema = z.object({
+  handle: z.string().trim().toLowerCase().max(20),
+  display_name: z.string().trim().max(NAME_MAX, `Please keep your display name under ${NAME_MAX} characters.`),
+  bio: z.string().trim().max(BIO_MAX, `Please keep your bio under ${BIO_MAX} characters.`),
+})
+
+/** Community 5a: claim a handle and set up the public profile (rules checked again in save_public_profile). */
+export async function savePublicProfile(_: FormState, formData: FormData): Promise<FormState & { handle?: string; isPublic?: boolean }> {
+  const parsed = PublicProfileSchema.safeParse({
+    handle: formData.get("handle") ?? "",
+    display_name: formData.get("display_name") ?? "",
+    bio: formData.get("bio") ?? "",
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+  const problem = handleProblem(parsed.data.handle)
+  if (problem) return { error: problem }
+  if (!parsed.data.display_name) return { error: "Please enter a display name." }
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("save_public_profile", {
+    p_handle: parsed.data.handle,
+    p_display_name: parsed.data.display_name,
+    p_bio: parsed.data.bio,
+    p_is_public: formData.get("is_public") === "on",
+    p_show_solves: formData.get("show_solves") === "on",
+  })
+  if (error) {
+    if (!/handle_|bad_|links_need|reserved|not_signed/.test(error.message)) console.error("savePublicProfile failed:", error.message)
+    return { error: profileError(error.message) }
+  }
+  const saved = data as { handle: string; is_public: boolean }
+  revalidatePath("/account")
+  return { ok: true, handle: saved.handle, isPublic: saved.is_public }
 }

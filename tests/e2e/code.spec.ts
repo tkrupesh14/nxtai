@@ -105,3 +105,12 @@ test("study plans list their problems, and a problem opened from a plan follows 
   await expect(page.getByRole("link", { name: /^Next: Largest of three$/ })).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test("public profiles: unknown or private handles are not found", async ({ page, request }) => {
+  const base = live ? "https://code.krpex.in" : "/code"
+  const res = await page.goto(`${base}/u/nobody_has_this_handle`)
+  expect(res?.status()).toBe(404)
+  const sitemap = await request.get(live ? "https://code.krpex.in/sitemap.xml" : "/code/sitemap.xml")
+  expect(sitemap.status()).toBe(200)
+  expect(await sitemap.text()).toContain("/plans/krpex-150</loc>")
+})

@@ -6,6 +6,9 @@ import { Button } from "@/components/site/ui/button"
 import { listCertificates } from "@/lib/learning/assessments"
 import { getAccountOverview, getAccountSummary } from "@/lib/learning/data"
 import { BuyButton } from "@/components/learn/buy-button"
+import { PublicProfileForm } from "@/components/learn/public-profile-form"
+import { codeHref } from "@/lib/code-host"
+import { getMyPublicProfile } from "@/lib/community/data"
 import {
   CREDIT_COST,
   CREDIT_PACKS,
@@ -73,11 +76,12 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 export default async function AccountPage() {
-  const [{ user, profile }, { learning, usage }, account, certificates] = await Promise.all([
+  const [{ user, profile }, { learning, usage }, account, certificates, publicProfile] = await Promise.all([
     getCurrentProfile(),
     getAccountOverview(),
     getAccountSummary(),
     listCertificates(),
+    getMyPublicProfile(),
   ])
   const planName = PLANS[account.plan].name
   const payments = razorpayConfigured()
@@ -119,6 +123,14 @@ export default async function AccountPage() {
           {planName} plan
         </span>
       </section>
+
+      <AccountSection
+        id="public-profile"
+        title="Public profile"
+        description="Claim a handle to take part in the Krpex community, and choose whether others can see your progress."
+      >
+        <PublicProfileForm profile={publicProfile} defaultName={profile.full_name} profileHref={codeHref("/u/", null)} />
+      </AccountSection>
 
       <AccountSection title="Today's usage" description="Daily allowances reset at midnight (India time).">
         <div className="grid gap-3 sm:grid-cols-2">

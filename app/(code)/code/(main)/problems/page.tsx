@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ActivityCard, DailyCard, SolvedCard } from "@/components/code/progress-panel"
 import { ProblemTable, type TableFilters } from "@/components/code/problem-table"
 import { getDailyProblem, getMyProgress, getProblemStats, type MyProgress } from "@/lib/code/data"
+import { getMyPublicProfile } from "@/lib/community/data"
 import { codeLinks } from "@/lib/code/host"
 import { TAGS } from "@/lib/code/meta"
 import { PLANS, planProblems } from "@/lib/code/plans"
@@ -27,7 +28,9 @@ export default async function ProblemsPage({ searchParams }: Props) {
   const sp = await searchParams
   const [user, links, dailySlug, stats] = await Promise.all([getSignedInUser(), codeLinks(), getDailyProblem(), getProblemStats()])
   const empty: MyProgress = { solved: [], tried: [], activity: {} }
-  const [progress, xp, extras] = user ? await Promise.all([getMyProgress(), getMyXp(), getStreakExtras()]) : [empty, { total: 0, week: 0 }, null]
+  const [progress, xp, extras, me] = user
+    ? await Promise.all([getMyProgress(), getMyXp(), getStreakExtras(), getMyPublicProfile()])
+    : [empty, { total: 0, week: 0 }, null, null]
   const daily = dailySlug ? PROBLEM_SUMMARIES.find((p) => p.slug === dailySlug) : undefined
   const streak = extras ? learningStats([], [], Date.now(), extras) : null
   const level = xpLevel(xp.total)
@@ -72,6 +75,22 @@ export default async function ProblemsPage({ searchParams }: Props) {
         {daily && <DailyCard problem={daily} href={links.code(`/p/${daily.slug}`)} solved={progress.solved.includes(daily.slug)} />}
         <SolvedCard problems={PROBLEM_SUMMARIES} solved={progress.solved} signedIn={Boolean(user)} loginHref={login} />
         {user && streak && <ActivityCard activity={progress.activity} streak={{ days: streak.streak, today: streak.activeToday }} level={level} />}
+        {user && (
+          <p className="px-1 text-sm text-muted-foreground">
+            {me?.is_public && !me.hidden ? (
+              <Link href={links.code(`/u/${me.handle}`)} className="font-medium text-primary hover:underline">
+                Your public profile (@{me.handle}) →
+              </Link>
+            ) : (
+              <>
+                <a href={links.main("/account#public-profile")} className="font-medium text-primary hover:underline">
+                  {me ? "Make your profile public" : "Claim your handle"}
+                </a>{" "}
+                to share your progress.
+              </>
+            )}
+          </p>
+        )}
         <nav aria-label="Study plans" className="rounded-xl border bg-card p-5">
           <div className="flex items-baseline justify-between">
             <h2 className="font-semibold">Study plans</h2>
