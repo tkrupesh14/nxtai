@@ -7,7 +7,7 @@ import { listCertificates } from "@/lib/learning/assessments"
 import { getAccountOverview, getAccountSummary } from "@/lib/learning/data"
 import { BuyButton } from "@/components/learn/buy-button"
 import { PublicProfileForm } from "@/components/learn/public-profile-form"
-import { codeHref } from "@/lib/code-host"
+import { communityHref } from "@/lib/code-host"
 import { getMyPublicProfile } from "@/lib/community/data"
 import {
   CREDIT_COST,
@@ -129,7 +129,7 @@ export default async function AccountPage() {
         title="Public profile"
         description="Claim a handle to take part in the Krpex community, and choose whether others can see your progress."
       >
-        <PublicProfileForm profile={publicProfile} defaultName={profile.full_name} profileHref={codeHref("/u/", null)} />
+        <PublicProfileForm profile={publicProfile} defaultName={profile.full_name} profileHref={communityHref("/u/", null)} />
       </AccountSection>
 
       <AccountSection title="Today's usage" description="Daily allowances reset at midnight (India time).">

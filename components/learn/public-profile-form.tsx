@@ -9,7 +9,7 @@ import { Label } from "@/components/site/ui/label"
 import { Textarea } from "@/components/site/ui/textarea"
 import { BIO_MAX, NAME_MAX, handleProblem, nextHandleChange, normaliseHandle, type MyPublicProfile } from "@/lib/community/profile"
 
-/** Community 5a: claim a handle and choose what the public page at code.krpex.in/u/<handle> shows. */
+/** Community 5a: claim a handle and choose what the public page at community.krpex.in/u/<handle> shows. */
 export function PublicProfileForm({ profile, defaultName, profileHref }: { profile: MyPublicProfile | null; defaultName: string; profileHref: string }) {
   const [state, action, pending] = useActionState(savePublicProfile, {})
   const [handle, setHandle] = useState(profile?.handle ?? "")
@@ -26,7 +26,7 @@ export function PublicProfileForm({ profile, defaultName, profileHref }: { profi
       <div className="grid gap-2">
         <Label htmlFor="handle">Handle</Label>
         <div className="flex min-w-0 items-center rounded-md border bg-background focus-within:ring-2 focus-within:ring-ring">
-          <span className="shrink-0 pl-3 text-sm text-muted-foreground">code.krpex.in/u/</span>
+          <span className="shrink-0 pl-3 text-sm text-muted-foreground">community.krpex.in/u/</span>
           <input
             id="handle"
             name="handle"

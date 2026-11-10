@@ -106,11 +106,28 @@ test("study plans list their problems, and a problem opened from a plan follows 
   expect(errors).toEqual([])
 })
 
-test("public profiles: unknown or private handles are not found", async ({ page, request }) => {
-  const base = live ? "https://code.krpex.in" : "/code"
-  const res = await page.goto(`${base}/u/nobody_has_this_handle`)
-  expect(res?.status()).toBe(404)
-  const sitemap = await request.get(live ? "https://code.krpex.in/sitemap.xml" : "/code/sitemap.xml")
+test("Krpex Community: home, guidelines, sitemap; profiles moved there from Code", async ({ page, request }) => {
+  const community = live ? "https://community.krpex.in" : "/community"
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  await page.goto(`${community}/`)
+  await expect(page.getByRole("heading", { name: "Learn together" })).toBeVisible()
+  await page.getByRole("link", { name: "Community guidelines" }).click()
+  await expect(page.getByRole("heading", { name: "Community guidelines", level: 1 })).toBeVisible()
+  expect((await page.goto(`${community}/u/nobody_has_this_handle`))?.status()).toBe(404)
+
+  const old = await request.get(`${live ? "https://code.krpex.in" : "/code"}/u/Some_One`, { maxRedirects: 0 })
+  expect(old.status()).toBe(308)
+  expect(old.headers().location).toBe(live ? "https://community.krpex.in/u/some_one" : "/community/u/some_one")
+  const sitemap = await request.get(`${community}/sitemap.xml`)
   expect(sitemap.status()).toBe(200)
-  expect(await sitemap.text()).toContain("/plans/krpex-150</loc>")
+  expect(await sitemap.text()).toContain("https://community.krpex.in/guidelines</loc>")
+  const robots = await request.get(`${community}/robots.txt`)
+  expect(await robots.text()).toContain("Sitemap: https://community.krpex.in/sitemap.xml")
+  if (live) {
+    const moved = await request.get("https://krpex.in/community/guidelines", { maxRedirects: 0 })
+    expect(moved.status()).toBe(308)
+    expect(moved.headers().location).toBe("https://community.krpex.in/guidelines")
+  }
+  expect(errors).toEqual([])
 })

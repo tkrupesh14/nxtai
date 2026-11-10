@@ -78,9 +78,9 @@ export default async function ProblemsPage({ searchParams }: Props) {
         {user && (
           <p className="px-1 text-sm text-muted-foreground">
             {me?.is_public && !me.hidden ? (
-              <Link href={links.code(`/u/${me.handle}`)} className="font-medium text-primary hover:underline">
+              <a href={links.community(`/u/${me.handle}`)} className="font-medium text-primary hover:underline">
                 Your public profile (@{me.handle}) →
-              </Link>
+              </a>
             ) : (
               <>
                 <a href={links.main("/account#public-profile")} className="font-medium text-primary hover:underline">

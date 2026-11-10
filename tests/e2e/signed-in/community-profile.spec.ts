@@ -22,7 +22,7 @@ test("a learner claims a handle, shares a public profile and can hide it again",
   await expect(section.getByText("Saved. Your profile is public.")).toBeVisible()
   await section.getByRole("link", { name: "View your public profile" }).click()
 
-  await expect(page).toHaveURL(/\/code\/u\/e2e_learner$/)
+  await expect(page).toHaveURL(/\/community\/u\/e2e_learner$/)
   await expect(page.getByText("@e2e_learner")).toBeVisible()
   await expect(page.getByText("Learning Python on Krpex")).toBeVisible()
   await expect(page.getByRole("heading", { name: "Study plans finished" })).toBeVisible()
@@ -33,7 +33,7 @@ test("a learner claims a handle, shares a public profile and can hide it again",
   await section.getByLabel(/Make my profile public/).uncheck()
   await section.getByRole("button", { name: "Save profile" }).click()
   await expect(section.getByText("Saved. Your profile is private.")).toBeVisible()
-  const res = await page.goto("/code/u/e2e_learner")
+  const res = await page.goto("/community/u/e2e_learner")
   expect(res?.status()).toBe(404)
   expect(errors).toEqual([])
 })

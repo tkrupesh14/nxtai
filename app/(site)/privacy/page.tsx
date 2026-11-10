@@ -49,7 +49,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Public profile (optional):</strong> if you claim a handle, we store it with the display name and bio
-            you choose. Your profile is private unless you make it public. A public profile at code.krpex.in/u/your-handle
+            you choose. Your profile is private unless you make it public. A public profile at community.krpex.in/u/your-handle
             shows that name and bio, your level, XP, streak, how many coding problems you solved, your coding activity,
             the study plans you finished and, only if you choose, the problems you solved recently. It never shows your
             email or your code. You can make it private again at any time, and it is deleted with your account.

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { describe, expect, it } from "vitest"
 
-import { authCookieDomain, codeHref, codeRoute, mainHref } from "@/lib/code-host"
+import { authCookieDomain, codeHref, codeRoute, communityHref, mainHref } from "@/lib/code-host"
 import { SHARED_AUTH_MARK, shareAuthCookies } from "@/lib/supabase/middleware"
 
 describe("code.krpex.in routing", () => {
@@ -22,9 +22,9 @@ describe("code.krpex.in routing", () => {
     }
     const config = (await import("../../next.config.mjs")).default
     const { beforeFiles } = (await config.rewrites!()) as { beforeFiles: { source: string; destination: string; has: unknown }[] }
-    const rewrite = (path: string) => {
+    const rewrite = (host: string, path: string) => {
       for (const r of beforeFiles) {
-        expect(r.has).toEqual([{ type: "host", value: "code.krpex.in" }])
+        if (JSON.stringify(r.has) !== JSON.stringify([{ type: "host", value: host }])) continue
         const keys: { name: string; modifier: string }[] = []
         const m = pathToRegexp(r.source, keys).exec(path)
         if (!m) continue
@@ -33,12 +33,31 @@ describe("code.krpex.in routing", () => {
       }
       return null
     }
-    for (const path of ["/", "/playground", "/p/two-sum", "/robots.txt", "/sitemap.xml", "/api/health", "/api/code/run",
-      "/_next/static/x.js", "/manifest.webmanifest", "/icon.svg", "/apple-icon", "/apple-icon.png", "/favicon.ico",
-      "/code-runner.html", "/coder", "/apix"]) {
-      const route = codeRoute("code.krpex.in", path, "")
-      expect(rewrite(path), path).toBe(route?.kind === "rewrite" ? route.pathname : null)
-    }
+    expect(beforeFiles.every((r) => ["code.krpex.in", "community.krpex.in"].includes((r.has as { value: string }[])[0].value))).toBe(true)
+    for (const host of ["code.krpex.in", "community.krpex.in"])
+      for (const path of ["/", "/playground", "/p/two-sum", "/u/asha", "/robots.txt", "/sitemap.xml", "/api/health", "/api/code/run",
+        "/_next/static/x.js", "/manifest.webmanifest", "/icon.svg", "/apple-icon", "/apple-icon.png", "/favicon.ico",
+        "/code-runner.html", "/coder", "/apix", "/communityx"]) {
+        const route = codeRoute(host, path, "")
+        expect(rewrite(host, path), `${host}${path}`).toBe(route?.kind === "rewrite" ? route.pathname : null)
+      }
+  })
+
+  it("serves community.krpex.in from /community and sends each prefix to its own subdomain", () => {
+    expect(codeRoute("community.krpex.in", "/", "")).toEqual({ kind: "rewrite", pathname: "/community" })
+    expect(codeRoute("community.krpex.in", "/u/asha", "")).toEqual({ kind: "rewrite", pathname: "/community/u/asha" })
+    expect(codeRoute("community.krpex.in", "/api/health", "")).toBeNull()
+    expect(codeRoute("community.krpex.in", "/community/u/asha", "?x=1")).toEqual({ kind: "redirect", url: "https://community.krpex.in/u/asha?x=1" })
+    expect(codeRoute("community.krpex.in", "/code/p/two-sum", "")).toEqual({ kind: "redirect", url: "https://code.krpex.in/p/two-sum" })
+    expect(codeRoute("code.krpex.in", "/community", "")).toEqual({ kind: "redirect", url: "https://community.krpex.in/" })
+    expect(codeRoute("krpex.in", "/community/guidelines", "")).toEqual({ kind: "redirect", url: "https://community.krpex.in/guidelines" })
+    expect(codeRoute("localhost", "/community/u/asha", "")).toBeNull()
+    expect(communityHref("/u/asha", "community.krpex.in")).toBe("/u/asha")
+    expect(communityHref("/u/asha", "code.krpex.in")).toBe("https://community.krpex.in/u/asha")
+    expect(communityHref("/", "krpex.in")).toBe("/community")
+    expect(codeHref("/problems", "community.krpex.in")).toBe("https://code.krpex.in/problems")
+    expect(mainHref("/learn", "community.krpex.in")).toBe("https://krpex.in/learn")
+    expect(authCookieDomain("community.krpex.in")).toBe(".krpex.in")
   })
 
   it("sends krpex.in/code to the subdomain, but serves /code directly elsewhere", () => {
