@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/site/theme-toggle"
 import { Button } from "@/components/site/ui/button"
 import { codeLinks } from "@/lib/code/host"
 import { displayNameFor, getSignedInUser, initialsFor } from "@/lib/supabase/profile"
+import { BetaBadge } from "@/components/site/beta-badge"
 
 /** Header for code.krpex.in. Account pages live on the main site, so those links go there. */
 export async function CodeHeader() {
@@ -20,6 +21,7 @@ export async function CodeHeader() {
             <span className="text-lg font-semibold tracking-tight">
               Krpex <span className="text-primary">Code</span>
             </span>
+            <BetaBadge />
           </Link>
           <nav className="hidden items-center gap-5 text-sm sm:flex">
             <Link href={links.code("/problems")} className="text-muted-foreground transition-colors hover:text-foreground">

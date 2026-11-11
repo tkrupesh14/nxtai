@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/site/theme-toggle"
 import { cn } from "@/lib/utils"
 
 import type { ListItem } from "./types"
+import { BetaBadge } from "@/components/site/beta-badge"
 
 const MOD = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"
 
@@ -72,6 +73,7 @@ export function TopBar({
           <span className="hidden text-[15px] font-semibold tracking-tight md:inline">
             Krpex <span className="text-primary">Code</span>
           </span>
+          <BetaBadge className="hidden md:inline-flex" />
         </Link>
         <span aria-hidden className="mx-1 hidden h-5 w-px bg-border sm:block" />
         <button type="button" onClick={() => setDrawer(true)} className="inline-flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-muted" aria-haspopup="dialog" aria-label={listTitle === "Problems" ? "Problem list" : `Problem list: ${listTitle}`}>

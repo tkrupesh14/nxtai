@@ -5,6 +5,7 @@ import { Button } from "@/components/site/ui/button"
 import { getMyPublicProfile } from "@/lib/community/data"
 import { codeLinks } from "@/lib/code/host"
 import { displayNameFor, getSignedInUser, initialsFor } from "@/lib/supabase/profile"
+import { BetaBadge } from "@/components/site/beta-badge"
 
 /** Header for community.krpex.in. Account pages live on the main site, so those links go there. */
 export async function CommunityHeader() {
@@ -23,6 +24,7 @@ export async function CommunityHeader() {
             <span className="text-lg font-semibold tracking-tight">
               Krpex <span className="text-primary">Community</span>
             </span>
+            <BetaBadge />
           </Link>
           <nav className="hidden items-center gap-5 text-sm md:flex">
             <Link href={links.community("/c")} className={nav}>
