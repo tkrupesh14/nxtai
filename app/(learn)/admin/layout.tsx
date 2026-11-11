@@ -20,8 +20,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </p>
         </div>
       ))}
-      <div className="grid gap-6 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-8">
-        <div className="grid content-start gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-8">
+        <div className="grid min-w-0 content-start gap-3">
           <p className="hidden px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground md:block">Admin</p>
           <AdminNav />
         </div>

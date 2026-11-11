@@ -391,6 +391,11 @@ test("the admin panel has one page per section, and old links open the right one
   for (const path of ["/admin", "/admin/users", "/admin/professors"]) {
     await page.goto(path)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
+    // Overflow can be clipped rather than scroll, so also check every section ends inside the screen.
+    const overhang = await page.evaluate(() =>
+      Math.max(...[...document.querySelectorAll("main section, main h1")].map((el) => el.getBoundingClientRect().right - window.innerWidth)),
+    )
+    expect(overhang).toBeLessThanOrEqual(0)
   }
   expect(errors).toEqual([])
 })
