@@ -163,9 +163,17 @@ Built once, generic, so courses reuse it:
 - **Rules from the XP plan:** posting from level 2, links from level 4, rate limits in the database, level badges next to names. A problem's shared solutions and spoiler discussions open only after you solve it (or open the official solution).
 - **Notifications:** replies and votes through the existing notifications and push.
 
-**Phase 6 — Contests and leagues.** Weekly 90-minute contest (4 problems) and the opt-in weekly leagues from the XP plan. Browser grading can be faked, so contest submissions are re-checked on a separate small runner box (containers, no network, CPU and memory limits) before ranking; practice stays in the browser.
+**Phase 6 — Admin panel (planned 2026-11-11).** `/admin` grew into one 500-line page that loads 9 queries on every visit, shows only the newest 50 users and 20 payments, and still needs SQL for anything about one learner, Code or community history. Rebuilt in six deploys, ordered by how often SQL is needed today. Every new admin function is `security definer`, checks `is_admin()`, never uses the service key, and every admin action is written to an audit log.
+- **6.1 Sections (no migration; built 2026-11-11).** `/admin` split into Overview (tiles, "needs attention", last 14 days), Users (search, give credits or Pro), Money (payments), Lesson reports, Community (queue, bans, profile visibility), Professors (professors, invites, review lessons) and System (errors), each its own route under `/admin/*` loading only its own data, with a sidebar (tabs on phones). Shared queries cached per request; the outage banner shows on every section. Old links keep working: `/admin` is the overview and `/admin#community` opens Community.
+- **6.2 One page per learner** `/admin/users/[id]`: account, plan and credits ledger, courses and progress, AI use and cost, payments, Code solves and submissions, community profile, posts, reports and bans; actions (credits/Pro, ban/unban, hide profile) in place; users list paged with filters (plan, joined, active). Admin audit log.
+- **6.3 Community moderation:** queue with filters (hidden / reported / all), active bans with expiry and lift, the moderation history (`community_mod_log`), boards with counts and on/off (`community_boards.active`).
+- **6.4 Money and AI:** revenue and AI cost by day, model and feature over 7/30/90 days, the costliest learners, paged payments with status filter, credits granted and used.
+- **6.5 Code:** submissions and acceptance per problem, problems nobody solves, judge and runner errors, AI coach use.
+- **6.6 System:** errors with a date range and grouping, recent deploys and health checks.
 
-**Phase 7 — More languages and playgrounds (was F).** SQL practice (SQLite in the browser), an HTML/CSS/JS playground with live preview, C/C++/Java on the Phase 6 runner if learners ask for it.
+**Phase 7 — Contests and leagues.** Weekly 90-minute contest (4 problems) and the opt-in weekly leagues from the XP plan. Browser grading can be faked, so contest submissions are re-checked on a separate small runner box (containers, no network, CPU and memory limits) before ranking; practice stays in the browser.
+
+**Phase 8 — More languages and playgrounds (was F).** SQL practice (SQLite in the browser), an HTML/CSS/JS playground with live preview, C/C++/Java on the Phase 7 contest runner if learners ask for it.
 
 ### Phase 6 — Payments (Razorpay)
 1. ✅ Plans, limits and credit ledger in the database (migration 007); account page shows plan, limits and credits.

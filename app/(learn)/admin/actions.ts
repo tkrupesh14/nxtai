@@ -15,7 +15,7 @@ export async function resolveReport(id: string) {
   const supabase = await createClient()
   const { error } = await supabase.rpc("admin_resolve_report", { p_id: id })
   if (error) console.error("admin_resolve_report failed:", error.message)
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
 }
 
 export async function grantAction(_: AdminResult, formData: FormData): Promise<AdminResult> {
@@ -35,7 +35,7 @@ export async function grantAction(_: AdminResult, formData: FormData): Promise<A
   }
   if (data === "not_found") return { message: `No account with ${email}.` }
   if (data === "nothing") return { message: "Enter credits and/or Pro days." }
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
   const parts = [credits ? `${credits > 0 ? "+" : ""}${credits} credits` : "", proDays ? `${proDays} Pro days` : ""].filter(Boolean)
   return { ok: true, message: `Done: ${parts.join(" and ")} for ${email}.` }
 }
@@ -53,7 +53,7 @@ export async function inviteProfessorAction(_: InviteResult, formData: FormData)
     console.error("admin_create_professor_invite failed:", error?.message)
     return { message: "Couldn't create the invite. Are you signed in as an admin?" }
   }
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
   const h = await headers()
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "krpex.in"
   const site = `${h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https")}://${host}`
@@ -64,14 +64,14 @@ export async function revokeInvite(id: string) {
   const supabase = await createClient()
   const { error } = await supabase.rpc("admin_revoke_professor_invite", { p_id: id })
   if (error) console.error("admin_revoke_professor_invite failed:", error.message)
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
 }
 
 export async function setProfessorStatus(id: string, status: "approved" | "suspended" | "pending") {
   const supabase = await createClient()
   const { error } = await supabase.rpc("admin_set_professor_status", { p_id: id, p_status: status })
   if (error) console.error("admin_set_professor_status failed:", error.message)
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
 }
 
 /** Show (or hide) a professor's AI version to learners (8.2). */
@@ -79,7 +79,7 @@ export async function setProfessorLive(id: string, live: boolean) {
   const supabase = await createClient()
   const { error } = await supabase.rpc("admin_set_professor_live", { p_id: id, p_live: live })
   if (error) console.error("admin_set_professor_live failed:", error.message)
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
 }
 
 export type GenerateResult = AdminResult & { id?: string }
@@ -119,7 +119,7 @@ export async function generateReviewLessonAction(_: GenerateResult, formData: Fo
     console.error("admin_add_review_lesson failed:", error?.message)
     return { message: "The lesson was written but couldn't be saved. Please try again." }
   }
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
   return { ok: true, id, message: `Added "${parsed.data.title}" to the review queue.` }
 }
 
@@ -127,7 +127,7 @@ export async function setReviewLessonStatus(id: string, status: "open" | "closed
   const supabase = await createClient()
   const { error } = await supabase.rpc("admin_set_review_lesson_status", { p_id: id, p_status: status })
   if (error) console.error("admin_set_review_lesson_status failed:", error.message)
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
 }
 
 // Community 5b moderation (migration 034).
@@ -138,7 +138,7 @@ export async function moderateCommunityAction(target: "post" | "comment", id: st
     console.error("admin_community_moderate failed:", error.message)
     return { message: "Couldn't do that. It may have changed already." }
   }
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
   return { ok: true }
 }
 
@@ -151,7 +151,7 @@ export async function communityBanAction(_: AdminResult, formData: FormData): Pr
   const supabase = await createClient()
   const { error } = await supabase.rpc("admin_community_ban", { p_handle: handle, p_days: days, p_reason: reason })
   if (error) return { message: error.message.includes("not_found") ? `No one has the handle @${handle}.` : "Couldn't do that." }
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
   return { ok: true, message: days === 0 ? `@${handle} can post again.` : `@${handle} can't post ${days === null ? "any more" : `for ${days} days`}.` }
 }
 
@@ -162,6 +162,6 @@ export async function profileVisibilityAction(_: AdminResult, formData: FormData
   const supabase = await createClient()
   const { error } = await supabase.rpc("admin_set_profile_hidden", { p_handle: handle, p_hidden: hidden })
   if (error) return { message: error.message.includes("not_found") ? `No one has the handle @${handle}.` : "Couldn't do that." }
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
   return { ok: true, message: hidden ? `@${handle}'s profile is hidden.` : `@${handle}'s profile can be seen again (if they made it public).` }
 }

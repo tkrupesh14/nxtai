@@ -41,7 +41,7 @@ for (const [path, text] of PUBLIC_PAGES) {
 }
 
 test("signed-out visitors are sent to log in", async ({ page }) => {
-  for (const path of ["/learn", "/account", "/admin", "/onboarding"]) {
+  for (const path of ["/learn", "/account", "/admin", "/admin/users", "/onboarding"]) {
     await page.goto(path)
     await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path).replace(/[/]/g, "%2F")}`))
   }

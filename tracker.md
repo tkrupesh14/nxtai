@@ -118,6 +118,19 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 | 5.6 | Communities | P2 | 🟡 | 🤖 | plan.md "Krpex Code v2" → Phase 5 (5a profiles · 5b problem solutions + discussion + moderation · 5c general board + course communities). **5a built 2026-11-10**: handles + public profiles (migration 033). **Live 2026-11-10** (`c206847`). **Own site community.krpex.in** (built 2026-11-10): same app under app/(community)/community, host routing in lib/code-host.ts + next.config.mjs, header, home, /guidelines, robots + sitemap (public profiles), profiles moved to community.krpex.in/u/<handle> (code.krpex.in/u/* → 308). **Live 2026-11-10** (`941effc`; DNS, Nginx and certificate done). **5b built 2026-11-10** (migration 034): per-problem Solutions (locked until solved or official solution opened) and Discussion on community.krpex.in/p/<slug>/…, posts with Markdown + code, one-level comments, upvotes, reports (3 from L2+ hide), admin queue + bans + profile hiding in /admin#community, reply/upvote/removal notifications, workspace Community card, terms + privacy. **Live 2026-11-11** (`3865298`). **5c built 2026-11-11** (migration 035): boards on community.krpex.in/c — Help, Interview prep, Show your project, Feedback, plus one per course category (9); home page feed of the latest active discussions (problems + boards, never solutions); "From the community" on the Code home; "Course communities" on /learn; "Ask the community" at the end of lessons (opens the subject board with the lesson as the title); "Professor" label for approved professor accounts (they skip the level/age rules; AI professors never post); boards in the sitemap; guideline on who's who. Needs migration 035 |
 | 5.8 | Switch AI to Bedrock once AWS grants access | P2 | ⛔ | 👤 | G14 |
 
+## Admin panel (build Phase 6, planned 2026-11-11)
+
+Plan: plan.md "Krpex Code v2" → Phase 6. IDs A.x to keep them apart from Payments 6.x.
+
+| ID | Task | Pri | Status | Owner | Notes |
+|----|------|-----|--------|-------|-------|
+| A.1 | Split `/admin` into sections: Overview, Users, Money, Lesson reports, Community, Professors, System | P1 | 🟡 | 🤖 | **Built 2026-11-11** (no migration): `/admin/*` routes with a sidebar (tabs on phones), each loading only its data (lib/admin/data.ts, cached per request); outage banner on every section; "Needs attention" on the overview; `/admin#community` → `/admin/community`. Signed-in e2e test in teach.spec.ts (runs in CI only) |
+| A.2 | One page per learner + paged, filtered users list + admin audit log | P1 | ⬜ | 🤖 | Needs a migration |
+| A.3 | Community moderation: filtered queue, bans with expiry/lift, moderation history, boards on/off | P1 | ⬜ | 🤖 | Needs a migration |
+| A.4 | Money and AI: revenue and AI cost by day/model/feature, costliest learners, paged payments | P2 | ⬜ | 🤖 | Needs a migration |
+| A.5 | Code: submissions and acceptance per problem, unsolved problems, runner errors, coach use | P2 | ⬜ | 🤖 | Needs a migration |
+| A.6 | System: errors by date range, deploys and health checks | P3 | ⬜ | 🤖 | |
+
 ## Phase 6 — Payments (Razorpay)
 
 | ID | Task | Pri | Status | Owner | Notes |

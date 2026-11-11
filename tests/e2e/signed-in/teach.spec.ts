@@ -28,7 +28,7 @@ test("an invited professor joins, uploads and publishes material", async ({ page
   localSql(`insert into private.admins (user_id) select id from auth.users where email = '${email.replace(/'/g, "")}' on conflict do nothing`)
 
   // Admin creates an invite; the link is shown once.
-  await page.goto("/admin")
+  await page.goto("/admin/professors")
   await page.getByLabel("Professor email").fill(email)
   await page.getByRole("button", { name: "Create invite" }).click()
   const link = await page.getByLabel("Invite link").inputValue()
@@ -74,7 +74,7 @@ test("an invited professor joins, uploads and publishes material", async ({ page
   await expect(page.getByRole("button", { name: "Publish Light notes" })).toBeDisabled()
 
   // Admin approves; now it can be published.
-  await page.goto("/admin")
+  await page.goto("/admin/professors")
   await page.getByRole("button", { name: "Approve" }).click()
   await expect(page.getByText(/approved · Physics/)).toBeVisible()
   await page.goto("/teach")
@@ -149,7 +149,7 @@ test("the admin adds an AI lesson for review, and the professor reviews it", asy
   const errors: string[] = []
   page.on("pageerror", (e) => errors.push(e.message))
 
-  await page.goto("/admin")
+  await page.goto("/admin/professors")
   await page.getByLabel("Lesson topic").fill("Projectile motion")
   await page.getByRole("button", { name: "Write a lesson for review" }).click()
   await expect(page.getByText('Added "Projectile motion" to the review queue.')).toBeVisible()
@@ -187,7 +187,7 @@ test("the admin adds an AI lesson for review, and the professor reviews it", asy
   await expect(page.getByRole("button", { name: "Update review" })).toBeVisible()
 
   // The admin sees it.
-  await page.goto("/admin")
+  await page.goto("/admin/professors")
   await expect(adminList.getByText(/1 review · Accurate 5, Clear 4, Right level 4, Overall 4/)).toBeVisible()
   await adminList.getByText("Read the reviews").click()
   await expect(adminList.getByText("Define the symbols before using them.")).toBeVisible()
@@ -264,7 +264,7 @@ test("a live professor's AI version teaches a learner's course from their materi
 
   // Not public until Krpex makes it live.
   expect((await page.request.get(`/professors/${professorId}`)).status()).toBe(404)
-  await page.goto("/admin")
+  await page.goto("/admin/professors")
   await expect(page.getByText(/asked to go live/)).toBeVisible()
   await page.getByRole("button", { name: "Make Dr. Test Professor live" }).click()
   await expect(page.getByText(/live for learners/)).toBeVisible()
@@ -343,11 +343,54 @@ test("a live professor's AI version teaches a learner's course from their materi
   expect(lessonUrl).toMatch(/^\/learn\//)
 
   // Hidden again: the page is gone and the course falls back to the AI professor.
-  await page.goto("/admin")
+  await page.goto("/admin/professors")
   await page.getByRole("button", { name: "Hide Dr. Test Professor from learners" }).click()
   await expect(page.getByText(/asked to go live/)).toBeVisible()
   expect((await page.request.get(`/professors/${professorId}`)).status()).toBe(404)
   await page.goto(courseUrl)
   await expect(page.getByText("Dr. Test Professor (AI)")).toHaveCount(0)
+  expect(errors).toEqual([])
+})
+
+test("the admin panel has one page per section, and old links open the right one", async ({ page }) => {
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  const nav = page.getByRole("navigation", { name: "Admin sections" })
+
+  await page.goto("/admin")
+  await expect(page.getByRole("heading", { name: "Overview", level: 1 })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Needs attention" })).toBeVisible()
+  await expect(nav.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page")
+
+  const sections = [
+    ["Users", "/admin/users", "Find a learner"],
+    ["Money", "/admin/money", "Recent payments"],
+    ["Lesson reports", "/admin/reports", /^Open \(\d+\)$/],
+    ["Community", "/admin/community", /^Reported or hidden \(\d+\)$/],
+    ["Professors", "/admin/professors", /^Professors \(\d+\)$/],
+    ["System", "/admin/system", /^Errors, last 24 hours/],
+  ] as const
+  for (const [label, path, section] of sections) {
+    await nav.getByRole("link", { name: label }).click()
+    await expect(page).toHaveURL(new RegExp(`${path}$`))
+    await expect(page.getByRole("heading", { name: label, level: 1 })).toBeVisible()
+    await expect(page.getByRole("heading", { name: section, level: 2 })).toBeVisible()
+    await expect(nav.getByRole("link", { name: label })).toHaveAttribute("aria-current", "page")
+  }
+
+  // Search keeps you on Users.
+  await page.goto("/admin/users?q=example.com")
+  await expect(page.getByRole("cell", { name: /@example\.com$/ }).first()).toBeVisible()
+
+  // Notifications already sent link to /admin#community.
+  await page.goto("/admin#community")
+  await expect(page).toHaveURL(/\/admin\/community$/)
+
+  // Phones: tabs scroll, the page doesn't.
+  await page.setViewportSize({ width: 360, height: 760 })
+  for (const path of ["/admin", "/admin/users", "/admin/professors"]) {
+    await page.goto(path)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
+  }
   expect(errors).toEqual([])
 })
