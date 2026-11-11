@@ -8,6 +8,7 @@ import { ErrorReporter } from "@/components/error-reporter"
 import { NavigationProgress } from "@/components/site/navigation-progress"
 import { COMMUNITY_ORIGIN } from "@/lib/code-host"
 import "../../(site)/site.css"
+import "../../(learn)/learn.css"
 
 // Krpex Community (5.6) on community.krpex.in: profiles now; solutions, discussions and boards next (plan.md Phase 5).
 

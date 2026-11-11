@@ -4,6 +4,8 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
 import { Workspace } from "@/components/code/workspace/workspace"
+import { getPostList } from "@/lib/community/data"
+import { problemSpace } from "@/lib/community/posts"
 import type { CoachAllowance, CoachTurn } from "@/lib/code/coach"
 import { getCoachAllowance, getCoachHistory, getDailyProblem, getMyProgress, getMySubmissions, getProblemStats, hasRevealed, type MySubmission } from "@/lib/code/data"
 import { codeLinks } from "@/lib/code/host"
@@ -24,7 +26,14 @@ export default async function ProblemPage({ params, searchParams }: Props) {
   const planParam = (await searchParams).plan
   const problem = problemBySlug(slug)
   if (!problem) notFound()
-  const [user, links, daily, allStats] = await Promise.all([getSignedInUser(), codeLinks(), getDailyProblem(), getProblemStats()])
+  const [user, links, daily, allStats, community] = await Promise.all([
+    getSignedInUser(),
+    codeLinks(),
+    getDailyProblem(),
+    getProblemStats(),
+    getPostList(problemSpace(slug), "solution", "top", 3),
+  ])
+  const cbase = links.community(`/p/${slug}`)
   let submissions: MySubmission[] = []
   let solvedList: string[] = []
   let triedList: string[] = []
@@ -69,6 +78,15 @@ export default async function ProblemPage({ params, searchParams }: Props) {
       initialCoach={coach}
       coachAllowance={allowance}
       plan={inPlan ? { slug: inPlan.slug, title: inPlan.title, href: links.code(`/plans/${inPlan.slug}`) } : null}
+      community={{
+        solutions: community.counts.solution,
+        discussions: community.counts.discussion,
+        locked: community.locked,
+        top: community.posts.map((p) => ({ title: p.title, score: p.score, href: `${cbase}/solutions/${p.id}` })),
+        solutionsHref: `${cbase}/solutions`,
+        discussHref: `${cbase}/discuss`,
+        shareHref: `${cbase}/solutions/new`,
+      }}
     />
   )
 }

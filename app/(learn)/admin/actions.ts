@@ -129,3 +129,39 @@ export async function setReviewLessonStatus(id: string, status: "open" | "closed
   if (error) console.error("admin_set_review_lesson_status failed:", error.message)
   revalidatePath("/admin")
 }
+
+// Community 5b moderation (migration 034).
+export async function moderateCommunityAction(target: "post" | "comment", id: string, action: "keep" | "remove", reason: string): Promise<AdminResult> {
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("admin_community_moderate", { p_target: target, p_id: id, p_action: action, p_reason: reason.slice(0, 200) })
+  if (error) {
+    console.error("admin_community_moderate failed:", error.message)
+    return { message: "Couldn't do that. It may have changed already." }
+  }
+  revalidatePath("/admin")
+  return { ok: true }
+}
+
+export async function communityBanAction(_: AdminResult, formData: FormData): Promise<AdminResult> {
+  const handle = String(formData.get("handle") ?? "").trim().replace(/^@/, "").toLowerCase()
+  const length = String(formData.get("length") ?? "7")
+  const reason = String(formData.get("reason") ?? "").slice(0, 200)
+  const days = length === "forever" ? null : Number(length)
+  if (!handle || (days !== null && ![0, 7, 30].includes(days))) return { message: "Enter a handle and a length." }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("admin_community_ban", { p_handle: handle, p_days: days, p_reason: reason })
+  if (error) return { message: error.message.includes("not_found") ? `No one has the handle @${handle}.` : "Couldn't do that." }
+  revalidatePath("/admin")
+  return { ok: true, message: days === 0 ? `@${handle} can post again.` : `@${handle} can't post ${days === null ? "any more" : `for ${days} days`}.` }
+}
+
+export async function profileVisibilityAction(_: AdminResult, formData: FormData): Promise<AdminResult> {
+  const handle = String(formData.get("handle") ?? "").trim().replace(/^@/, "").toLowerCase()
+  const hidden = formData.get("hidden") === "hide"
+  if (!handle) return { message: "Enter a handle." }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("admin_set_profile_hidden", { p_handle: handle, p_hidden: hidden })
+  if (error) return { message: error.message.includes("not_found") ? `No one has the handle @${handle}.` : "Couldn't do that." }
+  revalidatePath("/admin")
+  return { ok: true, message: hidden ? `@${handle}'s profile is hidden.` : `@${handle}'s profile can be seen again (if they made it public).` }
+}

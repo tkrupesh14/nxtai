@@ -41,7 +41,7 @@ export default async function GuidelinesPage() {
       <section className="mt-10 grid gap-2 text-sm text-muted-foreground">
         <h2 className="text-base font-semibold text-foreground">If something breaks the rules</h2>
         <p>
-          Use Report on the post or comment (coming with posts). Moderators may hide or remove content and pause or stop someone from posting. A profile that
+          Use Report on the post or comment. Three reports hide it until a moderator looks. Moderators may hide or remove content and pause or stop someone from posting. A profile that
           breaks the rules can be hidden until it is fixed.
         </p>
         <p>

@@ -121,6 +121,13 @@ export default function TermsPage() {
             text, use it to teach you, and show it to no one else. We may remove material that breaks these terms.
           </li>
           <li>
+            <strong>Community posts</strong> (solutions, discussions and comments on Krpex Community) are public to other
+            learners under your handle and display name. You keep ownership of them and let us show, store and moderate
+            them on the service, including after you delete your account (they then show as &ldquo;[deleted user]&rdquo;;
+            delete them first if you want them gone). Follow the community guidelines; we may hide or remove posts and
+            stop accounts from posting when they break these terms or the guidelines.
+          </li>
+          <li>
             You may use the lessons generated for you for your own learning. The {LEGAL.brand} name, design, software and
             catalog content belong to us.
           </li>

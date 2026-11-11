@@ -15,8 +15,8 @@ const PARTS = [
   },
   {
     title: "Solutions and discussions",
-    text: "Share how you solved each coding problem and see other approaches — unlocked once you've solved it, so nothing is spoiled.",
-    live: false,
+    text: "Every coding problem has its own Solutions and Discussion. Open a problem on Krpex Code and find them under Community. Solutions unlock once you've solved it.",
+    live: true,
   },
   {
     title: "Boards for every subject",

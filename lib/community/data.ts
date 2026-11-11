@@ -2,10 +2,11 @@ import "server-only"
 
 import { cache } from "react"
 
+import type { MyCommunityStatus, PostKind, PostList, Thread } from "@/lib/community/posts"
 import type { MyPublicProfile, PublicProfile } from "@/lib/community/profile"
 import { createClient } from "@/lib/supabase/server"
 
-// Community reads (migration 033). Each returns an empty answer if the migration isn't applied yet.
+// Community reads (migrations 033–034). Each returns an empty answer if the migration isn't applied yet.
 
 /** The signed-in learner's own profile settings, or null if they haven't claimed a handle. */
 export async function getMyPublicProfile(): Promise<MyPublicProfile | null> {
@@ -31,4 +32,27 @@ export async function getPublicHandles(): Promise<string[]> {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc("public_profile_handles")
   return error || !Array.isArray(data) ? [] : (data as string[])
+}
+
+/** A space's posts of one kind (locked solutions come back with counts only). */
+export async function getPostList(space: string, kind: PostKind, sort: "top" | "new" = "top", limit = 20, offset = 0): Promise<PostList> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("community_list", { p_space: space, p_kind: kind, p_sort: sort, p_limit: limit, p_offset: offset })
+  if (error || !data) return { locked: kind === "solution", posts: [], counts: { solution: 0, discussion: 0 } }
+  return data as PostList
+}
+
+/** One post with its comments, or null. */
+export const getThread = cache(async (id: string): Promise<Thread | null> => {
+  if (!/^[0-9a-f-]{36}$/.test(id)) return null
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("community_thread", { p_id: id })
+  return error || !data ? null : (data as Thread)
+})
+
+/** Whether the signed-in learner can post, or why not. */
+export async function getMyCommunityStatus(): Promise<MyCommunityStatus> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("community_my_status")
+  return error || !data ? { can_post: false, reason: "not_signed_in" } : (data as MyCommunityStatus)
 }

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState, useTransition } from "react"
 
 import { revealSolutionAction } from "@/app/(code)/code/p/[slug]/actions"
+import { CommunityCard, type CommunityLinks } from "@/components/code/workspace/community-card"
 import { DifficultyBadge } from "@/components/code/difficulty-badge"
 import { CodeEditor } from "@/components/code/editor"
 import { IconBulb, IconCircleCheck, IconDoc, IconFlask, IconHistory, IconKey, IconLock, IconSparkle, IconTag } from "@/components/code/icons"
@@ -39,6 +40,7 @@ export function LeftPanel({
   submitOutcome,
   onLoadCode,
   coach,
+  community,
 }: {
   tab: LeftTab
   setTab: (t: LeftTab) => void
@@ -57,6 +59,8 @@ export function LeftPanel({
   onLoadCode: (lang: CodeLanguage, code: string) => void
   /** The AI coach panel (built by the workspace, which owns the code and the last failing test). */
   coach: React.ReactNode
+  /** Community solutions and discussion on community.krpex.in (null if unavailable). */
+  community: CommunityLinks | null
 }) {
   const tabs: { id: LeftTab; label: string; icon: React.ReactNode }[] = [
     { id: "description", label: "Description", icon: <IconDoc width={15} height={15} /> },
@@ -87,12 +91,12 @@ export function LeftPanel({
       </div>
       <div role="tabpanel" className="min-h-0 flex-1 overflow-y-auto">
         {tab === "description" && (
-          <Description problem={problem} statement={statement} stats={stats} solved={solved} revealed={revealed} daily={daily} signedIn={signedIn} problemsHref={problemsHref} />
+          <Description problem={problem} statement={statement} stats={stats} solved={solved} revealed={revealed} daily={daily} signedIn={signedIn} problemsHref={problemsHref} community={community} />
         )}
         {tab === "coach" && coach}
         {tab === "solution" && <Solution problem={problem} solved={solved} revealed={revealed} setRevealed={setRevealed} signedIn={signedIn} />}
         {tab === "submissions" && <Submissions submissions={submissions} signedIn={signedIn} loginHref={loginHref} onLoadCode={onLoadCode} />}
-        {tab === "result" && submitOutcome && <Result outcome={submitOutcome} problem={problem} signedIn={signedIn} loginHref={loginHref} onSolution={() => setTab("solution")} onCoach={() => setTab("coach")} />}
+        {tab === "result" && submitOutcome && <Result outcome={submitOutcome} problem={problem} signedIn={signedIn} loginHref={loginHref} onSolution={() => setTab("solution")} onCoach={() => setTab("coach")} community={community} />}
       </div>
     </div>
   )
@@ -107,6 +111,7 @@ function Description({
   daily,
   signedIn,
   problemsHref,
+  community,
 }: {
   problem: WorkspaceProblem
   statement: React.ReactNode
@@ -116,6 +121,7 @@ function Description({
   daily: boolean
   signedIn: boolean
   problemsHref: string
+  community: CommunityLinks | null
 }) {
   const [hintsOpen, setHintsOpen] = useState(0)
   const rate = acceptance(stats ?? undefined)
@@ -201,6 +207,7 @@ function Description({
           )}
           {hintsOpen > 0 && <p className="mt-2 text-xs text-muted-foreground">Hints never cost XP.</p>}
         </section>
+        {community && <CommunityCard community={community} solved={solved} />}
       </div>
 
       <dl className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
@@ -439,6 +446,7 @@ function Result({
   loginHref,
   onSolution,
   onCoach,
+  community,
 }: {
   outcome: SubmitOutcome
   problem: WorkspaceProblem
@@ -446,6 +454,7 @@ function Result({
   loginHref: string
   onSolution: () => void
   onCoach: () => void
+  community: CommunityLinks | null
 }) {
   const { summary } = outcome
   const ok = summary.verdict === "accepted"
@@ -493,6 +502,18 @@ function Result({
           </p>
           <CaseView run={outcome.failing} params={problem.params} lang={outcome.lang} />
         </div>
+      )}
+      {ok && signedIn && community && (
+        <p className="mt-6 text-sm">
+          <a href={community.shareHref} className="font-medium text-primary hover:underline">
+            Share your solution with the community
+          </a>{" "}
+          or{" "}
+          <a href={community.solutionsHref} className="font-medium text-primary hover:underline">
+            see how others solved it
+          </a>
+          .
+        </p>
       )}
       {!ok && (
         <p className="mt-6 text-xs text-muted-foreground">

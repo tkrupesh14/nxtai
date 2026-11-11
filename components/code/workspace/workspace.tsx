@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 
 import { CoachPanel, type CoachFailure } from "./coach-panel"
 import { ConsolePanel, type ConsoleTab } from "./console-panel"
+import type { CommunityLinks } from "./community-card"
 import { LeftPanel, type LeftTab } from "./left-panel"
 import { TopBar } from "./top-bar"
 import type { CaseRun, ExpectedInfo, ListItem, RunOutcome, SavedSubmission, Stats, SubmitOutcome, WorkspaceProblem } from "./types"
@@ -75,6 +76,7 @@ export function Workspace({
   initialCoach,
   coachAllowance,
   plan,
+  community,
 }: {
   problem: WorkspaceProblem
   statement: React.ReactNode
@@ -93,6 +95,8 @@ export function Workspace({
   coachAllowance: CoachAllowance | null
   /** Set when the problem was opened from a study plan: the arrows and list then follow the plan. */
   plan: { slug: string; title: string; href: string } | null
+  /** Community solutions and discussion (community.krpex.in). */
+  community: CommunityLinks | null
 }) {
   const signedIn = Boolean(user)
   const samples = problem.tests.slice(0, problem.samples)
@@ -348,6 +352,7 @@ export function Workspace({
       <div ref={outer.container} className="flex min-h-0 flex-1 gap-0 px-2 pb-2" style={{ "--left": `${outer.size}%` } as React.CSSProperties}>
         <section aria-label="Problem" className={cn("min-h-0 min-w-0 flex-1 lg:w-[var(--left)] lg:flex-none", mobileTab === "problem" ? "flex flex-col" : "hidden lg:flex lg:flex-col")}>
           <LeftPanel
+            community={community}
             tab={leftTab}
             setTab={setLeftTab}
             problem={problem}

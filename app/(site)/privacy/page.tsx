@@ -55,6 +55,12 @@ export default function PrivacyPage() {
             email or your code. You can make it private again at any time, and it is deleted with your account.
           </li>
           <li>
+            <strong>Community posts:</strong> solutions, discussions, comments and upvotes you make on Krpex Community,
+            and reports you send. Posts and comments are shown to other learners with your handle, display name and level
+            (a problem&apos;s solutions only to people who solved it). Reports are seen only by our moderators. If you
+            delete your account, your posts stay up as &ldquo;[deleted user]&rdquo; and your upvotes and reports are deleted.
+          </li>
+          <li>
             <strong>Notifications:</strong> short messages about your account (a professor&apos;s reply, a payment, a
             report we looked at), shown only to you and kept for 90 days. Ones you haven&apos;t seen in the app may also be
             emailed to you; you choose how often, or turn this off, in your settings or from any of these emails. If you

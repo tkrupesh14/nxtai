@@ -131,3 +131,24 @@ test("Krpex Community: home, guidelines, sitemap; profiles moved there from Code
   }
   expect(errors).toEqual([])
 })
+
+test("each problem has community solutions (locked until solved) and a discussion", async ({ page }) => {
+  const community = live ? "https://community.krpex.in" : "/community"
+  const code = live ? "https://code.krpex.in" : "/code"
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  await page.goto(`${code}/p/two-sum`)
+  const card = page.locator("#community")
+  await expect(card.getByRole("link", { name: /community solutions? →/ })).toBeVisible()
+  await expect(card.getByText("Solve it to unlock")).toBeVisible()
+
+  await page.goto(`${community}/p/two-sum`)
+  await expect(page).toHaveURL(/\/p\/two-sum\/solutions$/)
+  await expect(page.getByRole("heading", { name: "34. Two sum" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: /community solutions? — solve it to unlock/ })).toBeVisible()
+  await page.getByRole("link", { name: /^Discussion/ }).click()
+  await expect(page).toHaveURL(/\/p\/two-sum\/discuss$/)
+  await expect(page.getByRole("link", { name: "Log in to post" })).toBeVisible()
+  expect((await page.goto(`${community}/p/not-a-problem/discuss`))?.status()).toBe(404)
+  expect(errors).toEqual([])
+})

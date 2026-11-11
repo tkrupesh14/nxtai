@@ -11,6 +11,7 @@ import {
   ReviewLessonStatusButton,
   RevokeInviteButton,
 } from "@/components/learn/admin-forms"
+import { CommunityBanForm, ModerateButtons, ProfileVisibilityForm } from "@/components/learn/admin-community"
 import { AccountSection } from "@/components/learn/account-section"
 import { Input } from "@/components/site/ui/input"
 import { Button } from "@/components/site/ui/button"
@@ -90,13 +91,26 @@ type AdminInvite = { id: string; email: string; subject: string; expires_at: str
 const th = "px-3 py-2 text-left font-medium whitespace-nowrap"
 const td = "px-3 py-2 whitespace-nowrap"
 
+type CommunityItem = {
+  target: "post" | "comment"
+  id: string
+  path: string
+  title: string
+  body: string | null
+  code: string | null
+  status: string
+  author: { handle: string; level: number } | { deleted: true }
+  author_email: string | null
+  reports: { reason: string; note: string | null; at: string }[]
+}
+
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const supabase = await createClient()
   const { data: isAdmin } = await supabase.rpc("is_admin")
   if (!isAdmin) notFound()
   const { q = "" } = await searchParams
 
-  const [overview, daily, users, payments, reports, errors, profs, reviewQueue] = await Promise.all([
+  const [overview, daily, users, payments, reports, errors, profs, reviewQueue, community] = await Promise.all([
     supabase.rpc("admin_overview"),
     supabase.rpc("admin_daily", { p_days: 14 }),
     supabase.rpc("admin_users", { p_search: q.slice(0, 100), p_limit: 50 }),
@@ -105,7 +119,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_errors", { p_hours: 24 }),
     supabase.rpc("admin_professors"),
     supabase.rpc("admin_review_lessons"),
+    supabase.rpc("admin_community_queue"),
   ])
+  const communityQueue = (community.data ?? []) as CommunityItem[]
   const reviewLessons = (reviewQueue.data ?? []) as AdminReviewLesson[]
   const professors = ((profs.data as { professors?: AdminProfessor[] } | null)?.professors ?? []) as AdminProfessor[]
   const invites = ((profs.data as { invites?: AdminInvite[] } | null)?.invites ?? []) as AdminInvite[]
@@ -115,7 +131,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const paymentRows = (payments.data ?? []) as Payment[]
   const reportRows = (reports.data ?? []) as Report[]
   const errorRows = (errors.data ?? []) as ErrorGroup[]
-  const failed = [overview, daily, users, payments, reports, errors, profs, reviewQueue].find((r) => r.error)
+  const failed = [overview, daily, users, payments, reports, errors, profs, reviewQueue, community].find((r) => r.error)
   const outages = errorRows.filter((e) => e.message.startsWith("AI outage"))
 
   return (
@@ -202,6 +218,58 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             </ul>
           )}
         </AccountSection>
+
+        <section id="community" className="scroll-mt-24">
+          <AccountSection
+            title={`Community: reported or hidden (${communityQueue.length})`}
+            description="Three reports from learners at level 2+ hide an item until you keep or remove it. Removing tells the author why."
+          >
+            {communityQueue.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nothing to review.</p>
+            ) : (
+              <ul className="grid gap-3">
+                {communityQueue.map((c) => (
+                  <li key={`${c.target}-${c.id}`} className="grid gap-2 rounded-lg border p-4 text-sm">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <p className="min-w-0 font-medium">
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-xs">{c.target === "post" ? "Post" : "Comment"}</span>{" "}
+                        {c.status === "hidden" && <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs text-amber-700 dark:text-amber-300">Hidden</span>}{" "}
+                        <a href={c.path} className="hover:underline">
+                          {c.title}
+                        </a>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {"deleted" in c.author ? "[deleted user]" : `@${c.author.handle} · L${c.author.level}`}
+                        {c.author_email ? ` · ${c.author_email}` : ""}
+                      </p>
+                    </div>
+                    {c.body && <p className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded bg-muted/50 p-2 text-[13px]">{c.body}</p>}
+                    {c.code && <pre className="max-h-40 overflow-auto rounded bg-muted/50 p-2 text-xs">{c.code}</pre>}
+                    <ul className="grid gap-0.5 text-xs text-muted-foreground">
+                      {c.reports.map((r, i) => (
+                        <li key={i}>
+                          <span className="font-medium text-foreground">{r.reason}</span>
+                          {r.note ? ` — ${r.note}` : ""} · {when(r.at)}
+                        </li>
+                      ))}
+                    </ul>
+                    <ModerateButtons target={c.target} id={c.id} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-5 grid gap-4 border-t pt-4">
+              <div className="grid gap-2">
+                <p className="text-sm font-medium">Stop someone posting</p>
+                <CommunityBanForm />
+              </div>
+              <div className="grid gap-2">
+                <p className="text-sm font-medium">Public profile page</p>
+                <ProfileVisibilityForm />
+              </div>
+            </div>
+          </AccountSection>
+        </section>
 
         <AccountSection
           title={`Errors, last 24 hours (${errorRows.reduce((n, e) => n + Number(e.count), 0)})`}
