@@ -126,7 +126,7 @@ describe("solutions", () => {
     await t.query(`select public.reveal_coding_solution('two-sum')`)
     l = await list("solution")
     expect(l.locked).toBe(false)
-    expect(l.posts).toEqual([expect.objectContaining({ id, author: { handle: "asha", name: "asha", level: expect.any(Number), public: true } })])
+    expect(l.posts).toEqual([expect.objectContaining({ id, author: { handle: "asha", name: "asha", level: expect.any(Number), public: true, professor: false } })])
     expect((await thread(id))!.post).toMatchObject({ body: "Store each number's index.", code: "def two_sum(n, t): pass", language: "python" })
   })
 })

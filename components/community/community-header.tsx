@@ -25,6 +25,9 @@ export async function CommunityHeader() {
             </span>
           </Link>
           <nav className="hidden items-center gap-5 text-sm md:flex">
+            <Link href={links.community("/c")} className={nav}>
+              Boards
+            </Link>
             <Link href={links.community("/guidelines")} className={nav}>
               Guidelines
             </Link>

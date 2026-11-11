@@ -5,9 +5,13 @@ import { Badge } from "@/components/site/ui/badge"
 import { Button } from "@/components/site/ui/button"
 import { ProfessorAvatar } from "@/components/learn/professor"
 import { ProgressSummary } from "@/components/learn/progress-summary"
+import { FeedList } from "@/components/community/feed-list"
 import { getCategory } from "@/lib/learning/catalog"
 import { CatalogCard } from "@/components/site/catalog-card"
 import { CATALOG } from "@/lib/learning/course-catalog"
+import { codeLinks } from "@/lib/code/host"
+import { getBoard } from "@/lib/community/boards"
+import { getFeed } from "@/lib/community/data"
 import { getMyXp, getQuestionTimes, getStreakExtras, listCourses } from "@/lib/learning/data"
 import { learningStats } from "@/lib/learning/stats"
 import { courseProfessor } from "@/lib/teach/teacher"
@@ -82,7 +86,14 @@ async function CourseGrid({ courses }: { courses: Awaited<ReturnType<typeof list
 }
 
 export default async function MyCoursesPage() {
-  const [courses, questionTimes, xp, extras] = await Promise.all([listCourses(), getQuestionTimes(), getMyXp(), getStreakExtras()])
+  const [courses, questionTimes, xp, extras, feed, links] = await Promise.all([
+    listCourses(),
+    getQuestionTimes(),
+    getMyXp(),
+    getStreakExtras(),
+    getFeed("courses", 5),
+    codeLinks(),
+  ])
   if (courses.length === 0) redirect("/onboarding")
   const stats = learningStats(courses.flatMap((c) => c.lessons), questionTimes, Date.now(), extras)
   const active = courses.filter((c) => c.status !== "archived")
@@ -96,6 +107,8 @@ export default async function MyCoursesPage() {
   const resume =
     [...active].filter((c) => c.nextLesson).sort((a, b) => (b.lastActive ?? b.created_at).localeCompare(a.lastActive ?? a.created_at))[0] ?? null
   const archived = courses.filter((c) => c.status === "archived")
+  // Course community boards for the learner's own subjects (community.krpex.in/c/<category>).
+  const boards = [...mine].map(getBoard).filter((b) => b !== null)
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 md:py-14">
@@ -128,6 +141,36 @@ export default async function MyCoursesPage() {
 
       <h2 className="mb-4 text-lg font-semibold tracking-tight">Your courses</h2>
       <CourseGrid courses={active} />
+      <section aria-labelledby="community" className="mt-12">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+          <h2 id="community" className="text-lg font-semibold tracking-tight">
+            Course communities
+          </h2>
+          <a href={links.community("/c")} className="text-sm font-medium text-primary hover:underline">
+            All boards
+          </a>
+        </div>
+        {boards.length > 0 && (
+          <ul className="mb-4 flex flex-wrap gap-2">
+            {boards.map((b) => (
+              <li key={b.slug}>
+                <a href={links.community(`/c/${b.slug}`)} className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-sm hover:border-primary/50">
+                  <span aria-hidden>{b.icon}</span>
+                  {b.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+        {feed.length ? (
+          <FeedList posts={feed} community={links.community} compact />
+        ) : (
+          <p className="rounded-xl border border-dashed p-5 text-sm text-muted-foreground">
+            Ask other learners about your subjects, share notes and help each other. Nobody has posted yet — start the first discussion.
+          </p>
+        )}
+      </section>
+
       {suggestions.length > 0 && (
         <section aria-labelledby="explore" className="mt-12">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-2">

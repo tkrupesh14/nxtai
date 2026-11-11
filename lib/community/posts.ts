@@ -11,6 +11,13 @@ export const isSection = (s: string): s is Section => s === "solutions" || s ===
 export const problemSpace = (slug: string) => `code:p:${slug}`
 export const spaceProblem = (space: string) => (/^code:p:[a-z0-9]+(-[a-z0-9]+)*$/.test(space) ? space.slice(7) : null)
 
+/** Path of a post on community.krpex.in (pass it to links.community). */
+export function postPath(space: string, kind: PostKind, id: string): string {
+  const board = /^board:([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(space)?.[1]
+  if (board) return `/c/${board}/${id}`
+  return `/p/${spaceProblem(space) ?? "x"}/${KIND_SECTION[kind]}/${id}`
+}
+
 export const LIMITS = { title: 120, body: 10000, code: 20000, comment: 2000, note: 500 } as const
 export const POST_LEVEL = 2
 
@@ -23,7 +30,8 @@ export const REPORT_REASONS = [
 ] as const
 export type ReportReason = (typeof REPORT_REASONS)[number]["value"]
 
-export type AuthorCard = { handle: string; name: string; level: number; public: boolean } | { deleted: true }
+/** professor: an approved (human) professor account (migration 035). */
+export type AuthorCard = { handle: string; name: string; level: number; public: boolean; professor?: boolean } | { deleted: true }
 export const isDeleted = (a: AuthorCard | null | undefined): a is { deleted: true } | null | undefined => !a || "deleted" in a
 
 export type PostSummary = {
@@ -40,6 +48,9 @@ export type PostSummary = {
   mine: boolean
   voted: boolean
 }
+
+/** A discussion in the cross-board feed (community_feed, migration 035). */
+export type FeedPost = Omit<PostSummary, "mine" | "voted"> & { space: string; activity_at: string }
 
 export type PostList = { locked: boolean; posts: PostSummary[]; counts: Record<PostKind, number> }
 

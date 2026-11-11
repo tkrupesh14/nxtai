@@ -2,11 +2,12 @@ import "server-only"
 
 import { cache } from "react"
 
-import type { MyCommunityStatus, PostKind, PostList, Thread } from "@/lib/community/posts"
+import type { BoardStats } from "@/lib/community/boards"
+import type { FeedPost, MyCommunityStatus, PostKind, PostList, Thread } from "@/lib/community/posts"
 import type { MyPublicProfile, PublicProfile } from "@/lib/community/profile"
 import { createClient } from "@/lib/supabase/server"
 
-// Community reads (migrations 033–034). Each returns an empty answer if the migration isn't applied yet.
+// Community reads (migrations 033–035). Each returns an empty answer if the migration isn't applied yet.
 
 /** The signed-in learner's own profile settings, or null if they haven't claimed a handle. */
 export async function getMyPublicProfile(): Promise<MyPublicProfile | null> {
@@ -55,4 +56,18 @@ export async function getMyCommunityStatus(): Promise<MyCommunityStatus> {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc("community_my_status")
   return error || !data ? { can_post: false, reason: "not_signed_in" } : (data as MyCommunityStatus)
+}
+
+/** Active boards with post counts and last activity (migration 035). */
+export async function getBoardStats(): Promise<BoardStats[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("community_boards")
+  return error || !Array.isArray(data) ? [] : (data as BoardStats[])
+}
+
+/** Most recently active discussions: everything, Code's (problems + general boards) or the course boards. */
+export async function getFeed(scope: "code" | "courses" | null = null, limit = 20, offset = 0): Promise<FeedPost[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("community_feed", { p_scope: scope, p_limit: limit, p_offset: offset })
+  return error || !Array.isArray(data) ? [] : (data as FeedPost[])
 }

@@ -152,3 +152,25 @@ test("each problem has community solutions (locked until solved) and a discussio
   expect((await page.goto(`${community}/p/not-a-problem/discuss`))?.status()).toBe(404)
   expect(errors).toEqual([])
 })
+
+test("community boards: the list, a general and a course board, and their sitemap entries", async ({ page, request }) => {
+  const community = live ? "https://community.krpex.in" : "/community"
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  await page.goto(`${community}/`)
+  await expect(page.getByRole("heading", { name: /^Latest discussions/ })).toBeVisible()
+  await page.getByRole("link", { name: "All boards" }).first().click()
+  await expect(page).toHaveURL(/\/c$/)
+  await expect(page.getByRole("heading", { name: "Boards", level: 1 })).toBeVisible()
+  await page.getByRole("link", { name: "Interview prep" }).click()
+  await expect(page).toHaveURL(/\/c\/interviews$/)
+  await expect(page.getByRole("heading", { name: "Interview prep", level: 1 })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Log in to post" })).toBeVisible()
+  await page.goto(`${community}/c/science`)
+  await expect(page.getByRole("heading", { name: "Science", level: 1 })).toBeVisible()
+  expect((await page.goto(`${community}/c/not-a-board`))?.status()).toBe(404)
+  const sitemap = await (await request.get(`${community}/sitemap.xml`)).text()
+  expect(sitemap).toContain("https://community.krpex.in/c/help</loc>")
+  expect(sitemap).toContain("https://community.krpex.in/c/exam-prep</loc>")
+  expect(errors).toEqual([])
+})

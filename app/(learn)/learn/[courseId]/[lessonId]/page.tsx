@@ -9,9 +9,11 @@ import { LessonGenerator } from "@/components/learn/lesson-generator"
 import { ProfessorCard } from "@/components/learn/professor"
 import { Quiz } from "@/components/learn/quiz"
 import { DifficultyText } from "@/components/code/difficulty-badge"
+import { Button } from "@/components/site/ui/button"
 import { codeLinks } from "@/lib/code/host"
 import { practiceFor, PRACTICE_SUBCATEGORIES } from "@/lib/code/practice"
 import { getCategory } from "@/lib/learning/catalog"
+import { getBoard } from "@/lib/community/boards"
 import { courseProfessor } from "@/lib/teach/teacher"
 import { getAccountSummary, getCourse, getProfessorChat, isUnlocked, isUuid } from "@/lib/learning/data"
 import { getSections, sourcesLabel } from "@/lib/sources/data"
@@ -61,7 +63,10 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
     hasContent && data.course.category === "coding" && PRACTICE_SUBCATEGORIES.includes(data.course.subcategory ?? "")
       ? practiceFor([lesson.title, lesson.objective, ...takeaways].join("\n"), data.course.level)
       : null
-  const code = practice?.problems.length ? await codeLinks() : null
+  const links = hasContent ? await codeLinks() : null
+  const code = practice?.problems.length ? links : null
+  // Course community board for this subject (community.krpex.in/c/<category>), with the lesson as a starting title.
+  const board = links && category ? getBoard(category.id) : null
 
   const endOfLesson = (
     <>
@@ -96,6 +101,23 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
               More {practice.tag.toLowerCase()} problems →
             </a>
           )}
+        </aside>
+      )}
+      {board && links && (
+        <aside className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-5" aria-label="Ask the community">
+          <div className="min-w-0 flex-1 basis-64">
+            <h2 className="font-semibold">Ask the community</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Stuck, or curious about something in this lesson? Ask other learners on the{" "}
+              <a href={links.community(`/c/${board.slug}`)} className="font-medium text-primary hover:underline">
+                {board.title}
+              </a>{" "}
+              board. Real people answer there, not the AI professor.
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <a href={links.community(`/c/${board.slug}/new?${new URLSearchParams({ title: `Question about “${lesson.title}”`.slice(0, 120) })}`)}>Ask a question</a>
+          </Button>
         </aside>
       )}
       {questions.length > 0 && (

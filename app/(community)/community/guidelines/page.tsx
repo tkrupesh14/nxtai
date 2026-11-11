@@ -19,6 +19,10 @@ const RULES: { title: string; text: string }[] = [
     title: "Keep personal details private",
     text: "Don't post phone numbers, addresses, emails or anything that identifies you or someone else. Your email is never shown on Krpex.",
   },
+  {
+    title: "Know who you're talking to",
+    text: "Everyone here is a real person. A “Professor” label means a teacher Krpex invited and approved. The AI professors from your courses never post in the community.",
+  },
   { title: "Keep it legal and safe", text: "Nothing illegal, sexual or violent, and nothing that puts anyone at risk." },
 ]
 

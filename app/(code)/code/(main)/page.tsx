@@ -1,11 +1,13 @@
 import Link from "next/link"
 
 import { PlanProgress } from "@/components/code/plan-progress"
+import { FeedList } from "@/components/community/feed-list"
 import { Button } from "@/components/site/ui/button"
 import { getMyProgress, getPlanState } from "@/lib/code/data"
 import { codeLinks } from "@/lib/code/host"
 import { nextInPlan, PLANS, planBySlug, planProblems } from "@/lib/code/plans"
 import { PROBLEM_SUMMARIES } from "@/lib/code/problems"
+import { getFeed } from "@/lib/community/data"
 import { getSignedInUser } from "@/lib/supabase/profile"
 
 const NOW = [
@@ -19,13 +21,12 @@ const NOW = [
 const NEXT = [
   { title: "More problems and languages", body: "The bank growing to 300 problems, SQL practice, and a web playground for HTML, CSS and JavaScript." },
   { title: "Contests", body: "Weekly contests with a leaderboard and leagues, checked on our servers so rankings are fair." },
-  { title: "Community", body: "Profiles, discussions and shared solutions for each problem — opened once you've solved it, so nothing is spoiled." },
 ]
 
 const titles = new Map(PROBLEM_SUMMARIES.map((p) => [p.slug, `${p.number}. ${p.title}`]))
 
 export default async function CodeHome() {
-  const [links, user] = await Promise.all([codeLinks(), getSignedInUser()])
+  const [links, user, feed] = await Promise.all([codeLinks(), getSignedInUser(), getFeed("code", 5)])
   const [progress, state] = user ? await Promise.all([getMyProgress(), getPlanState()]) : [null, null]
   const solved = new Set(progress?.solved ?? [])
   const following = (state?.follows ?? []).map(planBySlug).filter((p) => p !== null)
@@ -125,9 +126,37 @@ export default async function CodeHome() {
         </ul>
       </section>
 
+      <section className="mx-auto max-w-6xl px-4 py-8" aria-labelledby="community">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <h2 id="community" className="text-2xl font-semibold tracking-tight">
+            From the community
+          </h2>
+          <a href={links.community("/")} className="text-sm font-medium text-primary hover:underline">
+            Krpex Community →
+          </a>
+        </div>
+        {feed.length ? (
+          <div className="mt-6">
+            <FeedList posts={feed} community={links.community} compact />
+          </div>
+        ) : (
+          <p className="mt-6 rounded-xl border border-dashed p-5 text-sm text-muted-foreground">
+            Every problem has its own Discussion, and its community Solutions open once you&apos;ve solved it. For anything else, try the{" "}
+            <a href={links.community("/c/help")} className="font-medium text-primary hover:underline">
+              Help
+            </a>{" "}
+            and{" "}
+            <a href={links.community("/c/interviews")} className="font-medium text-primary hover:underline">
+              Interview prep
+            </a>{" "}
+            boards.
+          </p>
+        )}
+      </section>
+
       <section className="mx-auto max-w-6xl px-4 pb-20 pt-4">
         <h2 className="text-2xl font-semibold tracking-tight">Coming next</h2>
-        <ul className="mt-6 grid gap-4 md:grid-cols-3">
+        <ul className="mt-6 grid gap-4 md:grid-cols-2">
           {NEXT.map((f) => (
             <li key={f.title} className="rounded-xl border border-dashed p-5">
               <h3 className="font-semibold">{f.title}</h3>
