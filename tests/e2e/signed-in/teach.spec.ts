@@ -378,9 +378,26 @@ test("the admin panel has one page per section, and old links open the right one
     await expect(nav.getByRole("link", { name: label })).toHaveAttribute("aria-current", "page")
   }
 
-  // Search keeps you on Users.
-  await page.goto("/admin/users?q=example.com")
-  await expect(page.getByRole("cell", { name: /@example\.com$/ }).first()).toBeVisible()
+  // Users: filter, open a learner, give credits from their page and see it in the history.
+  await page.goto("/admin/users?q=example.com&active=7d")
+  const users = page.getByRole("list", { name: "Users" })
+  await expect(users.getByRole("link").first()).toBeVisible()
+  await users.getByRole("link").first().click()
+  await expect(page).toHaveURL(/\/admin\/users\/[0-9a-f-]{36}$/)
+  const learnerPath = new URL(page.url()).pathname
+  for (const h of ["Credits and Pro", "Learning", "AI use", "Payments", "Code", "Community", "Admin history"]) {
+    await expect(page.getByRole("heading", { name: h, level: 2 })).toBeVisible()
+  }
+  await page.getByLabel("Credits").fill("3")
+  await page.getByLabel("Note (optional)").fill("e2e goodwill")
+  await page.getByRole("button", { name: "Apply" }).first().click()
+  await expect(page.getByText(/^Done: \+3 credits for /)).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole("list", { name: "Admin history" }).getByText("Gave 3 credits")).toBeVisible()
+  await expect(page.getByRole("list", { name: "Credit history" }).getByText("e2e goodwill")).toBeVisible()
+  await page.goto("/admin/system")
+  await expect(page.getByRole("list", { name: "Admin activity" }).getByText("Gave 3 credits").first()).toBeVisible()
+  expect((await page.request.get("/admin/users/not-a-user")).status()).toBe(404)
 
   // Notifications already sent link to /admin#community.
   await page.goto("/admin#community")
@@ -388,7 +405,7 @@ test("the admin panel has one page per section, and old links open the right one
 
   // Phones: tabs scroll, the page doesn't.
   await page.setViewportSize({ width: 360, height: 760 })
-  for (const path of ["/admin", "/admin/users", "/admin/professors"]) {
+  for (const path of ["/admin", "/admin/users", learnerPath, "/admin/professors"]) {
     await page.goto(path)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
     // Overflow can be clipped rather than scroll, so also check every section ends inside the screen.

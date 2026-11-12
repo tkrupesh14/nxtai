@@ -19,15 +19,20 @@ import { Input } from "@/components/site/ui/input"
 import { Label } from "@/components/site/ui/label"
 import { REVIEW_LEVELS } from "@/lib/teach/reviews"
 
-export function GrantForm() {
+/** Give credits or Pro. With `email`, it's for that learner only (their admin page). */
+export function GrantForm({ email }: { email?: string } = {}) {
   const [state, action, pending] = useActionState(grantAction, {})
   return (
     <form action={action} className="grid gap-3">
-      <div className="grid gap-3 sm:grid-cols-[2fr_1fr_1fr]">
-        <div className="grid gap-1.5">
-          <Label htmlFor="g-email">Learner email</Label>
-          <Input id="g-email" name="email" type="email" required autoComplete="off" />
-        </div>
+      <div className={email ? "grid grid-cols-2 gap-3" : "grid gap-3 sm:grid-cols-[2fr_1fr_1fr]"}>
+        {email ? (
+          <input type="hidden" name="email" value={email} />
+        ) : (
+          <div className="grid gap-1.5">
+            <Label htmlFor="g-email">Learner email</Label>
+            <Input id="g-email" name="email" type="email" required autoComplete="off" />
+          </div>
+        )}
         <div className="grid gap-1.5">
           <Label htmlFor="g-credits">Credits</Label>
           <Input id="g-credits" name="credits" type="number" defaultValue={0} min={-100000} max={100000} />

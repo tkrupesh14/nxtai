@@ -37,3 +37,42 @@ export function AdminHeading({ title, note, errors = [] }: { title: string; note
 }
 
 export { AccountSection as AdminSection }
+
+/** One line for an admin audit entry (admin_audit, migration 036). */
+export function auditText(a: { action: string; detail: Record<string, unknown> }) {
+  const d = a.detail ?? {}
+  const what = d.comment ? "a comment" : "a post"
+  switch (true) {
+    case a.action === "grant": {
+      const credits = Number(d.credits ?? 0)
+      const days = Number(d.pro_days ?? 0)
+      const parts = [credits ? `${credits > 0 ? "gave" : "took"} ${Math.abs(credits)} credits` : "", days ? `gave ${days} Pro days` : ""].filter(Boolean)
+      return parts.join(" and ").replace(/^./, (c) => c.toUpperCase())
+    }
+    case a.action === "unban":
+      return "Let them post again"
+    case a.action.startsWith("ban:"):
+      return a.action === "ban:forever" ? "Stopped them posting for good" : `Stopped them posting for ${a.action.slice(4)} days`
+    case a.action === "hide_profile":
+      return "Hid their profile page"
+    case a.action === "show_profile":
+      return "Showed their profile page again"
+    case a.action === "keep":
+      return `Kept ${what} after reports`
+    case a.action === "remove":
+      return `Removed ${what}`
+    default:
+      return a.action
+  }
+}
+
+/** A small rounded label. */
+export function Pill({ children, tone = "muted" }: { children: React.ReactNode; tone?: "muted" | "primary" | "warn" | "danger" }) {
+  const tones = {
+    muted: "bg-muted text-muted-foreground",
+    primary: "bg-primary/10 text-primary",
+    warn: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+    danger: "bg-destructive/15 text-destructive-foreground",
+  }
+  return <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>
+}

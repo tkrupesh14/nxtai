@@ -30,12 +30,13 @@ export function ModerateButtons({ target, id }: { target: "post" | "comment"; id
   )
 }
 
-export function CommunityBanForm() {
+/** With `handle`, it's for that learner only (their admin page). */
+export function CommunityBanForm({ handle, banned }: { handle?: string; banned?: boolean } = {}) {
   const [state, action, pending] = useActionState<AdminResult, FormData>(communityBanAction, {})
   return (
     <form action={action} className="flex flex-wrap items-end gap-2">
-      <Input name="handle" placeholder="@handle" aria-label="Handle" required className="h-9 w-40" />
-      <select name="length" aria-label="Length" defaultValue="7" className="h-9 rounded-md border bg-background px-2 text-sm">
+      {handle ? <input type="hidden" name="handle" value={handle} /> : <Input name="handle" placeholder="@handle" aria-label="Handle" required className="h-9 w-40" />}
+      <select name="length" aria-label="Length" defaultValue={banned ? "0" : "7"} className="h-9 rounded-md border bg-background px-2 text-sm">
         <option value="7">No posting for 7 days</option>
         <option value="30">No posting for 30 days</option>
         <option value="forever">No posting, ever</option>
@@ -50,12 +51,12 @@ export function CommunityBanForm() {
   )
 }
 
-export function ProfileVisibilityForm() {
+export function ProfileVisibilityForm({ handle, hidden }: { handle?: string; hidden?: boolean } = {}) {
   const [state, action, pending] = useActionState<AdminResult, FormData>(profileVisibilityAction, {})
   return (
     <form action={action} className="flex flex-wrap items-end gap-2">
-      <Input name="handle" placeholder="@handle" aria-label="Handle" required className="h-9 w-40" />
-      <select name="hidden" aria-label="Profile" defaultValue="hide" className="h-9 rounded-md border bg-background px-2 text-sm">
+      {handle ? <input type="hidden" name="handle" value={handle} /> : <Input name="handle" placeholder="@handle" aria-label="Handle" required className="h-9 w-40" />}
+      <select name="hidden" aria-label="Profile" defaultValue={hidden ? "show" : "hide"} className="h-9 rounded-md border bg-background px-2 text-sm">
         <option value="hide">Hide profile page</option>
         <option value="show">Show profile page again</option>
       </select>
