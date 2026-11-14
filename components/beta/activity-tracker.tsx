@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 
+import { replayAllowed, startReplay, stopReplay } from "@/lib/beta/replay"
+import { testerCode } from "@/lib/beta/tester-code"
 import type { FeedbackSite } from "@/lib/feedback/options"
 import { createClient } from "@/lib/supabase/client"
 
@@ -44,6 +46,7 @@ function referrerPath() {
  * batches to /api/beta/activity. Nothing is sent for visitors who aren't signed in; for accounts that aren't tracked
  * the server says so and this tab stays quiet for 15 minutes before asking again. Only the path is sent, never the query string.
  * Leaving the tab ends the current visit (so it isn't lost on phones); coming back starts a new one on the same page.
+ * Tracked testers' sessions are also recorded with Clarity (lib/beta/replay.ts), except on private pages.
  */
 export function ActivityTracker({ site }: { site: FeedbackSite }) {
   const pathname = usePathname()
@@ -51,6 +54,7 @@ export function ActivityTracker({ site }: { site: FeedbackSite }) {
   const queue = useRef<View[]>([])
   const visit = useRef<Visit | null>(null)
   const away = useRef<string | null>(null) // the page the tab was hidden on
+  const code = useRef<string | null>(null) // anonymous tester code for session recordings
 
   const send = (beacon: boolean) => {
     if (status.current !== "on" || queue.current.length === 0) return
@@ -105,6 +109,8 @@ export function ActivityTracker({ site }: { site: FeedbackSite }) {
             if (!r.track) return void (status.current = "off")
           }
           status.current = "on"
+          code.current = await testerCode(data.session.user.id).catch(() => null)
+          if (code.current) startReplay(site, code.current)
         })
     return () => {
       document.removeEventListener("visibilitychange", onHide)
@@ -117,6 +123,8 @@ export function ActivityTracker({ site }: { site: FeedbackSite }) {
   useEffect(() => {
     if (status.current === "off") return
     const path = window.location.pathname
+    if (!replayAllowed(path)) stopReplay()
+    else if (status.current === "on" && code.current) startReplay(site, code.current)
     if (visit.current?.path === path) return
     const from = visit.current?.path ?? queue.current.at(-1)?.path ?? referrerPath()
     finish()

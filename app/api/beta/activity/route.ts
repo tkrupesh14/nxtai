@@ -6,8 +6,12 @@ import { createClient } from "@/lib/supabase/server"
 // sites (one sign-in cookie for *.krpex.in). The database decides who is tracked (approved testers who agreed, while
 // the beta is closed) and answers { track: false } to everyone else, so their browsers stop sending.
 
+// Skips the database for visitors who aren't signed in (the cookie is checked there anyway).
+const signedIn = async (supabase: Awaited<ReturnType<typeof createClient>>) => Boolean((await supabase.auth.getSession()).data.session)
+
 export async function GET() {
   const supabase = await createClient()
+  if (!(await signedIn(supabase))) return NextResponse.json({ track: false })
   const { data, error } = await supabase.rpc("activity_tracking")
   if (error) console.error("activity_tracking failed:", error.message)
   return NextResponse.json({ track: data === true })
@@ -24,6 +28,7 @@ export async function POST(request: NextRequest) {
   }
   if (!Array.isArray(views)) return new NextResponse(null, { status: 400 })
   const supabase = await createClient()
+  if (!(await signedIn(supabase))) return NextResponse.json({ track: false })
   const { data, error } = await supabase.rpc("activity_record", { p_views: views.slice(0, 50) })
   if (error) console.error("activity_record failed:", error.message)
   return NextResponse.json({ track: data === true })

@@ -4,6 +4,7 @@ import { headers } from "next/headers"
 import { BetaTabs } from "@/components/admin/beta-tabs"
 import { AdminHeading, AdminSection, Pill, Tile, td, th, when } from "@/components/admin/ui"
 import { getBetaActivity, getFeedbackList, getTesterActivity, requireAdmin, type BetaActivity, type TesterEvent } from "@/lib/admin/data"
+import { testerCodeSync } from "@/lib/beta/tester-code-server"
 import { requestHost } from "@/lib/code-host"
 import { feedbackPageHref, siteLabel } from "@/lib/feedback/options"
 
@@ -29,6 +30,9 @@ const pct = (n: number, of: number) => (of ? `${Math.round((n / of) * 100)}%` : 
 const secs = (s: number | null) => (s == null ? "" : s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s`)
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" })
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Kolkata" })
+const CLARITY = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID
+/** Clarity's recordings for this project; filter by the custom tag "tester" there. */
+const recordingsHref = CLARITY ? `https://clarity.microsoft.com/projects/view/${CLARITY}/impressions` : null
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** Splits a timeline (newest first) into sessions: a gap of 30 minutes or more starts a new one. */
@@ -73,7 +77,7 @@ export default async function AdminBetaActivity({ searchParams }: { searchParams
     <>
       <AdminHeading
         title="Beta"
-        note="What approved testers who agreed to tracking do on krpex.in, Krpex Code and Krpex Community. Pages are kept 90 days; lessons, code and posts come from their own records. Times are in India time."
+        note="What approved testers who agreed to tracking do on krpex.in, Krpex Code and Krpex Community. Pages are kept 90 days; lessons, code and posts come from their own records. Times are in India time. Session recordings are in Microsoft Clarity: filter by the tag “tester” with a tester's recording tag."
         errors={[error, one?.error ?? null]}
       />
       <BetaTabs current="activity" newFeedback={feedback.data?.counts.new} />
@@ -98,6 +102,16 @@ export default async function AdminBetaActivity({ searchParams }: { searchParams
                 <Link href={`/admin/users/${tester}`} className="text-primary hover:underline">
                   account
                 </Link>{" "}
+                · recordings tagged <code className="font-mono">{testerCodeSync(tester)}</code>
+                {recordingsHref ? (
+                  <>
+                    {" "}
+                    in{" "}
+                    <a href={recordingsHref} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                      Clarity
+                    </a>
+                  </>
+                ) : null}{" "}
                 ·{" "}
                 <Link href={href({ tester: null })} className="text-primary hover:underline">
                   all testers
@@ -246,6 +260,7 @@ export default async function AdminBetaActivity({ searchParams }: { searchParams
                       <th className={`${th} text-right`}>Active days</th>
                       <th className={`${th} text-right`}>Pages</th>
                       <th className={th}>Sites</th>
+                      <th className={th}>Recording tag</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -261,6 +276,7 @@ export default async function AdminBetaActivity({ searchParams }: { searchParams
                         <td className={`${td} text-right tabular-nums`}>{t.active_days}</td>
                         <td className={`${td} text-right tabular-nums`}>{t.views}</td>
                         <td className={td}>{t.sites.map(siteLabel).join(", ") || "—"}</td>
+                        <td className={`${td} font-mono text-xs`}>{testerCodeSync(t.user_id)}</td>
                       </tr>
                     ))}
                   </tbody>

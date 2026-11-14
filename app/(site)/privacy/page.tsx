@@ -186,6 +186,16 @@ export default function PrivacyPage() {
           <li>
             <strong>{LEGAL.sessionReplay || "A session-recording service"}</strong>: session recordings of beta testers
             who agreed to them{LEGAL.sessionReplay ? "" : " (not switched on yet; we'll name it here before it is)"}.
+            {LEGAL.sessionReplay === "Microsoft Clarity" ? (
+              <>
+                {" "}
+                Microsoft also uses this data as described in the{" "}
+                <a href="https://www.microsoft.com/privacy/privacystatement" className="text-primary hover:underline" rel="noreferrer">
+                  Microsoft Privacy Statement
+                </a>
+                .
+              </>
+            ) : null}
           </li>
           <li>
             <strong>Your browser&apos;s push service (Google, Apple, Mozilla or Microsoft)</strong>: delivers notifications

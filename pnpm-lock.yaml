@@ -187,6 +187,9 @@ importers:
       '@codemirror/view':
         specifier: 6.43.15
         version: 6.43.15
+      '@microsoft/clarity':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@radix-ui/react-label':
         specifier: ^2.1.1
         version: 2.1.17(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -538,6 +541,9 @@ packages:
 
   '@marijn/find-cluster-break@1.0.4':
     resolution: {integrity: sha512-Wy0V7+SGUjnF9/TkiM1hKVDPj7jKXduPNboMVtHTA8dySMURWqfg/JZ9E2Sq8JgSJmkl7k7Qe9FLeMSrSraWmQ==}
+
+  '@microsoft/clarity@1.0.2':
+    resolution: {integrity: sha512-9EZYROFpJxEGmQpHvUFqvD3ZJ7QQSqnibYSWmS+1xusoZfG1QQ1/Al9yVBBc11DWMbJrs1pe1hLT273it/skJg==}
 
   '@next/env@16.4.3':
     resolution: {integrity: sha512-a7tz1QCcWWkwC/rPJcPMJk/UNRu9CFhDd3OHYE5hddbJrs8BqRTalxI6GlKCWEGzRLHN+S/B7a4PAHCtm25aBQ==}
@@ -2185,6 +2191,8 @@ snapshots:
       '@lezer/lr': 1.4.12
 
   '@marijn/find-cluster-break@1.0.4': {}
+
+  '@microsoft/clarity@1.0.2': {}
 
   '@next/env@16.4.3': {}
 
