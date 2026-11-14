@@ -18,12 +18,21 @@ if [[ "${1:-}" != "--no-pull" ]]; then
   git pull --ff-only
 fi
 
+# What this build is, for /admin/system (read at start by lib/system/heartbeat.ts). Taken before building,
+# because the build itself touches tsconfig.json.
+commit=$(git rev-parse --short HEAD)
+subject=$(git log -1 --pretty=%s)
+dirty=false
+[[ -n "$(git status --porcelain --untracked-files=no)" ]] && dirty=true
+
 log "Installing dependencies"
 pnpm install --frozen-lockfile
 
 log "Building into .next-build (the live site keeps running)"
 rm -rf .next-build
 NEXT_DIST_DIR=.next-build pnpm build
+
+node -e 'require("fs").writeFileSync(".next-build/krpex-build.json", JSON.stringify({ commit: process.argv[1], subject: process.argv[2], dirty: process.argv[3] === "true", built_at: new Date().toISOString() }))' "$commit" "$subject" "$dirty"
 
 log "Swapping in the new build"
 rm -rf .next-prev

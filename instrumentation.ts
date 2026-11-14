@@ -1,11 +1,14 @@
 import type { Instrumentation } from "next"
 
 export async function register() {
-  // Pushes, notification emails and reminders (lib/background-jobs.ts). Never in dev or tests, nor in a
+  // Pushes, notification emails and reminders (lib/background-jobs.ts), and the heartbeat. Never in dev or tests, nor in a
   // second production server started with KRPEX_NO_JOBS=1 (e.g. a preview next to the live site).
   if (process.env.NEXT_RUNTIME !== "nodejs" || process.env.NODE_ENV !== "production" || process.env.KRPEX_NO_JOBS) return
   const { startBackgroundJobs } = await import("@/lib/background-jobs")
   startBackgroundJobs()
+  // Admin 6.6: log this start (deploy or restart) and a health check every 5 minutes.
+  const { startHeartbeat } = await import("@/lib/system/heartbeat")
+  startHeartbeat()
 }
 
 // Every server-side error in a page, route or server action is recorded for /admin.

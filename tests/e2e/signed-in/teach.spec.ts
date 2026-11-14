@@ -369,7 +369,7 @@ test("the admin panel has one page per section, and old links open the right one
     ["Lesson reports", "/admin/reports", /^Open \(\d+\)$/],
     ["Community", "/admin/community", /^Needs review \(\d+\)$/],
     ["Professors", "/admin/professors", /^Professors \(\d+\)$/],
-    ["System", "/admin/system", /^Errors, last 24 hours/],
+    ["System", "/admin/system", /^Errors \(\d+\)$/],
   ] as const
   for (const [label, path, section] of sections) {
     await nav.getByRole("link", { name: label }).click()
@@ -416,6 +416,17 @@ test("the admin panel has one page per section, and old links open the right one
   await page.goto("/admin/system")
   await expect(page.getByRole("list", { name: "Admin activity" }).getByText("Set the dollar rate to ₹88").first()).toBeVisible()
 
+  // System: health, deploys, errors by range, source and search.
+  await page.goto("/admin/system?range=7d")
+  for (const h of ["Health checks", "Deploys and restarts", "Admin activity"]) {
+    await expect(page.getByRole("heading", { name: h, level: 2 })).toBeVisible()
+  }
+  await page.getByLabel("Search errors").fill("nothing-matches-this")
+  await page.getByLabel("Source").selectOption("server")
+  await page.getByRole("button", { name: "Show" }).click()
+  await expect(page).toHaveURL(/\/admin\/system\?range=7d&q=nothing-matches-this&source=server/)
+  await expect(page.getByRole("heading", { name: "Errors (0)", level: 2 })).toBeVisible()
+
   // Code: periods, problem sort, stuck problems, coach and runner errors.
   await page.goto("/admin/code?days=90")
   for (const h of ["By day", "Where learners get stuck", "AI coach", "Runner errors"]) {
@@ -445,7 +456,7 @@ test("the admin panel has one page per section, and old links open the right one
 
   // Phones: tabs scroll, the page doesn't.
   await page.setViewportSize({ width: 360, height: 760 })
-  for (const path of ["/admin", "/admin/users", learnerPath, "/admin/money", "/admin/code", "/admin/community", "/admin/professors"]) {
+  for (const path of ["/admin", "/admin/users", learnerPath, "/admin/money", "/admin/code", "/admin/community", "/admin/professors", "/admin/system"]) {
     await page.goto(path)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
     // Overflow can be clipped rather than scroll, so also check every section ends inside the screen.

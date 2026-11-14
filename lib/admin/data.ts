@@ -193,6 +193,37 @@ export type UserAi = { inr: number; inr_30d: number; calls: number; features: { 
 export const getUserAi = cache((id: string) => rpc<UserAi | null>("admin_user_ai", { p_user: id }, null))
 export const getReports = cache(() => rpc<Report[]>("admin_reports", { p_status: "open" }, []))
 export const getErrors = cache(() => rpc<ErrorGroup[]>("admin_errors", { p_hours: 24 }, []))
+
+export type ErrorSource = "all" | "server" | "client"
+export type ErrorGroups = {
+  total: number
+  server: number
+  client: number
+  groups: (ErrorGroup & { first_seen: string; paths: number })[]
+  by_day: { day: string; server: number; client: number }[]
+}
+export const getErrorGroups = cache(async (from: string, to: string | null, source: ErrorSource, search: string) => {
+  const r = await rpc<Partial<ErrorGroups>>("admin_error_groups", { p_from: from, p_to: to, p_source: source, p_search: search.slice(0, 100), p_limit: 100 }, {})
+  return { data: { total: r.data.total ?? 0, server: r.data.server ?? 0, client: r.data.client ?? 0, groups: r.data.groups ?? [], by_day: r.data.by_day ?? [] }, error: r.error }
+})
+
+export type AppStart = { at: string; commit: string | null; subject: string | null; built_at: string | null; dirty: boolean; kind: "deploy" | "restart" | "rollback" | "unknown" }
+export type SystemHealth = {
+  hours: number
+  last_check: { at: string; ok: boolean; database: string; ms: number; rss_mb: number | null; commit: string | null } | null
+  checks: number
+  failed: number
+  avg_ms: number | null
+  max_ms: number | null
+  max_rss_mb: number | null
+  first_check: string | null
+  down_minutes: number
+  span_minutes: number
+  downtime: { from: string; to: string | null; minutes: number }[]
+  failures: { at: string; database: string; ms: number }[]
+  starts: AppStart[]
+}
+export const getSystem = cache((hours: number) => rpc<SystemHealth | null>("admin_system", { p_hours: hours }, null))
 export const getReviewLessons = cache(() => rpc<AdminReviewLesson[]>("admin_review_lessons", undefined, []))
 export type QueueShow = "all" | "reported" | "hidden"
 export const getCommunityQueue = cache((show: QueueShow = "all") => rpc<CommunityItem[]>("admin_community_queue", { p_show: show }, []))
