@@ -78,7 +78,40 @@ export default function TermsPage() {
         <p>We may refuse requests that break these rules and may suspend accounts that misuse the service.</p>
       </Section>
 
-      <Section title="6. Plans, credits and payments">
+      <Section title="6. The closed beta" id="beta">
+        <List>
+          <li>
+            While {LEGAL.brand} is in a closed beta, most of it (courses, Krpex Code and Krpex Community) is open only to
+            testers we approve. Applying doesn&apos;t guarantee a place, and we choose testers at our discretion.
+          </li>
+          <li>
+            Beta features are unfinished: they may change, break, be slow or be removed, and we may move or reset beta
+            features when we need to fix them. Don&apos;t rely on the beta for anything important.
+          </li>
+          <li>
+            Joining means agreeing to the beta activity tracking and session recordings described in our{" "}
+            <Link href="/privacy#beta" className="text-primary hover:underline">
+              Privacy Policy
+            </Link>
+            . You can leave the beta at any time by contacting us; while the beta is closed, that also ends your access.
+          </li>
+          <li>
+            Free Pro days given to testers are a gift: they end after the days given, have no cash value and can&apos;t be
+            refunded or transferred.
+          </li>
+          <li>
+            Feedback you send (bug reports, ideas, screenshots) helps us improve {LEGAL.brand}. You let us use it freely to
+            change and improve the service, without payment or credit to you. Don&apos;t send anything confidential or
+            anyone else&apos;s personal information in it.
+          </li>
+          <li>
+            We may end the beta, or someone&apos;s beta access, at any time. When the beta ends, {LEGAL.brand} opens to
+            everyone and your account and data stay as they are.
+          </li>
+        </List>
+      </Section>
+
+      <Section title="7. Plans, credits and payments">
         <List>
           <li>
             Some features need a paid plan or credits. Prices are shown in Indian Rupees on the{" "}
@@ -107,7 +140,7 @@ export default function TermsPage() {
         </List>
       </Section>
 
-      <Section title="7. Your content and ours" id="your-material">
+      <Section title="8. Your content and ours" id="your-material">
         <List>
           <li>
             You keep ownership of what you submit (your goals, background, questions and any material you upload). You let
@@ -134,7 +167,7 @@ export default function TermsPage() {
         </List>
       </Section>
 
-      <Section title="8. Availability and changes">
+      <Section title="9. Availability and changes">
         <p>
           We work to keep the service running but don&apos;t guarantee it will always be available or error-free. We may
           change, add or remove features. If we make important changes to these terms we&apos;ll update the date above and,
@@ -142,7 +175,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section title="9. Suspension and termination">
+      <Section title="10. Suspension and termination">
         <p>
           You can stop using the service and delete your account at any time. We may suspend or close accounts that break
           these terms or the law. If we close your account without a breach on your part, we&apos;ll refund unused paid
@@ -150,7 +183,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section title="10. Liability">
+      <Section title="11. Liability">
         <p>
           The service is provided &quot;as is&quot;. To the extent allowed by law, we aren&apos;t liable for indirect or
           consequential losses, and our total liability for any claim is limited to the amount you paid us in the 3 months
@@ -159,14 +192,14 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section title="11. Governing law and disputes">
+      <Section title="12. Governing law and disputes">
         <p>
           These terms are governed by the laws of India. Please contact us first so we can try to resolve any issue. Disputes
           are subject to the exclusive jurisdiction of {jurisdiction()}.
         </p>
       </Section>
 
-      <Section title="12. Contact and grievances">
+      <Section title="13. Contact and grievances">
         <p>
           Questions or complaints about the service can be sent to our Grievance Officer
           {LEGAL.grievanceOfficer ? `, ${LEGAL.grievanceOfficer},` : ""} at the email below. We acknowledge complaints within

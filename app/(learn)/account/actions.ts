@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { z } from "zod"
 
 import { BIO_MAX, NAME_MAX, handleProblem, profileError } from "@/lib/community/profile"
+import { FEEDBACK_BUCKET } from "@/lib/feedback/options"
 import { LEVEL_LABELS, STYLE_LABELS, TIMELINE_LABELS } from "@/lib/learning/labels"
 import { createClient } from "@/lib/supabase/server"
 
@@ -100,6 +101,18 @@ export async function signOutEverywhere() {
 export async function deleteAccount(_: FormState, formData: FormData): Promise<FormState> {
   if (String(formData.get("confirm") ?? "").trim() !== "DELETE") return { error: 'Type DELETE in capitals to confirm.' }
   const supabase = await createClient()
+  // Feedback screenshots live in Storage, which deleting the account's rows doesn't reach: remove them first.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (user) {
+    const bucket = supabase.storage.from(FEEDBACK_BUCKET)
+    const { data: files } = await bucket.list(user.id, { limit: 1000 })
+    if (files?.length) {
+      const { error: e } = await bucket.remove(files.map((f) => `${user.id}/${f.name}`))
+      if (e) console.error("deleting feedback screenshots failed:", e.message)
+    }
+  }
   const { error } = await supabase.rpc("delete_my_account")
   if (error) {
     console.error("delete_my_account failed:", error.message)

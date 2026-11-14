@@ -159,8 +159,12 @@ export default async function BetaPage({ searchParams }: { searchParams: Promise
           <li>
             We record how testers use Krpex (pages visited and what you do there) and record sessions on screen, with everything you type hidden. It&apos;s
             only used to find problems and improve Krpex. See our{" "}
-            <Link href="/privacy" className="text-primary hover:underline">
+            <Link href="/privacy#beta" className="text-primary hover:underline">
               privacy policy
+            </Link>{" "}
+            and the{" "}
+            <Link href="/terms#beta" className="text-primary hover:underline">
+              beta terms
             </Link>
             .
           </li>

@@ -12,7 +12,9 @@ export const LEGAL = {
   email: "info@krpex.in",
   /** Grievance Officer (IT Rules 2021 / DPDP Act 2023). Name falls back to the operator. */
   grievanceOfficer: "" as string,
-  lastUpdated: "7 November 2026",
+  /** Session-recording service for beta testers (B.4), e.g. "Microsoft Clarity"; empty until recordings are switched on. */
+  sessionReplay: "" as string,
+  lastUpdated: "14 November 2026",
 }
 
 export const operatorName = () => LEGAL.operator || LEGAL.brand

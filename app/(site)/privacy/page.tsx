@@ -13,7 +13,9 @@ export default function PrivacyPage() {
         <p>
           We collect what we need to run your account and build your courses: your name, email, learning answers, lessons,
           quiz progress and questions to your professors. Your learning inputs are sent to our AI provider to generate
-          content. We don&apos;t sell your data or show ads. You can delete your account and data at any time.
+          content. If you join the closed beta, we also record how you use Krpex (and, once it&apos;s switched on, your
+          sessions on screen, with what you type hidden) to find problems; that only happens with your agreement. We
+          don&apos;t sell your data or show ads. You can delete your account and data at any time.
         </p>
       }
     >
@@ -88,6 +90,47 @@ export default function PrivacyPage() {
             <strong>Messages:</strong> what you send through the contact form.
           </li>
           <li>
+            <strong>Feedback:</strong> what you send with the Feedback button: the kind (a bug, an idea, something
+            confusing), what you write and any screenshot you add, plus, added automatically, the page you were on, your
+            browser and device, screen and window size, language, the version of Krpex you were using and the last few
+            errors on that page. Our team sees it, and our reply is shown to you. Screenshots are stored privately and
+            seen only by you and our team. Don&apos;t put passwords or other people&apos;s details in a screenshot.
+          </li>
+          <li id="beta" className="scroll-mt-24">
+            <strong>Beta testing (only if you join the closed beta):</strong>
+            <ul className="mt-2 grid list-[circle] gap-2 pl-5">
+              <li>
+                <em>Your application:</em> your name, what describes you (student, working, teacher…), what you want to
+                learn, the device you&apos;ll mostly use, how you heard of {LEGAL.brand}, when you agreed to beta tracking,
+                our decision and our team&apos;s internal notes about it.
+              </li>
+              <li>
+                <em>Activity:</em> the pages you visit on {LEGAL.site}, Krpex Code and Krpex Community, how long you stay,
+                the page you came from, and the things you do that we already store for your account (lessons, quizzes,
+                questions, coding submissions, posts). We use it to see which parts of {LEGAL.brand} work and where people
+                get stuck.
+              </li>
+              <li>
+                <em>Session recordings:</em>{" "}
+                {LEGAL.sessionReplay ? (
+                  <>
+                    {LEGAL.sessionReplay} records
+                  </>
+                ) : (
+                  <>once switched on (we&apos;ll name the service here first), a recording service records</>
+                )}{" "}
+                how pages look and respond as you use them: clicks, taps, scrolling and page changes. Everything you
+                type, and the text on the page, is hidden in the recording. There are no recordings on your Account
+                pages, payment pages or admin pages, and never of your camera, microphone or other apps. Recordings
+                carry an anonymous tester code, not your name or email.
+              </li>
+            </ul>
+            <p className="mt-2">
+              Activity tracking and recordings happen only for approved testers who agreed to them on the application
+              form, and only while the beta lasts.
+            </p>
+          </li>
+          <li>
             <strong>Technical:</strong> IP address, browser and device information, and server logs used for security and
             fixing problems.
           </li>
@@ -102,6 +145,10 @@ export default function PrivacyPage() {
           <li>To keep the service secure, prevent abuse and fix problems.</li>
           <li>To reply to your messages and send essential account emails (confirmation, password reset, receipts).</li>
           <li>To email you notifications you haven&apos;t seen in the app, unless you turn this off.</li>
+          <li>
+            To run the closed beta: choose testers, read and answer feedback, and use beta activity and recordings to find
+            bugs and confusing parts and decide what to improve. Never to advertise to you or to judge you as a person.
+          </li>
         </List>
         <p>
           We process your data to provide the service you asked for, based on your consent when you sign up, and to meet
@@ -137,6 +184,10 @@ export default function PrivacyPage() {
             <strong>Email provider (Spacemail)</strong>: to deliver account and notification emails.
           </li>
           <li>
+            <strong>{LEGAL.sessionReplay || "A session-recording service"}</strong>: session recordings of beta testers
+            who agreed to them{LEGAL.sessionReplay ? "" : " (not switched on yet; we'll name it here before it is)"}.
+          </li>
+          <li>
             <strong>Your browser&apos;s push service (Google, Apple, Mozilla or Microsoft)</strong>: delivers notifications
             to devices where you turned them on. Messages are encrypted so the service can&apos;t read them.
           </li>
@@ -150,8 +201,9 @@ export default function PrivacyPage() {
       <Section title="5. Cookies and local storage">
         <p>
           We use essential cookies to keep you signed in, and your browser&apos;s local storage to remember small
-          preferences (such as theme and how far you got in a lesson). We don&apos;t use advertising or third-party tracking
-          cookies.
+          preferences (such as theme and how far you got in a lesson). We don&apos;t use advertising cookies. The only
+          third-party tracking is the session-recording service for beta testers who agreed to it, which may set its own
+          cookies on {LEGAL.site}, Krpex Code and Krpex Community while you&apos;re signed in as a tester.
         </p>
       </Section>
 
@@ -160,7 +212,9 @@ export default function PrivacyPage() {
           We keep your data while your account is active. When you delete your account, your profile, courses, lessons,
           progress, professor chats and uploaded material are deleted immediately from our database (backups roll off within
           about 30 days). Uploaded material that never became a course is deleted after a day, and a course&apos;s material
-          is deleted with the course.
+          is deleted with the course. Feedback and screenshots are kept while your account exists and deleted with it.
+          Beta activity (pages visited) is deleted after 90 days, and session recordings are deleted by the recording
+          service after at most 90 days. Your beta application is kept while your account exists.
           We keep payment records as long as tax and accounting laws require.
         </p>
       </Section>
@@ -171,6 +225,10 @@ export default function PrivacyPage() {
           <li>see and correct your information (most of it is on your Account page);</li>
           <li>delete your account and data (Account → Settings → Delete account);</li>
           <li>withdraw consent, by deleting your account or contacting us;</li>
+          <li>
+            leave the beta at any time by contacting us: activity tracking and recordings stop and we delete your beta
+            activity (while the beta is closed, this also ends your beta access);
+          </li>
           <li>nominate someone to exercise these rights for you in case of death or incapacity;</li>
           <li>raise a complaint with our Grievance Officer, and then with the Data Protection Board of India.</li>
         </List>
