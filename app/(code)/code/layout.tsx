@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 
 import { ErrorReporter } from "@/components/error-reporter"
+import { FeedbackButton } from "@/components/feedback/feedback-button"
 import { NavigationProgress } from "@/components/site/navigation-progress"
 import { CODE_ORIGIN } from "@/lib/code-host"
 import "../../(site)/site.css"
@@ -34,6 +35,7 @@ export default function CodeLayout({ children }: { children: React.ReactNode }) 
       <body className={`min-h-screen bg-background font-sans text-foreground antialiased ${GeistSans.variable} ${GeistMono.variable}`}>
         {children}
         <ErrorReporter />
+        <FeedbackButton site="code" />
         <NavigationProgress />
       </body>
     </html>

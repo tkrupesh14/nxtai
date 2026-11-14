@@ -457,7 +457,7 @@ test("the admin panel has one page per section, and old links open the right one
 
   // Phones: tabs scroll, the page doesn't.
   await page.setViewportSize({ width: 360, height: 760 })
-  for (const path of ["/admin", "/admin/users", "/admin/beta", learnerPath, "/admin/money", "/admin/code", "/admin/community", "/admin/professors", "/admin/system"]) {
+  for (const path of ["/admin", "/admin/users", "/admin/beta", "/admin/beta/feedback", learnerPath, "/admin/money", "/admin/code", "/admin/community", "/admin/professors", "/admin/system"]) {
     await page.goto(path)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
     // Overflow can be clipped rather than scroll, so also check every section ends inside the screen.
@@ -522,5 +522,56 @@ test("closed beta: a new account applies, waits, is approved by an admin and get
     await tester.close()
     localSql("update private.admin_settings set beta_closed = false")
   }
+  expect(errors).toEqual([])
+})
+
+test("feedback: sent from any page, triaged by an admin, and the reply shows on the account page", async ({ page }) => {
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  const words = `The Run button is hidden on my phone ${Date.now()}`
+
+  // Sent from Krpex Code (the main test learner is an admin by now, but this is the same button testers get).
+  await page.goto("/code/problems")
+  await page.getByRole("button", { name: "Feedback" }).click()
+  const dialog = page.getByRole("dialog", { name: "Send feedback" })
+  await dialog.getByText("Something's broken").click()
+  await dialog.getByLabel("What happened? What did you expect?").fill(words)
+  await dialog.getByRole("button", { name: "Send" }).click()
+  await expect(dialog.getByText("Thanks, we got it.")).toBeVisible()
+  await dialog.getByRole("button", { name: "Done" }).click()
+  await expect(dialog).toHaveCount(0)
+
+  await page.goto("/account/feedback")
+  const mine = page.getByRole("list", { name: "Your feedback" })
+  await expect(mine.getByText(words)).toBeVisible()
+  await expect(mine.getByRole("link", { name: "/code/problems" })).toBeVisible()
+
+  // The admin sees it with the page and context, marks it fixed and replies.
+  await page.goto("/admin")
+  await expect(page.getByRole("link", { name: /new beta feedback/ })).toBeVisible()
+  await page.goto("/admin/beta")
+  await page.getByRole("navigation", { name: "Beta" }).getByRole("link", { name: /^Feedback/ }).click()
+  await expect(page).toHaveURL(/\/admin\/beta\/feedback$/)
+  const item = page.getByRole("list", { name: "Feedback" }).getByRole("listitem").filter({ hasText: words })
+  await expect(item.getByText("Krpex Code")).toBeVisible()
+  await item.getByText("Details").click()
+  await expect(item.getByText(/Chrome/)).toBeVisible()
+  await item.getByLabel("Status").selectOption("fixed")
+  await item.getByLabel("Reply").fill("Thanks! Fixed in today's update.")
+  await item.getByRole("button", { name: "Save" }).click()
+  await expect(item.getByText("Saved.")).toBeVisible()
+  await page.goto("/admin/beta/feedback?show=fixed")
+  await expect(page.getByText(words)).toBeVisible()
+
+  // The tester sees the reply (and got a notification).
+  await page.goto("/account/feedback")
+  await expect(mine.getByText("Thanks! Fixed in today's update.")).toBeVisible()
+  await expect(mine.getByText("Fixed", { exact: true })).toBeVisible()
+  await page.goto("/notifications")
+  await expect(page.getByText("Krpex replied to your feedback").first()).toBeVisible()
+
+  // Not on the admin pages; not for visitors who aren't signed in.
+  await page.goto("/admin/beta/feedback")
+  await expect(page.getByRole("button", { name: "Feedback" })).toHaveCount(0)
   expect(errors).toEqual([])
 })

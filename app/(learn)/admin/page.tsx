@@ -2,7 +2,7 @@ import Link from "next/link"
 
 import { AdminHashRedirect } from "@/components/admin/hash-redirect"
 import { AdminHeading, AdminSection, inr, rupees, td, th, Tile } from "@/components/admin/ui"
-import { getBetaList, getCommunityQueue, getDaily, getErrors, getOverview, getProfessors, requireAdmin } from "@/lib/admin/data"
+import { getBetaList, getCommunityQueue, getDaily, getErrors, getFeedbackList, getOverview, getProfessors, requireAdmin } from "@/lib/admin/data"
 
 export const metadata = { title: "Admin — Krpex" }
 
@@ -11,7 +11,15 @@ const HASHES = { community: "/admin/community" }
 
 export default async function AdminOverview() {
   await requireAdmin()
-  const [overview, daily, community, errors, profs, beta] = await Promise.all([getOverview(), getDaily(14), getCommunityQueue(), getErrors(), getProfessors(), getBetaList("waiting", "", 1)])
+  const [overview, daily, community, errors, profs, beta, feedback] = await Promise.all([
+    getOverview(),
+    getDaily(14),
+    getCommunityQueue(),
+    getErrors(),
+    getProfessors(),
+    getBetaList("waiting", "", 1),
+    getFeedbackList("new", "", "", "", 1),
+  ])
   const o = overview.data
   const queue = community.data
   const professors = profs.data.professors
@@ -22,6 +30,7 @@ export default async function AdminOverview() {
 
   const attention = [
     { n: beta.data?.counts.waiting ?? 0, label: "beta applications waiting", href: "/admin/beta" },
+    { n: feedback.data?.counts.new ?? 0, label: "new beta feedback", href: "/admin/beta/feedback" },
     { n: o.reports_open ?? 0, label: "open lesson reports", href: "/admin/reports" },
     { n: queue.length, label: `community items to review${hidden ? ` (${hidden} hidden)` : ""}`, href: "/admin/community" },
     { n: pending, label: "professors waiting for approval", href: "/admin/professors" },
@@ -35,7 +44,7 @@ export default async function AdminOverview() {
       <AdminHeading
         title="Overview"
         note="Days are India time. AI cost uses GPT-6 Luna prices."
-        errors={[overview.error, daily.error, community.error, errors.error, profs.error, beta.error]}
+        errors={[overview.error, daily.error, community.error, errors.error, profs.error, beta.error, feedback.error]}
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

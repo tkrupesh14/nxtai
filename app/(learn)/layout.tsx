@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 
 import { ErrorReporter } from "@/components/error-reporter"
+import { FeedbackButton } from "@/components/feedback/feedback-button"
 import { NavigationProgress } from "@/components/site/navigation-progress"
 import { OfflineScreen } from "@/components/site/offline-screen"
 import { LearnHeader } from "@/components/learn/learn-header"
@@ -24,6 +25,7 @@ export default function LearnLayout({ children }: { children: React.ReactNode })
         <LearnHeader />
         {children}
         <ErrorReporter />
+        <FeedbackButton site="main" />
         <NavigationProgress />
         <OfflineScreen />
       </body>

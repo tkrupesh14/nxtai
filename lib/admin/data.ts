@@ -1,6 +1,7 @@
 import { cache } from "react"
 import { notFound } from "next/navigation"
 
+import type { FeedbackRow, FeedbackStatus } from "@/lib/feedback/options"
 import { createClient } from "@/lib/supabase/server"
 
 // Admin data, one loader per RPC. Wrapped in React's cache() so the layout and a section that need the same
@@ -276,4 +277,24 @@ export type BetaList = { closed: boolean; counts: Record<"waiting" | "approved" 
 export const BETA_PER_PAGE = 50
 export const getBetaList = cache((status: BetaFilter, search: string, page: number) =>
   rpc<BetaList | null>("admin_beta_list", { p_status: status, p_search: search, p_limit: BETA_PER_PAGE, p_offset: (page - 1) * BETA_PER_PAGE }, null),
+)
+
+/** Feedback from testers (closed beta B.2, migration 042). */
+export type FeedbackFilter = FeedbackStatus | "open" | "all"
+export type AdminFeedbackRow = FeedbackRow & {
+  user_id: string
+  email: string
+  name: string | null
+  context: { browser?: string; screen?: string; viewport?: string; language?: string; commit?: string; errors?: { message: string; at: string }[] }
+  replied_by: string | null
+  updated_at: string
+}
+export type FeedbackList = { counts: Record<FeedbackStatus, number>; total: number; rows: AdminFeedbackRow[] }
+export const FEEDBACK_PER_PAGE = 50
+export const getFeedbackList = cache((status: FeedbackFilter, site: string, kind: string, search: string, page: number) =>
+  rpc<FeedbackList | null>(
+    "admin_feedback_list",
+    { p_status: status, p_site: site, p_kind: kind, p_search: search, p_limit: FEEDBACK_PER_PAGE, p_offset: (page - 1) * FEEDBACK_PER_PAGE },
+    null,
+  ),
 )

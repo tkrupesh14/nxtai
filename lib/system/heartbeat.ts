@@ -16,7 +16,7 @@ import { checkDatabase } from "@/lib/system/health"
 type Build = { commit?: string; subject?: string; built_at?: string; dirty?: boolean }
 type Check = { p_at: string; p_ok: boolean; p_database: string; p_ms: number; p_rss_mb: number }
 
-function readBuild(): Build {
+export function readBuild(): Build {
   try {
     return JSON.parse(readFileSync(join(process.cwd(), process.env.NEXT_DIST_DIR || ".next", "krpex-build.json"), "utf8")) as Build
   } catch {

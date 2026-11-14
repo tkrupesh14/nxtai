@@ -35,6 +35,8 @@ for (const [path, text] of PUBLIC_PAGES) {
     expect(res?.status()).toBe(200)
     await expect(page.locator("body")).toContainText(text)
     await expect(page).toHaveTitle(/Krpex/)
+    // The Feedback button (beta B.2) is only for signed-in accounts.
+    await expect(page.getByRole("button", { name: "Feedback" })).toHaveCount(0)
     // Nothing wider than the screen (no sideways scrolling on phones).
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
     expect(errors).toEqual([])
@@ -42,7 +44,7 @@ for (const [path, text] of PUBLIC_PAGES) {
 }
 
 test("signed-out visitors are sent to log in", async ({ page }) => {
-  for (const path of ["/learn", "/account", "/admin", "/admin/users", "/admin/code", "/onboarding"]) {
+  for (const path of ["/learn", "/account", "/account/feedback", "/admin", "/admin/users", "/admin/beta/feedback", "/admin/code", "/onboarding"]) {
     await page.goto(path)
     await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path).replace(/[/]/g, "%2F")}`))
   }

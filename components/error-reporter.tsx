@@ -2,14 +2,18 @@
 
 import { useEffect } from "react"
 
+import { rememberError } from "@/lib/recent-errors"
+
 /** Sends uncaught browser errors to /api/client-error (max 5 per page load, no duplicates). */
 export function ErrorReporter() {
   useEffect(() => {
     const seen = new Set<string>()
     const send = (message: string, detail?: string) => {
-      if (!message || seen.size >= 5 || seen.has(message)) return
+      if (!message) return
       // Extensions and cross-origin scripts produce noise we can't fix.
       if (/^Script error\.?$|ResizeObserver loop|extension:\/\//i.test(message + (detail ?? ""))) return
+      rememberError(message)
+      if (seen.size >= 5 || seen.has(message)) return
       seen.add(message)
       const body = JSON.stringify({ message: message.slice(0, 500), path: location.pathname, detail: detail?.slice(0, 3000) })
       try {

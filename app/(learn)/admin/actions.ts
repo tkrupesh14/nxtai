@@ -222,3 +222,19 @@ export async function setBetaClosedAction(closed: boolean) {
   if (error) console.error("admin_set_beta_closed failed:", error.message)
   revalidatePath("/", "layout")
 }
+
+/** Triage one feedback report: its status and (optionally) a reply the tester sees (closed beta B.2). */
+export async function feedbackUpdateAction(id: string, _: AdminResult, formData: FormData): Promise<AdminResult> {
+  const status = String(formData.get("status") ?? "")
+  if (!["new", "planned", "in_progress", "fixed", "wont_fix"].includes(status)) return { message: "Choose a status." }
+  const reply = String(formData.get("reply") ?? "").slice(0, 2000)
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("admin_feedback_update", { p_id: id, p_status: status, p_reply: reply })
+  if (error) {
+    console.error("admin_feedback_update failed:", error.message)
+    return { message: "Couldn't save that. Are you signed in as an admin?" }
+  }
+  if (data === "not_found") return { message: "That report no longer exists." }
+  revalidatePath("/admin", "layout")
+  return { ok: true, message: "Saved." }
+}

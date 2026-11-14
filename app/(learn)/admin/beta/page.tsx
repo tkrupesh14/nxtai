@@ -1,10 +1,11 @@
 import Link from "next/link"
 
+import { BetaTabs } from "@/components/admin/beta-tabs"
 import { AdminHeading, AdminSection, Pill, Tile, when } from "@/components/admin/ui"
 import { BetaDecideForm } from "@/components/learn/admin-beta"
 import { Button } from "@/components/site/ui/button"
 import { Input } from "@/components/site/ui/input"
-import { BETA_PER_PAGE, getBetaList, requireAdmin, type BetaFilter } from "@/lib/admin/data"
+import { BETA_PER_PAGE, getBetaList, getFeedbackList, requireAdmin, type BetaFilter } from "@/lib/admin/data"
 import { BETA_DEVICES, BETA_ROLES } from "@/lib/beta/options"
 
 import { setBetaClosedAction } from "../actions"
@@ -29,7 +30,7 @@ export default async function AdminBeta({ searchParams }: { searchParams: Promis
   const show: BetaFilter = SHOW.some((s) => s.id === p.show) ? (p.show as BetaFilter) : "waiting"
   const q = (p.q ?? "").slice(0, 100)
   const page = Math.max(1, Math.min(2000, Number.parseInt(p.page ?? "1", 10) || 1))
-  const { data, error } = await getBetaList(show, q, page)
+  const [{ data, error }, feedback] = await Promise.all([getBetaList(show, q, page), getFeedbackList("new", "", "", "", 1)])
   const href = (o: { show?: BetaFilter; page?: number }) => {
     const qs = new URLSearchParams()
     const s = o.show ?? show
@@ -49,6 +50,7 @@ export default async function AdminBeta({ searchParams }: { searchParams: Promis
         note="Applications for the closed beta. Approved testers can use krpex.in courses, Krpex Code and Krpex Community; approving gives Pro and tells them by notification and email."
         errors={[error]}
       />
+      <BetaTabs current="applications" newFeedback={feedback.data?.counts.new} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Tile label="Waiting" value={counts.waiting.toLocaleString("en-IN")} />

@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 
 import { ErrorReporter } from "@/components/error-reporter"
+import { FeedbackButton } from "@/components/feedback/feedback-button"
 import { NavigationProgress } from "@/components/site/navigation-progress"
 import { OfflineScreen } from "@/components/site/offline-screen"
 import { CursorTrail } from "@/components/site/cursor-trail"
@@ -34,6 +35,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         <Footer />
         <CursorTrail />
         <ErrorReporter />
+        <FeedbackButton site="main" />
         <NavigationProgress />
         <OfflineScreen />
       </body>

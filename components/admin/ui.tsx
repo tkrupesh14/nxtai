@@ -1,4 +1,5 @@
 import { AccountSection } from "@/components/learn/account-section"
+import { statusLabel } from "@/lib/feedback/options"
 
 // Small pieces shared by the admin sections.
 
@@ -82,6 +83,8 @@ export function auditText(a: { action: string; detail: Record<string, unknown> }
       return `Approved for the beta${typeof d.pro_days === "number" ? ` with ${d.pro_days} days of Pro` : ""}`
     case a.action === "beta:declined":
       return "Declined for the beta"
+    case a.action.startsWith("feedback:"):
+      return `Marked their feedback “${statusLabel(a.action.slice(9))}”${d.replied ? " and replied" : ""}`
     case a.action === "beta_closed":
       return "Closed the beta"
     case a.action === "beta_opened":
