@@ -12,6 +12,17 @@ export type RunEnd = { status: "done" | "timeout" | "stopped"; ok: boolean; stdo
 // The test harness's results line (lib/code/harness.ts) is read by the page, not shown to the learner.
 const hideResults = (text: string) => (text.includes(RESULT_MARK) ? text.replace(new RegExp(`${RESULT_MARK}[^\\n]*\\n?`), "") : text)
 
+// Failures of the runner itself (not the learner's code) go to the admin error log, at most 3 per page load.
+let reported = 0
+function reportRunnerFailure(text: string, lang: string) {
+  if (reported >= 3) return
+  reported += 1
+  const body = JSON.stringify({ message: `Code runner: ${text}`.slice(0, 500), path: location.pathname, detail: `language: ${lang}` })
+  try {
+    void fetch("/api/client-error", { method: "POST", body, keepalive: true, headers: { "Content-Type": "application/json" } }).catch(() => {})
+  } catch {}
+}
+
 /**
  * Runs code in the learner's browser through public/code-runner.html, a sandboxed iframe (opaque origin) with a
  * Web Worker inside. Nothing is sent to our server.
@@ -21,6 +32,7 @@ export function useRunner({ timeoutMs = 5000 }: { timeoutMs?: number } = {}) {
   const ready = useRef<Promise<void> | null>(null)
   const markReady = useRef<() => void>(() => {})
   const runId = useRef(0)
+  const runLang = useRef<string>("")
   const finish = useRef<((end: RunEnd) => void) | null>(null)
   const stdout = useRef("")
   const stderr = useRef("")
@@ -44,6 +56,7 @@ export function useRunner({ timeoutMs = 5000 }: { timeoutMs?: number } = {}) {
       const m = e.data as { type: string; id?: string; text?: string; ms?: number; ok?: boolean }
       if (m.type === "ready") return markReady.current()
       if (m.id !== String(runId.current)) return
+      if (m.type === "fail") return reportRunnerFailure(m.text ?? "unknown", runLang.current)
       if (m.type === "status") setOutput((o) => [...o, { kind: "info", text: `${m.text}\n` }])
       else if (m.type === "started") {
         setState("running")
@@ -80,6 +93,7 @@ export function useRunner({ timeoutMs = 5000 }: { timeoutMs?: number } = {}) {
     async (lang: CodeLanguage, code: string, stdin = "") => {
       await ready.current
       runId.current += 1
+      runLang.current = lang
       setOutput([])
       setMs(null)
       setState("loading")

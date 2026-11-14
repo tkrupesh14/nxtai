@@ -129,12 +129,14 @@ var WORKER = "(" + function (PYODIDE, MAX_OUTPUT) {
       ok = m.lang === "python" ? await runPython(m.code, m.stdin) : await runJavaScript(m.code, m.stdin);
     } catch (err) {
       post("err", "Couldn't run the code: " + (err && err.message ? err.message : err) + "\n");
+      // Not the learner's code failing: the runner itself (e.g. Python didn't load). Reported to the admin page.
+      self.postMessage({ id: m.id, type: "fail", text: String(err && err.message ? err.message : err).slice(0, 300) });
     }
     self.postMessage({ id: m.id, type: "done", ms: Date.now() - t0, ok: ok });
   };
 } + ")(" + JSON.stringify(PYODIDE) + ", " + MAX_OUTPUT + ");";
 
-var worker = null, current = null, timer = null, limit = 5000;
+var worker = null, current = null, timer = null, limit = 5000, started = false;
 var LOAD_LIMIT = 180000; // first Python download on a slow connection
 var blobUrl = URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }));
 
@@ -146,6 +148,7 @@ function startWorker() {
     var m = e.data;
     if (!current || m.id !== current) return;
     if (m.type === "started") {
+      started = true;
       // The time limit counts from here, not while Python downloads.
       clearTimeout(timer);
       timer = setTimeout(function () { kill("timeout"); }, limit);
@@ -155,6 +158,7 @@ function startWorker() {
   };
   worker.onerror = function (e) {
     if (current) toParent({ id: current, type: "err", text: (e.message || "The runner stopped.") + "\n" });
+    if (current) toParent({ id: current, type: "fail", text: "Worker error: " + String(e.message || "the runner stopped").slice(0, 300) });
     e.preventDefault();
   };
   return worker;
@@ -179,7 +183,11 @@ window.addEventListener("message", function (e) {
   var w = worker || startWorker();
   limit = Math.min(Math.max(Number(m.timeoutMs) || 5000, 1000), 30000);
   clearTimeout(timer);
-  timer = setTimeout(function () { kill("timeout"); }, LOAD_LIMIT);
+  started = false;
+  timer = setTimeout(function () {
+    if (!started && current) toParent({ id: current, type: "fail", text: "Didn't start within 3 minutes (" + (m.lang === "python" ? "Python" : "JavaScript") + ")" });
+    kill("timeout");
+  }, LOAD_LIMIT);
   w.postMessage({ type: "run", id: m.id, lang: m.lang === "python" ? "python" : "javascript", code: m.code, stdin: String(m.stdin || "").slice(0, 20000) });
 });
 

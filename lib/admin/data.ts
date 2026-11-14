@@ -171,6 +171,24 @@ export const getPaymentList = cache(async (status: PaymentStatus, page: number) 
   return { data: { total: r.data.total ?? 0, rows: r.data.rows ?? [] }, error: r.error }
 })
 
+export type CodeStats = {
+  days: MoneyDays
+  submissions: number
+  accepted: number
+  learners: number
+  solvers: number
+  problems_solved: number
+  problems_active: number
+  languages: Record<string, number>
+  daily: { day: string; submissions: number; accepted: number; learners: number; coach: number }[]
+  problems: { slug: string; title: string; topic: string; difficulty: string; active: boolean; submissions: number; accepted: number; tried: number; solvers: number; reveals: number; coach: number }[]
+  stuck: { slug: string; title: string; difficulty: string; tried: number; solvers: number; reveals: number }[]
+  never_tried: { slug: string; title: string; difficulty: string }[]
+  coach: { requests: number; learners: number; failed: number; paid: number; inr: number; kinds: { kind: string; requests: number; answered: number; failed: number; paid: number }[] }
+  runner_errors: { message: string; count: number; last: string; path: string | null; detail: string | null }[]
+}
+export const getCode = cache((days: MoneyDays) => rpc<CodeStats | null>("admin_code", { p_days: days }, null))
+
 export type UserAi = { inr: number; inr_30d: number; calls: number; features: { feature: string; calls: number; inr: number; inr_30d: number }[] }
 export const getUserAi = cache((id: string) => rpc<UserAi | null>("admin_user_ai", { p_user: id }, null))
 export const getReports = cache(() => rpc<Report[]>("admin_reports", { p_status: "open" }, []))

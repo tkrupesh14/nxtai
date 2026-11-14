@@ -9,6 +9,7 @@ export const ADMIN_SECTIONS = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/money", label: "Money" },
+  { href: "/admin/code", label: "Code" },
   { href: "/admin/reports", label: "Lesson reports" },
   { href: "/admin/community", label: "Community" },
   { href: "/admin/professors", label: "Professors" },
