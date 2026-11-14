@@ -3,8 +3,8 @@ import Link from "next/link"
 import { FeedList } from "@/components/community/feed-list"
 import { Button } from "@/components/site/ui/button"
 import { codeLinks } from "@/lib/code/host"
-import { BOARDS } from "@/lib/community/boards"
-import { getFeed, getMyPublicProfile } from "@/lib/community/data"
+import { BOARDS, isBoardOpen } from "@/lib/community/boards"
+import { getBoardStats, getFeed, getMyPublicProfile } from "@/lib/community/data"
 import { getSignedInUser } from "@/lib/supabase/profile"
 
 // community.krpex.in home: the latest active discussions across problems and boards, and every board (plan.md Phase 5).
@@ -14,7 +14,7 @@ const PER_PAGE = 20
 export default async function CommunityHome({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const page = Math.max(1, Math.min(20, Number.parseInt((await searchParams).page ?? "1", 10) || 1))
   const [user, links] = await Promise.all([getSignedInUser(), codeLinks()])
-  const [me, feed] = await Promise.all([user ? getMyPublicProfile() : null, getFeed(null, PER_PAGE + 1, (page - 1) * PER_PAGE)])
+  const [me, feed, stats] = await Promise.all([user ? getMyPublicProfile() : null, getFeed(null, PER_PAGE + 1, (page - 1) * PER_PAGE), getBoardStats()])
   const posts = feed.slice(0, PER_PAGE)
   const more = feed.length > PER_PAGE
   const home = links.community("/")
@@ -92,7 +92,7 @@ export default async function CommunityHome({ searchParams }: { searchParams: Pr
           </h2>
           {(["general", "course"] as const).map((kind) => (
             <ul key={kind} className="divide-y rounded-xl border bg-card text-sm">
-              {BOARDS.filter((b) => b.kind === kind).map((b) => (
+              {BOARDS.filter((b) => b.kind === kind && isBoardOpen(b.slug, stats)).map((b) => (
                 <li key={b.slug}>
                   <Link href={links.community(`/c/${b.slug}`)} className="flex items-center gap-2 px-4 py-2 hover:bg-muted/50">
                     <span aria-hidden>{b.icon}</span>

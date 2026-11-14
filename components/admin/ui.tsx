@@ -61,6 +61,26 @@ export function auditText(a: { action: string; detail: Record<string, unknown> }
       return `Kept ${what} after reports`
     case a.action === "remove":
       return `Removed ${what}`
+    case a.action === "board_off":
+      return `Turned off the ${d.title ?? d.board} board`
+    case a.action === "board_on":
+      return `Turned on the ${d.title ?? d.board} board`
+    case a.action === "resolve_report":
+      return `Resolved their lesson report${d.lesson ? ` on “${d.lesson}”` : ""}`
+    case a.action === "professor_invite":
+      return `Invited ${d.email} to teach ${d.subject}`
+    case a.action === "professor_invite_revoked":
+      return `Withdrew the teaching invite for ${d.email}`
+    case a.action === "professor:approved":
+      return "Approved them as a professor"
+    case a.action === "professor:suspended":
+      return "Suspended them as a professor"
+    case a.action === "professor:pending":
+      return "Moved their professor application back to pending"
+    case a.action === "professor_listed":
+      return "Showed their AI professor to learners"
+    case a.action === "professor_unlisted":
+      return "Hid their AI professor from learners"
     default:
       return a.action
   }

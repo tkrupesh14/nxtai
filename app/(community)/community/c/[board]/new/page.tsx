@@ -4,8 +4,8 @@ import { notFound, redirect } from "next/navigation"
 import { PostComposer } from "@/components/community/post-composer"
 import { PostingNote } from "@/components/community/posting-note"
 import { codeLinks } from "@/lib/code/host"
-import { boardSpace, getBoard } from "@/lib/community/boards"
-import { getMyCommunityStatus, getThread } from "@/lib/community/data"
+import { boardSpace, getBoard, isBoardOpen } from "@/lib/community/boards"
+import { getBoardStats, getMyCommunityStatus, getThread } from "@/lib/community/data"
 import { LIMITS } from "@/lib/community/posts"
 import { getSignedInUser } from "@/lib/supabase/profile"
 
@@ -55,7 +55,16 @@ export default async function NewBoardPostPage({ params, searchParams }: Props) 
     )
   }
 
-  const status = await getMyCommunityStatus()
+  const [status, stats] = await Promise.all([getMyCommunityStatus(), getBoardStats()])
+  if (!isBoardOpen(slug, stats))
+    return (
+      <main className="mx-auto grid max-w-3xl gap-6 px-4 py-8 md:py-10">
+        {heading("Start a discussion")}
+        <p className="rounded-xl border border-dashed px-6 py-4 text-sm text-muted-foreground">
+          This board is closed to new discussions. You can still read it.
+        </p>
+      </main>
+    )
   if (!status.can_post)
     return (
       <main className="mx-auto grid max-w-3xl gap-6 px-4 py-8 md:py-10">

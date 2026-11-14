@@ -111,7 +111,9 @@ export type CommunityItem = {
   code: string | null
   status: string
   author: { handle: string; level: number } | { deleted: true }
+  author_id: string | null
   author_email: string | null
+  created_at: string
   reports: { reason: string; note: string | null; at: string }[]
 }
 
@@ -138,7 +140,16 @@ export const getPayments = cache(() => rpc<Payment[]>("admin_payments", { p_limi
 export const getReports = cache(() => rpc<Report[]>("admin_reports", { p_status: "open" }, []))
 export const getErrors = cache(() => rpc<ErrorGroup[]>("admin_errors", { p_hours: 24 }, []))
 export const getReviewLessons = cache(() => rpc<AdminReviewLesson[]>("admin_review_lessons", undefined, []))
-export const getCommunityQueue = cache(() => rpc<CommunityItem[]>("admin_community_queue", undefined, []))
+export type QueueShow = "all" | "reported" | "hidden"
+export const getCommunityQueue = cache((show: QueueShow = "all") => rpc<CommunityItem[]>("admin_community_queue", { p_show: show }, []))
+export type CommunityBan = { user_id: string; handle: string | null; email: string | null; until: string | null; reason: string | null; by: string | null; at: string }
+export type AdminBoard = { slug: string; kind: "general" | "course"; title: string; active: boolean; posts: number; hidden: number; last_activity: string | null }
+export const COMMUNITY_LOG_PER_PAGE = 50
+export const getCommunityBans = cache(() => rpc<CommunityBan[]>("admin_community_bans", undefined, []))
+export const getCommunityLog = cache((page: number) =>
+  rpc<AuditRow[]>("admin_community_log", { p_limit: COMMUNITY_LOG_PER_PAGE + 1, p_offset: (page - 1) * COMMUNITY_LOG_PER_PAGE }, []),
+)
+export const getAdminBoards = cache(() => rpc<AdminBoard[]>("admin_community_boards", undefined, []))
 export const getProfessors = cache(async (): Promise<Loaded<{ professors: AdminProfessor[]; invites: AdminInvite[] }>> => {
   const r = await rpc<{ professors?: AdminProfessor[]; invites?: AdminInvite[] }>("admin_professors", undefined, {})
   return { data: { professors: r.data.professors ?? [], invites: r.data.invites ?? [] }, error: r.error }

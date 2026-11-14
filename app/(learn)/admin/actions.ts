@@ -165,3 +165,20 @@ export async function profileVisibilityAction(_: AdminResult, formData: FormData
   revalidatePath("/admin", "layout")
   return { ok: true, message: hidden ? `@${handle}'s profile is hidden.` : `@${handle}'s profile can be seen again (if they made it public).` }
 }
+
+/** Lift a posting ban from the bans list (6.3). */
+export async function liftBanAction(handle: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("admin_community_ban", { p_handle: handle, p_days: 0, p_reason: "" })
+  if (error) console.error("admin_community_ban (lift) failed:", error.message)
+  revalidatePath("/admin", "layout")
+}
+
+/** Turn a community board off (no new discussions, gone from the lists) or back on (6.3). */
+export async function setBoardActiveAction(slug: string, active: boolean) {
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("admin_set_board_active", { p_slug: slug, p_active: active })
+  if (error) console.error("admin_set_board_active failed:", error.message)
+  revalidatePath("/admin", "layout")
+  revalidatePath("/community", "layout")
+}

@@ -366,7 +366,7 @@ test("the admin panel has one page per section, and old links open the right one
     ["Users", "/admin/users", "Find a learner"],
     ["Money", "/admin/money", "Recent payments"],
     ["Lesson reports", "/admin/reports", /^Open \(\d+\)$/],
-    ["Community", "/admin/community", /^Reported or hidden \(\d+\)$/],
+    ["Community", "/admin/community", /^Needs review \(\d+\)$/],
     ["Professors", "/admin/professors", /^Professors \(\d+\)$/],
     ["System", "/admin/system", /^Errors, last 24 hours/],
   ] as const
@@ -399,13 +399,28 @@ test("the admin panel has one page per section, and old links open the right one
   await expect(page.getByRole("list", { name: "Admin activity" }).getByText("Gave 3 credits").first()).toBeVisible()
   expect((await page.request.get("/admin/users/not-a-user")).status()).toBe(404)
 
+  // Community: queue filters, bans, boards on/off (logged in the history).
+  await page.goto("/admin/community")
+  for (const h of [/^Can't post \(\d+\)$/, "Boards", "Moderation history"]) {
+    await expect(page.getByRole("heading", { name: h, level: 2 })).toBeVisible()
+  }
+  await page.getByRole("navigation", { name: "Queue filter" }).getByRole("link", { name: "Hidden" }).click()
+  await expect(page).toHaveURL(/\/admin\/community\?show=hidden$/)
+  await expect(page.getByRole("heading", { name: /^Hidden \(\d+\)$/, level: 2 })).toBeVisible()
+  const boards = page.getByRole("list", { name: "Boards" })
+  await boards.getByRole("button", { name: "Turn off Feedback for Krpex" }).click()
+  await expect(boards.getByRole("button", { name: "Turn on Feedback for Krpex" })).toBeVisible()
+  await expect(page.getByRole("list", { name: "Moderation history" }).getByText("Turned off the Feedback for Krpex board").first()).toBeVisible()
+  await boards.getByRole("button", { name: "Turn on Feedback for Krpex" }).click()
+  await expect(boards.getByRole("button", { name: "Turn off Feedback for Krpex" })).toBeVisible()
+
   // Notifications already sent link to /admin#community.
   await page.goto("/admin#community")
   await expect(page).toHaveURL(/\/admin\/community$/)
 
   // Phones: tabs scroll, the page doesn't.
   await page.setViewportSize({ width: 360, height: 760 })
-  for (const path of ["/admin", "/admin/users", learnerPath, "/admin/professors"]) {
+  for (const path of ["/admin", "/admin/users", learnerPath, "/admin/community", "/admin/professors"]) {
     await page.goto(path)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
     // Overflow can be clipped rather than scroll, so also check every section ends inside the screen.

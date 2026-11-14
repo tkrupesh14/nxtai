@@ -23,3 +23,6 @@ export const spaceBoard = (space: string) => (/^board:[a-z0-9]+(-[a-z0-9]+)*$/.t
 
 /** Board summary from community_boards(). */
 export type BoardStats = { slug: string; kind: BoardKind; title: string; posts: number; last_activity: string | null }
+
+/** community_boards() lists only boards that are on (an admin can turn one off). If it failed to load, treat every board as on. */
+export const isBoardOpen = (slug: string, stats: BoardStats[]) => stats.length === 0 || stats.some((s) => s.slug === slug)
