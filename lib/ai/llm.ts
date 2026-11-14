@@ -178,7 +178,7 @@ async function viaResponses<T>(
 
 async function callStructured<T>(schema: Schema, name: string, prompt: string, opts: CallOpts): Promise<T> {
   const { parsed, usage } = await callStructuredWithUsage<T>(schema, name, prompt, opts)
-  logAiUsage(name, usage) // professor chat records its own usage in professor_questions
+  logAiUsage(name, usage, MODEL) // professor chat and the coach record their own usage
   return parsed
 }
 
@@ -492,7 +492,7 @@ export async function streamLesson(args: LessonArgs, onBlocks: (blocks: LessonBl
       }
     })
     const completion = await stream.finalChatCompletion()
-    logAiUsage("lesson", { input: completion.usage?.prompt_tokens ?? 0, output: completion.usage?.completion_tokens ?? 0 })
+    logAiUsage("lesson", { input: completion.usage?.prompt_tokens ?? 0, output: completion.usage?.completion_tokens ?? 0 }, MODEL)
     const choice = completion.choices[0]
     if (!choice) throw new AIError("no choices", "The AI returned an empty response. Please try again.")
     if (choice.finish_reason === "length") throw new AIError("finish_reason=length", "The AI response was cut short. Please try again.")

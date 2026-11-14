@@ -182,3 +182,17 @@ export async function setBoardActiveAction(slug: string, active: boolean) {
   revalidatePath("/admin", "layout")
   revalidatePath("/community", "layout")
 }
+
+/** Set the dollar rate used to show AI costs in rupees (6.4). */
+export async function usdInrAction(_: AdminResult, formData: FormData): Promise<AdminResult> {
+  const rate = Number(String(formData.get("rate") ?? "").trim())
+  if (!Number.isFinite(rate) || rate < 50 || rate > 200) return { message: "Enter a rate between ₹50 and ₹200." }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("admin_set_usd_inr", { p_rate: rate })
+  if (error) {
+    console.error("admin_set_usd_inr failed:", error.message)
+    return { message: "Couldn't save the rate." }
+  }
+  revalidatePath("/admin", "layout")
+  return { ok: true, message: `Saved: $1 = ₹${Math.round(rate * 100) / 100}.` }
+}

@@ -12,7 +12,9 @@ import {
   setProfessorStatus,
   setReviewLessonStatus,
   type GenerateResult,
+  type AdminResult,
   type InviteResult,
+  usdInrAction,
 } from "@/app/(learn)/admin/actions"
 import { Button } from "@/components/site/ui/button"
 import { Input } from "@/components/site/ui/input"
@@ -221,5 +223,22 @@ export function ReviewLessonStatusButton({ id, status, title }: { id: string; st
     >
       {pending ? "…" : status === "open" ? "Close" : "Reopen"}
     </Button>
+  )
+}
+
+/** The dollar rate AI costs are turned into rupees at (Money page). */
+export function UsdInrForm({ rate }: { rate: number }) {
+  const [state, action, pending] = useActionState<AdminResult, FormData>(usdInrAction, {})
+  return (
+    <form action={action} className="flex flex-wrap items-end gap-2">
+      <div className="grid gap-1">
+        <Label htmlFor="usd-inr">₹ per US dollar</Label>
+        <Input id="usd-inr" name="rate" type="number" inputMode="decimal" step="0.01" min={50} max={200} defaultValue={rate} required className="h-9 w-32" />
+      </div>
+      <Button size="sm" type="submit" disabled={pending} loading={pending}>
+        Save
+      </Button>
+      {state.message && <p className={state.ok ? "w-full text-sm text-green-700 dark:text-green-400" : "w-full text-sm text-destructive-foreground"}>{state.message}</p>}
+    </form>
   )
 }

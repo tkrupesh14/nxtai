@@ -1,7 +1,7 @@
 import Link from "next/link"
 
 import { AdminHashRedirect } from "@/components/admin/hash-redirect"
-import { AdminHeading, AdminSection, inr, td, th, Tile, usd } from "@/components/admin/ui"
+import { AdminHeading, AdminSection, inr, rupees, td, th, Tile } from "@/components/admin/ui"
 import { getCommunityQueue, getDaily, getErrors, getOverview, getProfessors, requireAdmin } from "@/lib/admin/data"
 
 export const metadata = { title: "Admin — Krpex" }
@@ -41,7 +41,7 @@ export default async function AdminOverview() {
         <Tile label="Users" value={o.users_total ?? 0} sub={`+${o.users_today ?? 0} today · ${o.active_7d ?? 0} active 7d`} />
         <Tile label="Courses" value={o.courses_total ?? 0} sub={`+${o.courses_today ?? 0} today`} />
         <Tile label="Today" value={o.lessons_written_today ?? 0} sub={`lessons written · ${o.questions_today ?? 0} questions`} />
-        <Tile label="AI spend today" value={usd(o.ai_usd_today ?? 0)} sub={`${usd(o.ai_usd_30d ?? 0)} last 30 days`} />
+        <Tile label="AI spend today" value={rupees(o.ai_inr_today)} sub={`${rupees(o.ai_inr_30d)} last 30 days`} />
         <Tile label="Revenue (30 days)" value={inr(o.revenue_paise_30d ?? 0)} sub={`${inr(o.revenue_paise_total ?? 0)} all time`} />
         <Tile label="Paid orders" value={o.paid_orders_total ?? 0} sub={`${o.pro_active ?? 0} active Pro`} />
         <Tile label="Credits held" value={o.credits_outstanding ?? 0} sub="across all learners" />
@@ -89,7 +89,7 @@ export default async function AdminOverview() {
                   <td className={td}>{d.courses}</td>
                   <td className={td}>{d.lessons}</td>
                   <td className={td}>{d.questions}</td>
-                  <td className={td}>{usd(d.ai_usd)}</td>
+                  <td className={td}>{rupees(d.ai_inr)}</td>
                   <td className={td}>{inr(d.revenue_paise)}</td>
                 </tr>
               ))}

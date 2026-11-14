@@ -3,7 +3,24 @@ import { AccountSection } from "@/components/learn/account-section"
 // Small pieces shared by the admin sections.
 
 export const inr = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`
-export const usd = (v: number | string) => `$${Number(v).toFixed(Number(v) < 1 ? 3 : 2)}`
+/** Rupees (not paise), e.g. AI costs: paise shown below ₹100, whole rupees above. */
+export const rupees = (v: number | string | null | undefined) => {
+  const n = Number(v ?? 0)
+  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: n !== 0 && Math.abs(n) < 100 ? 2 : 0, maximumFractionDigits: Math.abs(n) < 100 ? 2 : 0 })}`
+}
+
+/** What each kind of AI call is called on the admin pages. */
+export const AI_FEATURES: Record<string, string> = {
+  lesson: "Lessons",
+  course_plan: "Course plans",
+  source_course_plan: "Course plans from files",
+  goal_check: "Goal checks",
+  module_test: "Module tests",
+  final_exam: "Final exams",
+  professor_reply: "Professor answers",
+  coach_reply: "Coding coach",
+}
+export const aiFeature = (kind: string) => AI_FEATURES[kind] ?? kind
 export const when = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) : "—"
 
@@ -61,6 +78,8 @@ export function auditText(a: { action: string; detail: Record<string, unknown> }
       return `Kept ${what} after reports`
     case a.action === "remove":
       return `Removed ${what}`
+    case a.action === "usd_inr":
+      return `Set the dollar rate to ₹${d.to} (was ₹${d.from})`
     case a.action === "board_off":
       return `Turned off the ${d.title ?? d.board} board`
     case a.action === "board_on":

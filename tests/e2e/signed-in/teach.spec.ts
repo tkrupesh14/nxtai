@@ -364,7 +364,7 @@ test("the admin panel has one page per section, and old links open the right one
 
   const sections = [
     ["Users", "/admin/users", "Find a learner"],
-    ["Money", "/admin/money", "Recent payments"],
+    ["Money", "/admin/money", /^Payments \(\d+\)$/],
     ["Lesson reports", "/admin/reports", /^Open \(\d+\)$/],
     ["Community", "/admin/community", /^Needs review \(\d+\)$/],
     ["Professors", "/admin/professors", /^Professors \(\d+\)$/],
@@ -399,6 +399,22 @@ test("the admin panel has one page per section, and old links open the right one
   await expect(page.getByRole("list", { name: "Admin activity" }).getByText("Gave 3 credits").first()).toBeVisible()
   expect((await page.request.get("/admin/users/not-a-user")).status()).toBe(404)
 
+  // Money: periods, AI cost in rupees, the dollar rate (logged).
+  await page.goto("/admin/money?days=7")
+  await expect(page.getByRole("navigation", { name: "Period" }).getByRole("link", { name: "Last 7 days" })).toHaveAttribute("aria-current", "page")
+  for (const h of ["By day", "AI cost by feature", "AI cost by model", "Costliest learners", "Credits", "Dollar rate"]) {
+    await expect(page.getByRole("heading", { name: h, level: 2 })).toBeVisible()
+  }
+  await expect(page.getByRole("table", { name: "By day" }).getByRole("row")).toHaveCount(8)
+  await expect(page.getByRole("table").filter({ hasText: "$" })).toHaveCount(0) // costs in rupees only
+  await page.getByLabel("₹ per US dollar").fill("88")
+  await page.getByRole("button", { name: "Save" }).click()
+  await expect(page.getByText("Saved: $1 = ₹88.")).toBeVisible()
+  await page.getByRole("navigation", { name: "Payment status" }).getByRole("link", { name: "Failed" }).click()
+  await expect(page).toHaveURL(/\/admin\/money\?days=7&status=failed$/)
+  await page.goto("/admin/system")
+  await expect(page.getByRole("list", { name: "Admin activity" }).getByText("Set the dollar rate to ₹88").first()).toBeVisible()
+
   // Community: queue filters, bans, boards on/off (logged in the history).
   await page.goto("/admin/community")
   for (const h of [/^Can't post \(\d+\)$/, "Boards", "Moderation history"]) {
@@ -420,7 +436,7 @@ test("the admin panel has one page per section, and old links open the right one
 
   // Phones: tabs scroll, the page doesn't.
   await page.setViewportSize({ width: 360, height: 760 })
-  for (const path of ["/admin", "/admin/users", learnerPath, "/admin/community", "/admin/professors"]) {
+  for (const path of ["/admin", "/admin/users", learnerPath, "/admin/money", "/admin/community", "/admin/professors"]) {
     await page.goto(path)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
     // Overflow can be clipped rather than scroll, so also check every section ends inside the screen.

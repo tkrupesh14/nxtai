@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server"
 // data in one request share a single call. Every RPC also checks require_admin in the database.
 
 export type Overview = Record<string, number>
-export type Day = { day: string; signups: number; courses: number; lessons: number; questions: number; ai_usd: string; revenue_paise: number }
+export type Day = { day: string; signups: number; courses: number; lessons: number; questions: number; ai_inr: string; revenue_paise: number }
 export type UserRow = {
   id: string
   email: string
@@ -46,7 +46,7 @@ export type AdminUser = {
   ledger: { delta: number; reason: string; note: string | null; ref: string | null; created_at: string }[]
   xp: { total: number; level: number; week: number; last: string | null }
   courses: { id: string; title: string; category: string | null; status: string; language: string; created_at: string; lessons: number; passed: number; last_passed: string | null; certificate: string | null }[]
-  ai: { lessons_written: number; courses_created: number; questions: number; questions_30d: number; coach: number; coach_30d: number; usd: number; usd_30d: number }
+  ai: { lessons_written: number; courses_created: number; questions: number; questions_30d: number; coach: number; coach_30d: number }
   payments: { created_at: string; paid_at: string | null; product: string; amount_paise: number; status: string; razorpay_payment_id: string | null }[]
   code: {
     solved: number
@@ -136,7 +136,43 @@ export const requireAdmin = cache(async () => {
 
 export const getOverview = cache(() => rpc<Overview>("admin_overview", undefined, {}))
 export const getDaily = cache((days: number) => rpc<Day[]>("admin_daily", { p_days: days }, []))
-export const getPayments = cache(() => rpc<Payment[]>("admin_payments", { p_limit: 20 }, []))
+export type MoneyDays = 7 | 30 | 90
+export type Money = {
+  days: MoneyDays
+  rate: { usd_inr: number; updated_at: string; by: string | null }
+  prices: { model: string; in: number; out: number }[]
+  revenue_paise: number
+  paid_orders: number
+  paying_learners: number
+  unpaid_orders: number
+  ai_inr: number
+  ai_calls: number
+  ai_unpriced: number
+  pro_active: number
+  credits_outstanding: number
+  daily: { day: string; revenue_paise: number; orders: number; ai_inr: number; ai_calls: number }[]
+  features: { feature: string; calls: number; tokens_in: number; tokens_out: number; inr: number }[]
+  models: { model: string; calls: number; tokens_in: number; tokens_out: number; inr: number; priced: boolean }[]
+  learners: { user_id: string; email: string | null; calls: number; inr: number; paid_paise: number }[]
+  unattributed_inr: number
+  credits: { reason: string; added: number; used: number; entries: number }[]
+}
+export const getMoney = cache((days: MoneyDays) => rpc<Money | null>("admin_money", { p_days: days }, null))
+
+export type PaymentStatus = "all" | "paid" | "created" | "failed"
+export type PaymentRow = Payment & { user_id: string | null; razorpay_order_id: string | null }
+export const PAYMENTS_PER_PAGE = 50
+export const getPaymentList = cache(async (status: PaymentStatus, page: number) => {
+  const r = await rpc<{ total?: number; rows?: PaymentRow[] }>(
+    "admin_payment_list",
+    { p_status: status, p_limit: PAYMENTS_PER_PAGE, p_offset: (page - 1) * PAYMENTS_PER_PAGE },
+    {},
+  )
+  return { data: { total: r.data.total ?? 0, rows: r.data.rows ?? [] }, error: r.error }
+})
+
+export type UserAi = { inr: number; inr_30d: number; calls: number; features: { feature: string; calls: number; inr: number; inr_30d: number }[] }
+export const getUserAi = cache((id: string) => rpc<UserAi | null>("admin_user_ai", { p_user: id }, null))
 export const getReports = cache(() => rpc<Report[]>("admin_reports", { p_status: "open" }, []))
 export const getErrors = cache(() => rpc<ErrorGroup[]>("admin_errors", { p_hours: 24 }, []))
 export const getReviewLessons = cache(() => rpc<AdminReviewLesson[]>("admin_review_lessons", undefined, []))

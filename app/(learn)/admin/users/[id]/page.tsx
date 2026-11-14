@@ -1,10 +1,10 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-import { AdminHeading, AdminSection, auditText, inr, Pill, Tile, usd, when } from "@/components/admin/ui"
+import { AdminHeading, AdminSection, aiFeature, auditText, inr, Pill, rupees, Tile, when } from "@/components/admin/ui"
 import { CommunityBanForm, ProfileVisibilityForm } from "@/components/learn/admin-community"
 import { GrantForm } from "@/components/learn/admin-forms"
-import { getUser, requireAdmin } from "@/lib/admin/data"
+import { getUser, getUserAi, requireAdmin } from "@/lib/admin/data"
 import { PRODUCTS, type ProductId } from "@/lib/learning/plans"
 
 export const metadata = { title: "Learner — Admin — Krpex" }
@@ -45,9 +45,10 @@ export default async function AdminLearner({ params }: { params: Promise<{ id: s
   await requireAdmin()
   const { id } = await params
   if (!UUID.test(id)) notFound()
-  const { data: u, error } = await getUser(id.toLowerCase())
+  const [{ data: u, error }, aiCost] = await Promise.all([getUser(id.toLowerCase()), getUserAi(id.toLowerCase())])
+  const ai = aiCost.data
   if (!u && !error) notFound()
-  if (!u) return <AdminHeading title="Learner" errors={[error]} />
+  if (!u) return <AdminHeading title="Learner" errors={[error, aiCost.error]} />
 
   const a = u.account
   const pro = u.plan.plan === "pro"
@@ -61,7 +62,7 @@ export default async function AdminLearner({ params }: { params: Promise<{ id: s
         <Link href="/admin/users" className="text-sm text-primary hover:underline">
           ← Users
         </Link>
-        <AdminHeading title={a.full_name || a.email} errors={[error]} />
+        <AdminHeading title={a.full_name || a.email} errors={[error, aiCost.error]} />
         <p className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
           <span className="break-all">{a.email}</span>
           {pro ? <Pill tone="primary">Pro{u.plan.period_end ? ` until ${day(u.plan.period_end)}` : ""}</Pill> : <Pill>Free</Pill>}
@@ -81,7 +82,7 @@ export default async function AdminLearner({ params }: { params: Promise<{ id: s
         <Tile label="Level" value={u.xp.level} sub={`${u.xp.total} XP · ${u.xp.week} this week`} />
         <Tile label="Courses" value={u.courses.length} sub={`${passed} lessons passed`} />
         <Tile label="Code" value={u.code.solved} sub={`solved · ${u.code.submissions} runs`} />
-        <Tile label="AI cost (30 days)" value={usd(u.ai.usd_30d)} sub={`${usd(u.ai.usd)} all time`} />
+        <Tile label="AI cost (30 days)" value={rupees(ai?.inr_30d)} sub={`${rupees(ai?.inr)} all time`} />
         <Tile label="Paid" value={inr(paid)} sub={`${u.payments.filter((p) => p.status === "paid").length} orders`} />
       </div>
 
@@ -154,7 +155,7 @@ export default async function AdminLearner({ params }: { params: Promise<{ id: s
 
       <AdminSection
         title="AI use"
-        description="Cost covers questions to the professor and the coding coach. Course plans and lessons are counted here and costed on the Overview."
+        description="Professor answers and the coding coach are costed in full. Course plans, lessons and tests are costed from 14 Nov 2026, when we started recording who they were for."
       >
         <Rows label="AI use">
           <Row main="Lessons written" side={u.ai.lessons_written} />
@@ -162,6 +163,16 @@ export default async function AdminLearner({ params }: { params: Promise<{ id: s
           <Row main="Questions answered" side={`${u.ai.questions} (${u.ai.questions_30d} in 30 days)`} />
           <Row main="Coding coach replies" side={`${u.ai.coach} (${u.ai.coach_30d} in 30 days)`} />
         </Rows>
+        {ai && ai.features.length ? (
+          <>
+            <h3 className="mb-2 mt-5 text-sm font-medium">Cost by feature</h3>
+            <Rows label="AI cost by feature">
+              {ai.features.map((f) => (
+                <Row key={f.feature} main={aiFeature(f.feature)} sub={`${f.calls} ${f.calls === 1 ? "call" : "calls"}`} side={`${rupees(f.inr)} · ${rupees(f.inr_30d)} in 30 days`} />
+              ))}
+            </Rows>
+          </>
+        ) : null}
       </AdminSection>
 
       <AdminSection title="Payments">
