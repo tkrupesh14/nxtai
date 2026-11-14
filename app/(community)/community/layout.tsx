@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 
 import { CommunityHeader } from "@/components/community/community-header"
+import { ActivityTracker } from "@/components/beta/activity-tracker"
 import { ErrorReporter } from "@/components/error-reporter"
 import { FeedbackButton } from "@/components/feedback/feedback-button"
 import { NavigationProgress } from "@/components/site/navigation-progress"
@@ -40,6 +41,7 @@ export default function CommunityLayout({ children }: { children: React.ReactNod
         {children}
         <ErrorReporter />
         <FeedbackButton site="community" />
+        <ActivityTracker site="community" />
         <NavigationProgress />
       </body>
     </html>

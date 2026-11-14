@@ -44,7 +44,7 @@ for (const [path, text] of PUBLIC_PAGES) {
 }
 
 test("signed-out visitors are sent to log in", async ({ page }) => {
-  for (const path of ["/learn", "/account", "/account/feedback", "/admin", "/admin/users", "/admin/beta/feedback", "/admin/code", "/onboarding"]) {
+  for (const path of ["/learn", "/account", "/account/feedback", "/admin", "/admin/users", "/admin/beta/feedback", "/admin/beta/activity", "/admin/code", "/onboarding"]) {
     await page.goto(path)
     await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path).replace(/[/]/g, "%2F")}`))
   }
@@ -73,6 +73,10 @@ test("health check answers", async ({ request }) => {
 test("API routes refuse bad input without crashing", async ({ request }) => {
   const stream = await request.post("/api/lessons/stream", { data: { courseId: "x", lessonId: "y" } })
   expect(stream.status()).toBeLessThan(500)
+  // Beta activity (B.3): visitors who aren't signed in are never tracked, and junk is refused.
+  expect(await (await request.get("/api/beta/activity")).json()).toEqual({ track: false })
+  expect(await (await request.post("/api/beta/activity", { data: [{ site: "main", path: "/", started_at: new Date().toISOString(), seconds: 1 }] })).json()).toEqual({ track: false })
+  expect((await request.post("/api/beta/activity", { data: "not json", headers: { "Content-Type": "application/json" } })).status()).toBe(400)
   const hook = await request.post("/api/razorpay/webhook", { data: "{}", headers: { "x-razorpay-signature": "bad" } })
   expect(hook.status()).toBeGreaterThanOrEqual(400)
   expect(hook.status()).toBeLessThan(500)

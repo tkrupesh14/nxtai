@@ -298,3 +298,19 @@ export const getFeedbackList = cache((status: FeedbackFilter, site: string, kind
     null,
   ),
 )
+
+/** Tester activity (closed beta B.3, migration 044). */
+export type BetaActivity = {
+  days: number
+  funnel: Record<"applied" | "approved" | "signed_in" | "onboarded" | "lesson_opened" | "lesson_finished" | "day_2" | "week_2", number>
+  sites: Record<"main" | "code" | "community" | "two_or_more" | "all_three" | "code_submitted" | "community_posted", number>
+  pages: { site: "main" | "code" | "community"; page: string; views: number; testers: number; avg_seconds: number; exits: number }[]
+  testers: { user_id: string; name: string | null; email: string; approved_at: string | null; views: number; active_days: number; last_seen: string | null; sites: string[] }[]
+}
+export type TesterEvent = { at: string; kind: string; site: "main" | "code" | "community"; title: string; detail: string | null; seconds: number | null }
+export type TesterActivity = {
+  tester: { user_id: string; name: string | null; email: string; status: string; source: string; approved_at: string | null; active_days: number; first_seen: string | null; last_seen: string | null }
+  events: TesterEvent[]
+}
+export const getBetaActivity = cache((days: number) => rpc<BetaActivity | null>("admin_beta_activity", { p_days: days }, null))
+export const getTesterActivity = cache((user: string, days: number) => rpc<TesterActivity | null>("admin_beta_tester_activity", { p_user: user, p_days: days }, null))

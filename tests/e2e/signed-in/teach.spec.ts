@@ -457,7 +457,7 @@ test("the admin panel has one page per section, and old links open the right one
 
   // Phones: tabs scroll, the page doesn't.
   await page.setViewportSize({ width: 360, height: 760 })
-  for (const path of ["/admin", "/admin/users", "/admin/beta", "/admin/beta/feedback", learnerPath, "/admin/money", "/admin/code", "/admin/community", "/admin/professors", "/admin/system"]) {
+  for (const path of ["/admin", "/admin/users", "/admin/beta", "/admin/beta/feedback", "/admin/beta/activity", learnerPath, "/admin/money", "/admin/code", "/admin/community", "/admin/professors", "/admin/system"]) {
     await page.goto(path)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
     // Overflow can be clipped rather than scroll, so also check every section ends inside the screen.
@@ -518,6 +518,24 @@ test("closed beta: a new account applies, waits, is approved by an admin and get
     await expect(t.getByRole("heading", { name: "Boards", level: 1 })).toBeVisible()
     await t.goto("/onboarding")
     await expect(t.getByText("What would you like to learn?")).toBeVisible()
+
+    // Beta activity (B.3): pages seen by the approved tester show up for the admin. A new tab, since the first one
+    // was told "not tracked" while the application waited (it asks again after 15 minutes).
+    const t2 = await tester.newPage()
+    await t2.goto("/code/problems")
+    await expect(t2.getByRole("heading", { name: "Problems", exact: true })).toBeVisible()
+    await t2.goto("/community/c")
+    await expect(t2.getByRole("heading", { name: "Boards", level: 1 })).toBeVisible()
+    await t2.close({ runBeforeUnload: true })
+    await expect(async () => {
+      await page.goto("/admin/beta/activity")
+      await page.getByRole("table", { name: "Testers" }).getByRole("link", { name: "Beta Tester" }).click()
+      await expect(page.getByRole("list", { name: "Sessions" }).getByRole("link", { name: "/code/problems" })).toBeVisible({ timeout: 2000 })
+    }).toPass({ timeout: 30_000 })
+    await expect(page.getByRole("list", { name: "Sessions" }).getByRole("link", { name: "/community/c" })).toBeVisible()
+    await page.goto("/admin/beta/activity")
+    await expect(page.getByRole("heading", { name: "Funnel" })).toBeVisible()
+    await expect(page.getByRole("table", { name: "Most used Krpex Code pages" })).toContainText("/code/problems")
   } finally {
     await tester.close()
     localSql("update private.admin_settings set beta_closed = false")

@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 
+import { ActivityTracker } from "@/components/beta/activity-tracker"
 import { ErrorReporter } from "@/components/error-reporter"
 import { FeedbackButton } from "@/components/feedback/feedback-button"
 import { NavigationProgress } from "@/components/site/navigation-progress"
@@ -36,6 +37,7 @@ export default function CodeLayout({ children }: { children: React.ReactNode }) 
         {children}
         <ErrorReporter />
         <FeedbackButton site="code" />
+        <ActivityTracker site="code" />
         <NavigationProgress />
       </body>
     </html>
