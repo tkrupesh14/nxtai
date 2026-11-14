@@ -250,3 +250,30 @@ export const getUserList = cache(async (f: UserFilters) => {
 })
 export const getUser = cache((id: string) => rpc<AdminUser | null>("admin_user", { p_user: id }, null))
 export const getAudit = cache((limit: number) => rpc<AuditRow[]>("admin_audit", { p_limit: limit, p_offset: 0 }, []))
+
+/** Beta applications (closed beta B.1, migration 041). */
+export type BetaFilter = "waiting" | "approved" | "declined" | "existing" | "all"
+export type BetaRow = {
+  user_id: string
+  email: string
+  source: "applied" | "existing"
+  status: "waiting" | "approved" | "declined"
+  name: string | null
+  role: string | null
+  goal: string | null
+  device: string | null
+  heard_from: string | null
+  consent_at: string | null
+  note: string | null
+  pro_days: number | null
+  created_at: string
+  decided_at: string | null
+  decided_by: string | null
+  last_sign_in_at: string | null
+  plan: string
+}
+export type BetaList = { closed: boolean; counts: Record<"waiting" | "approved" | "declined" | "existing", number>; total: number; rows: BetaRow[] }
+export const BETA_PER_PAGE = 50
+export const getBetaList = cache((status: BetaFilter, search: string, page: number) =>
+  rpc<BetaList | null>("admin_beta_list", { p_status: status, p_search: search, p_limit: BETA_PER_PAGE, p_offset: (page - 1) * BETA_PER_PAGE }, null),
+)

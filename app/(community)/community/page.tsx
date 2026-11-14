@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { FeedList } from "@/components/community/feed-list"
 import { Button } from "@/components/site/ui/button"
+import { getBetaStatus } from "@/lib/beta/access"
 import { codeLinks } from "@/lib/code/host"
 import { BOARDS, isBoardOpen } from "@/lib/community/boards"
 import { getBoardStats, getFeed, getMyPublicProfile } from "@/lib/community/data"
@@ -13,7 +14,30 @@ const PER_PAGE = 20
 
 export default async function CommunityHome({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const page = Math.max(1, Math.min(20, Number.parseInt((await searchParams).page ?? "1", 10) || 1))
-  const [user, links] = await Promise.all([getSignedInUser(), codeLinks()])
+  const [user, links, beta] = await Promise.all([getSignedInUser(), codeLinks(), getBetaStatus()])
+  if (!beta.access) {
+    // Closed beta: the home page says what this is; reading is for approved testers (plan.md "Closed beta").
+    return (
+      <main className="mx-auto max-w-6xl px-4 pb-16">
+        <section className="pb-8 pt-10 md:pt-14">
+          <p className="text-sm font-medium text-primary">Krpex Community</p>
+          <h1 className="mt-2 text-balance text-3xl font-semibold tracking-tight md:text-5xl">Learn together</h1>
+          <p className="mt-3 max-w-2xl text-pretty text-muted-foreground">
+            Share how you solved a problem, ask when you&apos;re stuck and show how far you&apos;ve come — with the same account you use for courses and coding.
+          </p>
+          <p className="mt-3 max-w-2xl text-pretty text-muted-foreground">Krpex Community is in a closed beta: approved testers can read and post.</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button asChild>
+              <a href={links.main(`/beta?from=${encodeURIComponent("/community")}`)}>{beta.application ? "See your beta application" : "Apply for the beta"}</a>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link href={links.community("/guidelines")}>Community guidelines</Link>
+            </Button>
+          </div>
+        </section>
+      </main>
+    )
+  }
   const [me, feed, stats] = await Promise.all([user ? getMyPublicProfile() : null, getFeed(null, PER_PAGE + 1, (page - 1) * PER_PAGE), getBoardStats()])
   const posts = feed.slice(0, PER_PAGE)
   const more = feed.length > PER_PAGE

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 export const ADMIN_SECTIONS = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/users", label: "Users" },
+  { href: "/admin/beta", label: "Beta" },
   { href: "/admin/money", label: "Money" },
   { href: "/admin/code", label: "Code" },
   { href: "/admin/reports", label: "Lesson reports" },

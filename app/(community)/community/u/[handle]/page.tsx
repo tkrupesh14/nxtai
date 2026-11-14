@@ -55,6 +55,7 @@ export default async function ProfilePage({ params }: Props) {
             <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight">
               <span className="min-w-0 break-words">{p.display_name}</span>
               <LevelBadge level={level.level} className="text-xs" />
+              {p.beta_tester ? <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Beta tester</span> : null}
             </h1>
             <p className="text-sm text-muted-foreground">@{p.handle}</p>
             {p.bio && <p className="mt-2 max-w-prose break-words text-sm">{p.bio}</p>}

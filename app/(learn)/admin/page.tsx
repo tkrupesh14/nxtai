@@ -2,7 +2,7 @@ import Link from "next/link"
 
 import { AdminHashRedirect } from "@/components/admin/hash-redirect"
 import { AdminHeading, AdminSection, inr, rupees, td, th, Tile } from "@/components/admin/ui"
-import { getCommunityQueue, getDaily, getErrors, getOverview, getProfessors, requireAdmin } from "@/lib/admin/data"
+import { getBetaList, getCommunityQueue, getDaily, getErrors, getOverview, getProfessors, requireAdmin } from "@/lib/admin/data"
 
 export const metadata = { title: "Admin — Krpex" }
 
@@ -11,7 +11,7 @@ const HASHES = { community: "/admin/community" }
 
 export default async function AdminOverview() {
   await requireAdmin()
-  const [overview, daily, community, errors, profs] = await Promise.all([getOverview(), getDaily(14), getCommunityQueue(), getErrors(), getProfessors()])
+  const [overview, daily, community, errors, profs, beta] = await Promise.all([getOverview(), getDaily(14), getCommunityQueue(), getErrors(), getProfessors(), getBetaList("waiting", "", 1)])
   const o = overview.data
   const queue = community.data
   const professors = profs.data.professors
@@ -21,6 +21,7 @@ export default async function AdminOverview() {
   const hidden = queue.filter((c) => c.status === "hidden").length
 
   const attention = [
+    { n: beta.data?.counts.waiting ?? 0, label: "beta applications waiting", href: "/admin/beta" },
     { n: o.reports_open ?? 0, label: "open lesson reports", href: "/admin/reports" },
     { n: queue.length, label: `community items to review${hidden ? ` (${hidden} hidden)` : ""}`, href: "/admin/community" },
     { n: pending, label: "professors waiting for approval", href: "/admin/professors" },
@@ -34,7 +35,7 @@ export default async function AdminOverview() {
       <AdminHeading
         title="Overview"
         note="Days are India time. AI cost uses GPT-6 Luna prices."
-        errors={[overview.error, daily.error, community.error, errors.error, profs.error]}
+        errors={[overview.error, daily.error, community.error, errors.error, profs.error, beta.error]}
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

@@ -78,6 +78,14 @@ export function auditText(a: { action: string; detail: Record<string, unknown> }
       return `Kept ${what} after reports`
     case a.action === "remove":
       return `Removed ${what}`
+    case a.action === "beta:approved":
+      return `Approved for the beta${typeof d.pro_days === "number" ? ` with ${d.pro_days} days of Pro` : ""}`
+    case a.action === "beta:declined":
+      return "Declined for the beta"
+    case a.action === "beta_closed":
+      return "Closed the beta"
+    case a.action === "beta_opened":
+      return "Ended the closed beta (everyone can use Krpex)"
     case a.action === "usd_inr":
       return `Set the dollar rate to ₹${d.to} (was ₹${d.from})`
     case a.action === "board_off":

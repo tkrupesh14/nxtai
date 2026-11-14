@@ -196,3 +196,29 @@ export async function usdInrAction(_: AdminResult, formData: FormData): Promise<
   revalidatePath("/admin", "layout")
   return { ok: true, message: `Saved: $1 = ₹${Math.round(rate * 100) / 100}.` }
 }
+
+/** Approve (with Pro for some days) or decline a beta application (closed beta B.1). */
+export async function betaDecideAction(userId: string, _: AdminResult, formData: FormData): Promise<AdminResult> {
+  const status = formData.get("status")
+  if (status !== "approved" && status !== "declined") return { message: "Choose approve or decline." }
+  const note = String(formData.get("note") ?? "").slice(0, 500)
+  const proDays = Math.trunc(Number(formData.get("pro_days") ?? 30))
+  if (!Number.isFinite(proDays) || proDays < 0 || proDays > 365) return { message: "Pro days: 0 to 365." }
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("admin_beta_decide", { p_user: userId, p_status: status, p_note: note, p_pro_days: proDays })
+  if (error) {
+    console.error("admin_beta_decide failed:", error.message)
+    return { message: "Couldn't save that. Are you signed in as an admin?" }
+  }
+  if (data === "not_found") return { message: "That application no longer exists." }
+  revalidatePath("/admin", "layout")
+  return { ok: true, message: status === "approved" ? "Approved." : "Declined." }
+}
+
+/** End the closed beta (everyone gets in) or close it again (closed beta B.1). */
+export async function setBetaClosedAction(closed: boolean) {
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("admin_set_beta_closed", { p_closed: closed })
+  if (error) console.error("admin_set_beta_closed failed:", error.message)
+  revalidatePath("/", "layout")
+}

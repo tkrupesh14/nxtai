@@ -364,6 +364,7 @@ test("the admin panel has one page per section, and old links open the right one
 
   const sections = [
     ["Users", "/admin/users", "Find a learner"],
+    ["Beta", "/admin/beta", /^Waiting \(\d+\)$/],
     ["Money", "/admin/money", /^Payments \(\d+\)$/],
     ["Code", "/admin/code", /^Problems \(\d+\)$/],
     ["Lesson reports", "/admin/reports", /^Open \(\d+\)$/],
@@ -456,7 +457,7 @@ test("the admin panel has one page per section, and old links open the right one
 
   // Phones: tabs scroll, the page doesn't.
   await page.setViewportSize({ width: 360, height: 760 })
-  for (const path of ["/admin", "/admin/users", learnerPath, "/admin/money", "/admin/code", "/admin/community", "/admin/professors", "/admin/system"]) {
+  for (const path of ["/admin", "/admin/users", "/admin/beta", learnerPath, "/admin/money", "/admin/code", "/admin/community", "/admin/professors", "/admin/system"]) {
     await page.goto(path)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
     // Overflow can be clipped rather than scroll, so also check every section ends inside the screen.
@@ -464,6 +465,62 @@ test("the admin panel has one page per section, and old links open the right one
       Math.max(...[...document.querySelectorAll("main section, main h1")].map((el) => el.getBoundingClientRect().right - window.innerWidth)),
     )
     expect(overhang).toBeLessThanOrEqual(0)
+  }
+  expect(errors).toEqual([])
+})
+
+test("closed beta: a new account applies, waits, is approved by an admin and gets in", async ({ page, browser }) => {
+  test.setTimeout(120_000)
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  // The local database keeps the beta open for the other tests (supabase/seed.sql); close it for this one.
+  localSql("update private.admin_settings set beta_closed = true")
+  const tester = await browser.newContext()
+  try {
+    const t = await tester.newPage()
+    t.on("pageerror", (e) => errors.push(e.message))
+    await t.goto("/code/problems")
+    await expect(t).toHaveURL(/\/beta\?from=%2Fcode%2Fproblems$/)
+    await t.getByRole("link", { name: "Create an account" }).click()
+    await t.getByLabel("Your name").fill("Beta Tester")
+    await t.getByLabel("Email").fill(`beta-${Date.now()}@example.com`)
+    await t.getByLabel("Password", { exact: true }).fill("testpass123")
+    await t.getByRole("button", { name: "Create account" }).click()
+
+    // Back on /beta, signed in: apply.
+    await expect(t).toHaveURL(/\/beta\?from=%2Fcode%2Fproblems$/)
+    await t.getByLabel("What describes you best?").selectOption("college")
+    await t.getByLabel("Device you'll mostly use").selectOption("android")
+    await t.getByLabel("What would you like to learn or practise on Krpex?").fill("Python for my placements")
+    await t.getByRole("checkbox", { name: /records how I use krpex\.in/ }).check()
+    await t.getByRole("button", { name: "Apply for the beta" }).click()
+    await expect(t.getByRole("heading", { name: "You're on the list" })).toBeVisible()
+    await t.goto("/learn")
+    await expect(t).toHaveURL(/\/beta\?from=%2Flearn$/)
+
+    // The admin (the main test learner) approves, with Pro.
+    await page.goto("/admin")
+    await expect(page.getByRole("link", { name: /beta applications waiting/ })).toBeVisible()
+    await page.goto("/admin/beta?q=Beta+Tester")
+    const list = page.getByRole("list", { name: "Beta applications" })
+    await expect(list.getByText("Python for my placements")).toBeVisible()
+    await list.getByRole("button", { name: "Approve Beta Tester" }).click()
+    await expect(list.getByRole("button", { name: "Approve Beta Tester" })).toHaveCount(0)
+    await page.goto("/admin/beta?show=approved&q=Beta+Tester")
+    await expect(list.getByText(/30 days of Pro given/)).toBeVisible()
+
+    // In: Code, Community and courses open, with Pro.
+    await t.goto("/beta?from=%2Fcode%2Fproblems")
+    await expect(t.getByRole("heading", { name: "You're in" })).toBeVisible()
+    await t.getByRole("link", { name: "Continue" }).click()
+    await expect(t.getByRole("heading", { name: "Problems", exact: true })).toBeVisible()
+    await t.goto("/community/c")
+    await expect(t.getByRole("heading", { name: "Boards", level: 1 })).toBeVisible()
+    await t.goto("/onboarding")
+    await expect(t.getByText("What would you like to learn?")).toBeVisible()
+  } finally {
+    await tester.close()
+    localSql("update private.admin_settings set beta_closed = false")
   }
   expect(errors).toEqual([])
 })

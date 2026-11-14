@@ -3,6 +3,7 @@ import Link from "next/link"
 import { PlanProgress } from "@/components/code/plan-progress"
 import { FeedList } from "@/components/community/feed-list"
 import { Button } from "@/components/site/ui/button"
+import { getBetaStatus } from "@/lib/beta/access"
 import { getMyProgress, getPlanState } from "@/lib/code/data"
 import { codeLinks } from "@/lib/code/host"
 import { nextInPlan, PLANS, planBySlug, planProblems } from "@/lib/code/plans"
@@ -26,7 +27,7 @@ const NEXT = [
 const titles = new Map(PROBLEM_SUMMARIES.map((p) => [p.slug, `${p.number}. ${p.title}`]))
 
 export default async function CodeHome() {
-  const [links, user, feed] = await Promise.all([codeLinks(), getSignedInUser(), getFeed("code", 5)])
+  const [links, user, feed, beta] = await Promise.all([codeLinks(), getSignedInUser(), getFeed("code", 5), getBetaStatus()])
   const [progress, state] = user ? await Promise.all([getMyProgress(), getPlanState()]) : [null, null]
   const solved = new Set(progress?.solved ?? [])
   const following = (state?.follows ?? []).map(planBySlug).filter((p) => p !== null)
@@ -64,15 +65,28 @@ export default async function CodeHome() {
         <p className="mx-auto mt-5 max-w-2xl text-pretty text-lg text-muted-foreground">
           Solve problems in Python or JavaScript with a proper workspace, see your tests pass instantly and earn XP for your Krpex streak.
         </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild size="lg">
-            <Link href={links.code("/problems")}>Start solving</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href={links.code("/playground")}>Open the playground</Link>
-          </Button>
-        </div>
-        <p className="mt-4 text-sm text-muted-foreground">Free · no install · Python loads once (about 12 MB), then it&apos;s quick</p>
+        {beta.access ? (
+          <>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Button asChild size="lg">
+                <Link href={links.code("/problems")}>Start solving</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href={links.code("/playground")}>Open the playground</Link>
+              </Button>
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">Free · no install · Python loads once (about 12 MB), then it&apos;s quick</p>
+          </>
+        ) : (
+          <>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Button asChild size="lg">
+                <a href={links.main(`/beta?from=${encodeURIComponent("/code/problems")}`)}>{beta.application ? "See your beta application" : "Apply for the beta"}</a>
+              </Button>
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">Krpex Code is in a closed beta. Approved testers get every problem, the playground and Pro free for 30 days.</p>
+          </>
+        )}
 
         <div aria-hidden className="mx-auto mt-12 max-w-2xl overflow-hidden rounded-xl border bg-card text-left shadow-sm">
           <div className="flex items-center gap-1.5 border-b px-4 py-2.5">

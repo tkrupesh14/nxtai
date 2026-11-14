@@ -36,6 +36,7 @@ export function handleProblem(raw: string): string | null {
 
 export const PROFILE_ERRORS: Record<string, string> = {
   not_signed_in: "Please log in again.",
+  "beta access required": "Community profiles are open to beta testers. Apply at krpex.in/beta.",
   bad_handle: "Use 3 to 20 lowercase letters, numbers and _ (not at the start or end).",
   reserved_handle: "That handle is reserved. Please pick another.",
   handle_taken: "That handle is taken. Please pick another.",
@@ -62,6 +63,8 @@ export type MyPublicProfile = {
 
 export type PublicProfile = {
   handle: string
+  /** Took part in the closed beta (migration 041). */
+  beta_tester?: boolean
   display_name: string
   bio: string
   joined: string | null

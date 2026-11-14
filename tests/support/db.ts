@@ -32,6 +32,8 @@ export async function createTestDb() {
     }
   }
   await db.query(`insert into private.server_keys (name, key_hash) values ('app', encode(sha256(convert_to($1, 'UTF8')), 'hex'))`, [SERVER_KEY])
+  // The closed beta (migration 041) is opened here so tests can use fresh accounts; tests/db/beta.test.ts closes it.
+  await db.exec(`update private.admin_settings set beta_closed = false`)
 
   const query = async <T = Record<string, unknown>>(sql: string, params: unknown[] = []) => (await db.query<T>(sql, params)).rows
   const one = async <T = Record<string, unknown>>(sql: string, params: unknown[] = []) => (await query<T>(sql, params))[0]

@@ -135,7 +135,7 @@ export async function savePublicProfile(_: FormState, formData: FormData): Promi
     p_show_solves: formData.get("show_solves") === "on",
   })
   if (error) {
-    if (!/handle_|bad_|links_need|reserved|not_signed/.test(error.message)) console.error("savePublicProfile failed:", error.message)
+    if (!/handle_|bad_|links_need|reserved|not_signed|beta access/.test(error.message)) console.error("savePublicProfile failed:", error.message)
     return { error: profileError(error.message) }
   }
   const saved = data as { handle: string; is_public: boolean }

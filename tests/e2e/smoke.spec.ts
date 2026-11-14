@@ -23,6 +23,7 @@ const PUBLIC_PAGES = [
   ["/terms", /terms/i],
   ["/privacy", /privacy/i],
   ["/refund-policy", /refund/i],
+  ["/beta", /Apply for the beta/],
   ["/login", /log in/i],
   ["/create-account", /create/i],
 ] as const

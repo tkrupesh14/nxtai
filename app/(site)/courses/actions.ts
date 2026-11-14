@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
+import { requireBeta } from "@/lib/beta/access"
 import { professorForCategory } from "@/lib/learning/catalog"
 import { getCatalogCourse } from "@/lib/learning/course-catalog"
 import { COURSE_LIMIT_MESSAGES } from "@/lib/learning/plans"
@@ -25,6 +26,7 @@ export async function startCatalogCourse(_prev: StartState, formData: FormData):
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect(`/create-account?next=${encodeURIComponent(`/courses/${slug}`)}`)
+  await requireBeta(`/courses/${slug}`)
 
   // Already started (and not archived)? Continue it instead of making a copy.
   const { data: existing } = await supabase
