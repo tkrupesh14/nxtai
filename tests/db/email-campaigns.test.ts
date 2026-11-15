@@ -14,6 +14,7 @@ beforeEach(async () => {
   await t.addUser(USER_ADMIN, "admin@example.com")
   await t.query(`insert into private.admins (user_id) values ($1)`, [USER_ADMIN])
   await t.addUser(USER_A, "asha@example.com")
+  await t.query(`update private.admin_settings set email_send_from = null, email_send_to = null`) // any time of day, unless a test sets hours
 })
 
 async function campaign(tags: string[] = []) {
@@ -124,5 +125,19 @@ describe("email campaigns", () => {
     await call(`public.app_email_claim($1, 5)`, [SERVER_KEY])
     await t.asUser(USER_ADMIN)
     expect((await call(`public.admin_email_campaign($1)`, [id])).campaign.status).toBe("done")
+  })
+
+  it("sends only during the sending hours, spread through the day", async () => {
+    await t.asOwner()
+    await t.query(`update private.admin_settings set email_send_from = 10, email_send_to = 19`)
+    const at = async (ist: string) => (await t.one<{ n: number }>(`select private.email_allowed_now($1::timestamp at time zone 'Asia/Kolkata') as n`, [ist]))!.n
+    expect(await at("2026-11-16 00:05")).toBe(0)
+    expect(await at("2026-11-16 09:59")).toBe(0)
+    expect(await at("2026-11-16 10:00")).toBe(10)
+    expect(await at("2026-11-16 14:30")).toBe(60) // halfway: 50 of 100, plus the first batch of 10
+    expect(await at("2026-11-16 18:59")).toBe(100)
+    expect(await at("2026-11-16 19:00")).toBe(0)
+    await t.query(`update private.admin_settings set email_send_from = null`)
+    expect(await at("2026-11-16 03:00")).toBe(100)
   })
 })

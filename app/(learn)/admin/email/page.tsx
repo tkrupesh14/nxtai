@@ -29,7 +29,7 @@ export default async function AdminEmail() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Tile label="Contacts" value={n(data?.contacts)} sub="imported from our community" />
         <Tile label="Can be emailed" value={n(data?.sendable)} />
-        <Tile label="Sent today" value={`${n(data?.today.sent)} / ${n(data?.today.cap)}`} sub="daily limit, rising as the ramp goes well" />
+        <Tile label="Sent today" value={`${n(data?.today.sent)} / ${n(data?.today.cap)}`} sub="daily limit, sent 10 am–7 pm IST" />
         <Tile
           label="Do-not-send list"
           value={n(offList)}

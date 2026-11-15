@@ -69,7 +69,7 @@ export default async function AdminEmailCampaign({ params, searchParams }: { par
           </AdminSection>
           <AdminSection
             title="Check and send"
-            description={`${n(data.audience)} contacts will get it (people on the do-not-send list are left out). It goes out in batches: today's limit is ${n(data.today.cap)} (${n(data.today.sent)} sent so far), rising while bounces and spam complaints stay low. Sending pauses itself if bounces pass 5% or complaints pass 0.1%.`}
+            description={`${n(data.audience)} contacts will get it (people on the do-not-send list are left out). It goes out between 10 am and 7 pm India time, spread through the day: today's limit is ${n(data.today.cap)} (${n(data.today.sent)} sent so far), rising while bounces and spam complaints stay low. Sending pauses itself if bounces pass 5% or complaints pass 0.1%.`}
           >
             <div className="flex flex-wrap items-start gap-4">
               <TestSendButton id={id} />
