@@ -85,6 +85,16 @@ export function auditText(a: { action: string; detail: Record<string, unknown> }
       return "Declined for the beta"
     case a.action.startsWith("feedback:"):
       return `Marked their feedback “${statusLabel(a.action.slice(9))}”${d.replied ? " and replied" : ""}`
+    case a.action === "email:import":
+      return `Imported email contacts from “${d.source}” (${d.added} new, ${d.updated} existing)`
+    case a.action === "email:start":
+      return `Started the “${d.campaign}” email campaign to ${d.recipients} people`
+    case a.action === "email:pause":
+      return `Paused the “${d.campaign}” email campaign`
+    case a.action === "email:resume":
+      return `Resumed the “${d.campaign}” email campaign`
+    case a.action === "email:stop":
+      return `Stopped the “${d.campaign}” email campaign`
     case a.action === "beta_closed":
       return "Closed the beta"
     case a.action === "beta_opened":

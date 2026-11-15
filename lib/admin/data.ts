@@ -323,3 +323,76 @@ export type TesterActivity = {
 }
 export const getBetaActivity = cache((days: number) => rpc<BetaActivity | null>("admin_beta_activity", { p_days: days }, null))
 export const getTesterActivity = cache((user: string, days: number) => rpc<TesterActivity | null>("admin_beta_tester_activity", { p_user: user, p_days: days }, null))
+
+/** Email campaigns (E.2–E.5, migration 047). */
+export type EmailStats = {
+  recipients: number
+  queued: number
+  sent: number
+  delivered: number
+  bounced: number
+  complained: number
+  failed: number
+  skipped: number
+  opened: number
+  clicked: number
+  unsubscribed: number
+  signed_up: number
+  applied: number
+}
+export type EmailCampaignStatus = "draft" | "sending" | "paused" | "done"
+export type EmailCampaignSummary = {
+  id: string
+  slug: string
+  name: string
+  subject: string
+  status: EmailCampaignStatus
+  paused_reason: string | null
+  created_at: string
+  started_at: string | null
+  finished_at: string | null
+  stats: EmailStats
+}
+export type EmailImport = { id: number; source: string; consent_note: string | null; file_name: string | null; tags: string[]; counts: Record<string, number>; created_at: string }
+export type EmailOverview = {
+  contacts: number
+  sendable: number
+  suppressed: Record<string, number> | null
+  tags: { tag: string; contacts: number }[]
+  imports: EmailImport[]
+  today: { sent: number; cap: number }
+  campaigns: EmailCampaignSummary[]
+}
+export type EmailContact = { id: string; email: string; name: string | null; college: string | null; year: string | null; tags: string[]; source: string; suppressed: string | null; created_at: string }
+export type EmailRecipient = {
+  email: string
+  name: string | null
+  status: string
+  sent_at: string | null
+  delivered_at: string | null
+  opened_at: string | null
+  opens: number
+  clicked_at: string | null
+  clicks: number
+  unsubscribed_at: string | null
+  error: string | null
+  signed_up: boolean
+  applied: boolean
+}
+export type EmailCampaign = {
+  campaign: { id: string; slug: string; name: string; subject: string; preview: string; body: string; from_name: string; tags: string[]; status: EmailCampaignStatus; paused_reason: string | null; created_at: string; started_at: string | null; finished_at: string | null }
+  audience: number | null
+  stats: EmailStats
+  health: { sent: number; bounced: number; complained: number; bounce_rate: number; complaint_rate: number; unhealthy: boolean }
+  today: { sent: number; cap: number }
+  total: number
+  rows: EmailRecipient[]
+}
+export const EMAIL_PER_PAGE = 50
+export const getEmailOverview = cache(() => rpc<EmailOverview | null>("admin_email_overview", undefined, null))
+export const getEmailContacts = cache((search: string, tag: string, page: number) =>
+  rpc<{ total: number; rows: EmailContact[] } | null>("admin_email_contacts", { p_search: search, p_tag: tag, p_limit: EMAIL_PER_PAGE, p_offset: (page - 1) * EMAIL_PER_PAGE }, null),
+)
+export const getEmailCampaign = cache((id: string, filter: string, page: number) =>
+  rpc<EmailCampaign | null>("admin_email_campaign", { p_id: id, p_filter: filter, p_limit: EMAIL_PER_PAGE, p_offset: (page - 1) * EMAIL_PER_PAGE }, null),
+)

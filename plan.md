@@ -196,6 +196,25 @@ Built once, generic, so courses reuse it:
   - *As built (B.4, 2026-11-14, Microsoft Clarity):* `@microsoft/clarity` (asked for instead of the script tag), project id `NEXT_PUBLIC_CLARITY_PROJECT_ID` in `.env.local` (no id, no recordings: CI and previews). `lib/beta/replay.ts`: started from the activity tracker once `/api/beta/activity` says the account is tracked (approved, agreed, beta closed), so the same consent and the same 15-minute recheck; `data-clarity-mask` on `<body>` masks all text and images on top of Clarity's input masking; never started on, and stopped (`clarity("stop")`, for the rest of that page load) when moving to, `/account`, `/admin`, `/teach` and the sign-in pages. Sessions are identified and tagged with `t-` + 10 hex of SHA-256(user id) (`lib/beta/tester-code.ts`, same on the server), shown per tester on `/admin/beta/activity` with a link to the project's recordings; tag `site` too. Privacy page names Microsoft Clarity (`LEGAL.sessionReplay`) and links Microsoft's privacy statement.
 **Before opening (👤):** privacy page and terms updated for tracking, recordings and screenshots (I draft, you review); the Clarity or PostHog account; decide how many testers to take at first.
 
+### Email campaigns (planned 2026-11-15)
+
+**Goal:** email people from Krpex's own community (first list: the "30 days of code" Google Form, Jan 2023, ~1,600 rows: name, email, WhatsApp, college, year, LinkedIn) about the beta, and see per person who got it, opened, clicked and applied.
+
+**Why not just send it:** the list is ~3 years old and was for a different event, so (a) many addresses will bounce (some rows are already malformed, e.g. `name@gmail` with no `.com`), and (b) people may not remember signing up. Sending 1,600 old addresses at once from krpex.in risks spam complaints that would also push password resets and beta emails into spam. So: a separate sending domain, list cleaning, a slow ramp, and a first email that reminds people where they know us from and makes leaving easy (re-permission). People who never open or click after two emails are dropped.
+
+**Sending:** Amazon SES (on our AWS account; ~$0.10 per 1,000) over SMTP with the existing nodemailer, from `news.krpex.in` (own SPF/DKIM/DMARC, so krpex.in's account emails are unaffected). Spacemail stays for account emails only. SES reports delivery, bounces and complaints to `/api/email/ses` (SNS, signature checked). Credentials only in `.env.local`.
+
+**Built into admin (`/admin/email`):**
+- Contacts: CSV import (email, name, college, year, tags), with the source and consent note recorded per import. Emails trimmed and lower-cased; bad syntax, duplicates, role/disposable addresses, common domain typos and domains with no mail server (MX check) are skipped and counted; optionally (on by default) only personal providers (Gmail, Outlook, Yahoo…), since old college addresses bounce. Phone and LinkedIn are not imported.
+- Do-not-send list: unsubscribes, hard bounces and complaints, checked before every send, forever.
+- Campaigns: subject, preview text, body (simple Markdown in the Krpex email layout), audience by tag, test send to yourself, then send. Sending is batched by the background job with a daily cap (ramp: 100/day in week 1, then ×2 every 3 days; a campaign pauses itself when bounces pass 5% (SES's own warning level; after 40 sends) or complaints pass 0.1% (2 or more), and the admins get a notification).
+- Tracking per recipient: delivered / bounced / complained (SES), opened (1×1 image on krpex.in), clicked (links go through `krpex.in/e/c/<token>`), applied (links carry `?ref=email-<campaign>`, so it also shows under "Where testers come from"). Opens are approximate (Apple Mail opens everything; some apps block images): judge by clicks and applications.
+- Unsubscribe: one-click `List-Unsubscribe` headers (Gmail/Yahoo bulk-sender rule) and a footer link to `krpex.in/e/u/<token>`, no sign-in needed.
+- Results: per campaign sent → delivered → opened → clicked → applied, bounces, unsubscribes; per-person table with filters (e.g. "opened, didn't click" for a follow-up).
+- Privacy policy: marketing emails to community members, open/click tracking, how to unsubscribe.
+
+**Steps:** E.1 SES + DNS (you, with help) → E.2 contacts + import + do-not-send → E.3 campaigns + sending job + unsubscribe → E.4 tracking + SES events → E.5 results page → E.6 first campaign (re-permission email to the 30 days of code list, ramped).
+
 ### Phase 6 — Payments (Razorpay)
 1. ✅ Plans, limits and credit ledger in the database (migration 007); account page shows plan, limits and credits.
 2. Razorpay account + KYC 👤; policy pages (Phase 3.2).

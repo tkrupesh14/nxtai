@@ -131,6 +131,13 @@ export default function PrivacyPage() {
               form, and only while the beta lasts.
             </p>
           </li>
+          <li id="email-updates" className="scroll-mt-24">
+            <strong>Email updates (people from our community):</strong> if you signed up with us for an event or
+            programme (such as 30 Days of Code), we keep your email address, name and, if you gave them, your college and
+            year, with where you signed up, so we can send occasional news and invitations. For each email we record
+            whether it was delivered, opened (from an image in the email; approximate) and whether you clicked a link,
+            and whether you then created an account or applied to the beta. Every email has an unsubscribe link.
+          </li>
           <li>
             <strong>Technical:</strong> IP address, browser and device information, and server logs used for security and
             fixing problems.
@@ -146,6 +153,10 @@ export default function PrivacyPage() {
           <li>To keep the service secure, prevent abuse and fix problems.</li>
           <li>To reply to your messages and send essential account emails (confirmation, password reset, receipts).</li>
           <li>To email you notifications you haven&apos;t seen in the app, unless you turn this off.</li>
+          <li>
+            To send occasional news and invitations to people who signed up with us, and to see which emails are useful
+            (delivered, opened, clicked), until you unsubscribe.
+          </li>
           <li>
             To run the closed beta: choose testers, read and answer feedback, and use beta activity and recordings to find
             bugs and confusing parts and decide what to improve. Never to advertise to you or to judge you as a person.
@@ -164,7 +175,8 @@ export default function PrivacyPage() {
             <strong>Supabase</strong>: database and sign-in.
           </li>
           <li>
-            <strong>Amazon Web Services</strong>: hosting (servers in Sydney, Australia).
+            <strong>Amazon Web Services</strong>: hosting (servers in Sydney, Australia), and delivering email updates
+            (Amazon SES), which also tells us about delivery, bounces and spam complaints.
           </li>
           <li>
             <strong>OpenRouter and the AI model providers it routes to (such as OpenAI)</strong>: your learning profile,
@@ -226,6 +238,8 @@ export default function PrivacyPage() {
           is deleted with the course. Feedback and screenshots are kept while your account exists and deleted with it.
           Beta activity (pages visited) is deleted after 90 days, and session recordings are deleted by the recording
           service after at most 90 days. Your beta application is kept while your account exists.
+          Email-update contacts and their email history are kept until you ask us to delete them. When you unsubscribe,
+          your address goes on a do-not-email list, which we keep so that we never email you again.
           We keep payment records as long as tax and accounting laws require.
         </p>
       </Section>
@@ -240,6 +254,7 @@ export default function PrivacyPage() {
             leave the beta at any time by contacting us: activity tracking and recordings stop and we delete your beta
             activity (while the beta is closed, this also ends your beta access);
           </li>
+          <li>unsubscribe from email updates with the link in any of them, at any time;</li>
           <li>nominate someone to exercise these rights for you in case of death or incapacity;</li>
           <li>raise a complaint with our Grievance Officer, and then with the Data Protection Board of India.</li>
         </List>

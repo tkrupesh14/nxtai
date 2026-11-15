@@ -14,7 +14,8 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Everything except static files and images (including the code runner, served as is on both hosts).
-    // Also not the recording upload: the proxy would cut its body off at 10 MB (the route checks sign-in itself).
-    '/((?!_next/static|_next/image|favicon.ico|sw\\.js|offline\\.html|code-runner\\.html|api/teach/recordings$|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Also not the recording upload: the proxy would cut its body off at 10 MB (the route checks sign-in itself),
+    // nor email tracking (opens, clicks, one-click unsubscribe, SES events), which never needs a session.
+    '/((?!_next/static|_next/image|favicon.ico|sw\\.js|offline\\.html|code-runner\\.html|api/teach/recordings$|api/email/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
