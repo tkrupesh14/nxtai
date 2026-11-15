@@ -1,17 +1,20 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { BetaForm } from "@/components/site/beta-form"
+import { BetaForm, RememberBetaRef } from "@/components/site/beta-form"
 import { Button } from "@/components/site/ui/button"
 import { getBetaStatus } from "@/lib/beta/access"
-import { BETA_DEVICES, BETA_ROLES } from "@/lib/beta/options"
+import { BETA_DEVICES, BETA_ROLES, betaRef } from "@/lib/beta/options"
 import { CODE_ORIGIN, COMMUNITY_ORIGIN } from "@/lib/code-host"
 import { safeNext } from "@/lib/safe-next"
 import { displayNameFor, getSignedInUser } from "@/lib/supabase/profile"
 
+const DESCRIPTION = "Apply to test Krpex: personal AI-taught courses, 150 coding problems with an AI coach, and a learner community. Pro is free for 30 days."
 export const metadata: Metadata = {
   title: "Join the beta — Krpex",
-  description: "Krpex is in a closed beta. Apply to try Krpex courses, Krpex Code and Krpex Community, with Pro free while you test.",
+  description: DESCRIPTION,
+  openGraph: { title: "Join the Krpex closed beta", description: DESCRIPTION, type: "website", url: "/beta" },
+  twitter: { card: "summary_large_image", title: "Join the Krpex closed beta", description: DESCRIPTION },
 }
 
 const OFFER = [
@@ -28,11 +31,15 @@ const ASK = [
 const label = (list: { id: string; label: string }[], id: string) => list.find((x) => x.id === id)?.label ?? id
 const date = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "long", timeZone: "Asia/Kolkata" })
 
-export default async function BetaPage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
-  const { from } = await searchParams
+export default async function BetaPage({ searchParams }: { searchParams: Promise<{ from?: string; ref?: string }> }) {
+  const { from, ref: refParam } = await searchParams
+  const ref = betaRef(refParam)
   const [status, user] = await Promise.all([getBetaStatus(), getSignedInUser()])
   const next = safeNext(from, "/learn")
-  const here = `/beta${from ? `?from=${encodeURIComponent(next)}` : ""}`
+  const qs = new URLSearchParams()
+  if (from) qs.set("from", next)
+  if (ref) qs.set("ref", ref)
+  const here = `/beta${qs.size ? `?${qs}` : ""}`
   const app = status.application
 
   return (
@@ -88,7 +95,7 @@ export default async function BetaPage({ searchParams }: { searchParams: Promise
           <details className="mt-5">
             <summary className="cursor-pointer text-sm font-medium text-primary">Change my application</summary>
             <div className="mt-4">
-              <BetaForm name={app.name} initial={app} />
+              <BetaForm name={app.name} initial={app} refCode={ref} />
             </div>
           </details>
         </section>
@@ -116,10 +123,11 @@ export default async function BetaPage({ searchParams }: { searchParams: Promise
           </h2>
           {user ? (
             <div className="mt-5">
-              <BetaForm name={displayNameFor(user)} />
+              <BetaForm name={displayNameFor(user)} refCode={ref} />
             </div>
           ) : (
             <>
+              <RememberBetaRef refCode={ref} />
               <p className="mt-2 text-sm text-muted-foreground">Create a free Krpex account first; it takes a minute. Then you&apos;ll come straight back here to apply.</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <Button asChild>

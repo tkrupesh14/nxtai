@@ -264,6 +264,7 @@ export type BetaRow = {
   goal: string | null
   device: string | null
   heard_from: string | null
+  ref: string | null
   consent_at: string | null
   note: string | null
   pro_days: number | null
@@ -273,7 +274,14 @@ export type BetaRow = {
   last_sign_in_at: string | null
   plan: string
 }
-export type BetaList = { closed: boolean; counts: Record<"waiting" | "approved" | "declined" | "existing", number>; total: number; rows: BetaRow[] }
+export type BetaSource = { ref: string | null; applied: number; waiting: number; approved: number; active_7d: number }
+export type BetaList = {
+  closed: boolean
+  counts: Record<"waiting" | "approved" | "declined" | "existing", number>
+  sources?: BetaSource[] // migration 045
+  total: number
+  rows: BetaRow[]
+}
 export const BETA_PER_PAGE = 50
 export const getBetaList = cache((status: BetaFilter, search: string, page: number) =>
   rpc<BetaList | null>("admin_beta_list", { p_status: status, p_search: search, p_limit: BETA_PER_PAGE, p_offset: (page - 1) * BETA_PER_PAGE }, null),

@@ -101,7 +101,8 @@ export default function PrivacyPage() {
             <ul className="mt-2 grid list-[circle] gap-2 pl-5">
               <li>
                 <em>Your application:</em> your name, what describes you (student, working, teacher…), what you want to
-                learn, the device you&apos;ll mostly use, how you heard of {LEGAL.brand}, when you agreed to beta tracking,
+                learn, the device you&apos;ll mostly use, how you heard of {LEGAL.brand} (including the name of the shared
+                link you came through, if any, such as a community&apos;s name), when you agreed to beta tracking,
                 our decision and our team&apos;s internal notes about it.
               </li>
               <li>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 
-import { BETA_DEVICES, BETA_ROLES } from "@/lib/beta/options"
+import { BETA_DEVICES, BETA_ROLES, betaRef } from "@/lib/beta/options"
 import { createClient } from "@/lib/supabase/server"
 
 export type BetaApplyState = { status: "idle" | "saved" | "error"; message?: string }
@@ -21,6 +21,7 @@ export async function applyForBeta(_prev: BetaApplyState, formData: FormData): P
   const device = String(formData.get("device") ?? "")
   const heard = String(formData.get("heard_from") ?? "").trim()
   const consent = formData.get("consent") === "on"
+  const ref = betaRef(formData.get("ref"))
 
   if (!name || name.length > 80) return { status: "error", message: "Please enter your name (up to 80 characters)." }
   if (!BETA_ROLES.some((r) => r.id === role)) return { status: "error", message: "Please choose what describes you best." }
@@ -37,6 +38,7 @@ export async function applyForBeta(_prev: BetaApplyState, formData: FormData): P
     p_device: device,
     p_heard_from: heard,
     p_consent: consent,
+    p_ref: ref,
   })
   if (error) {
     console.error("beta_apply failed:", error.code, error.message)

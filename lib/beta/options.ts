@@ -27,3 +27,10 @@ export const BETA_DEVICES: { id: BetaDevice; label: string }[] = [
   { id: "computer", label: "Laptop or desktop" },
   { id: "tablet", label: "Tablet" },
 ]
+
+/** A shared beta link's name (krpex.in/beta?ref=<name>): lower-case letters, digits and dashes, up to 40. Anything else → null. */
+export function betaRef(value: unknown): string | null {
+  const v = typeof value === "string" ? value.trim().toLowerCase() : ""
+  return /^[a-z0-9][a-z0-9-]{0,39}$/.test(v) ? v : null
+}
+export const BETA_REF_KEY = "krpex-beta-ref" // localStorage: the link someone first arrived through

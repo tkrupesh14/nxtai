@@ -1,21 +1,42 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useEffect, useState } from "react"
 
 import { applyForBeta, type BetaApplyState } from "@/app/(site)/beta/actions"
 import { Button } from "@/components/site/ui/button"
 import { Input } from "@/components/site/ui/input"
 import { Label } from "@/components/site/ui/label"
 import { Textarea } from "@/components/site/ui/textarea"
-import { BETA_DEVICES, BETA_ROLES, type BetaApplication } from "@/lib/beta/options"
+import { BETA_DEVICES, BETA_REF_KEY, BETA_ROLES, betaRef, type BetaApplication } from "@/lib/beta/options"
 
 const select = "h-10 w-full rounded-md border bg-background px-3 text-sm"
 
+/** The shared link this browser first arrived through (krpex.in/beta?ref=…), kept so it survives signing up. */
+function useBetaRef(fromUrl: string | null) {
+  const [ref, setRef] = useState<string | null>(fromUrl)
+  useEffect(() => {
+    try {
+      const stored = betaRef(localStorage.getItem(BETA_REF_KEY))
+      if (stored) setRef(stored)
+      else if (fromUrl) localStorage.setItem(BETA_REF_KEY, fromUrl)
+    } catch {}
+  }, [fromUrl])
+  return ref
+}
+
+/** Remembers ?ref= for visitors who still have to create an account before they can apply. */
+export function RememberBetaRef({ refCode }: { refCode: string | null }) {
+  useBetaRef(refCode)
+  return null
+}
+
 /** The beta application (krpex.in/beta). `initial` fills it in again to change a waiting application. */
-export function BetaForm({ name, initial }: { name: string; initial?: BetaApplication | null }) {
+export function BetaForm({ name, initial, refCode = null }: { name: string; initial?: BetaApplication | null; refCode?: string | null }) {
   const [state, formAction, pending] = useActionState<BetaApplyState, FormData>(applyForBeta, { status: "idle" })
+  const ref = useBetaRef(refCode)
   return (
     <form action={formAction} className="grid gap-5">
+      {ref ? <input type="hidden" name="ref" value={ref} /> : null}
       <div className="grid gap-2">
         <Label htmlFor="beta-name">Your name</Label>
         <Input id="beta-name" name="name" defaultValue={initial?.name ?? name} required maxLength={80} autoComplete="name" />

@@ -36,6 +36,8 @@ export async function sendEmail(mail: {
   subject: string
   text: string
   html: string
+  /** Where replies go (e.g. the visitor who used the contact form). */
+  replyTo?: { name: string; address: string }
   /** One-click unsubscribe (RFC 8058): Gmail and Yahoo show an "Unsubscribe" button. */
   unsubscribe?: { url: string; oneClickUrl: string }
 }): Promise<void> {
@@ -44,6 +46,7 @@ export async function sendEmail(mail: {
   await getTransport().sendMail({
     from,
     to: mail.to,
+    replyTo: mail.replyTo,
     subject: mail.subject,
     text: mail.text,
     html: mail.html,

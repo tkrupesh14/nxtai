@@ -101,14 +101,20 @@ test("sitemap lists the course pages", async ({ request }) => {
   expect(xml).toContain("/courses/python-fundamentals")
 })
 
-test("uploads need the Krpex site and a signed-in learner", async ({ request, baseURL }) => {
+test("uploads need the Krpex site and a signed-in learner", async ({ request, baseURL }, testInfo) => {
+  // The API doesn't depend on the screen, and Nginx allows uploads in bursts of 5 a minute (shared by these
+  // tests): run them once, on desktop, so back-to-back runs don't hit 429.
+  test.skip(testInfo.project.name === "mobile", "API check; runs on desktop only")
   const res = await request.post("/api/sources", { multipart: { text: "x".repeat(300) } })
   expect(res.status()).toBe(403)
   const signedOut = await request.post("/api/sources", { multipart: { text: "x".repeat(300) }, headers: { origin: new URL(baseURL!).origin } })
   expect(signedOut.status()).toBe(401)
 })
 
-test("the professor space needs sign-in, and its uploads need the Krpex site", async ({ page, request, baseURL }) => {
+test("the professor space needs sign-in, and its uploads need the Krpex site", async ({ page, request, baseURL }, testInfo) => {
+  // The API doesn't depend on the screen, and Nginx allows uploads in bursts of 5 a minute (shared by these
+  // tests): run them once, on desktop, so back-to-back runs don't hit 429.
+  test.skip(testInfo.project.name === "mobile", "API check; runs on desktop only")
   await page.goto("/teach/join?token=abc")
   await expect(page).toHaveURL(/\/login\?next=%2Fteach%2Fjoin%3Ftoken%3Dabc$/)
   const res = await request.post("/api/teach/materials", { multipart: { text: "x".repeat(300), language: "en" } })
@@ -120,7 +126,10 @@ test("the professor space needs sign-in, and its uploads need the Krpex site", a
   expect(signedOut.status()).toBe(401)
 })
 
-test("lecture recording uploads need the Krpex site and a signed-in professor", async ({ request, baseURL }) => {
+test("lecture recording uploads need the Krpex site and a signed-in professor", async ({ request, baseURL }, testInfo) => {
+  // The API doesn't depend on the screen, and Nginx allows uploads in bursts of 5 a minute (shared by these
+  // tests): run them once, on desktop, so back-to-back runs don't hit 429.
+  test.skip(testInfo.project.name === "mobile", "API check; runs on desktop only")
   const url = "/api/teach/recordings?language=en&filename=lecture.mp3&seconds=5"
   const data = Buffer.alloc(1000, 1)
   expect((await request.post(url, { data, headers: { "content-type": "audio/mpeg" } })).status()).toBe(403)

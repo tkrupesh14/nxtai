@@ -1,5 +1,9 @@
 "use server"
 
+import { after } from "next/server"
+
+import { emailConfigured, sendEmail } from "@/lib/email/send"
+import { LEGAL } from "@/lib/legal"
 import { createClient } from "@/lib/supabase/server"
 
 export type ContactState = { status: "idle" | "success" | "error"; message?: string }
@@ -27,5 +31,27 @@ export async function sendContactMessage(_prev: ContactState, formData: FormData
     return { status: "error", message: "We couldn't send your message right now. Please try again shortly." }
   }
 
+  // Tell the team (3.4), after the visitor has their answer; replying goes straight to the visitor.
+  after(() => notifyTeam(name, email, message))
   return { status: "success", message: "Thanks! Your message has been sent. We'll get back to you soon." }
+}
+
+const escape = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
+
+async function notifyTeam(name: string, email: string, message: string) {
+  if (!emailConfigured()) return
+  const to = process.env.CONTACT_EMAIL || LEGAL.email
+  const oneLine = name.replace(/[\r\n]+/g, " ").slice(0, 80)
+  try {
+    await sendEmail({
+      to,
+      replyTo: { name: oneLine, address: email },
+      subject: `Contact form: ${oneLine}`,
+      text: `${name} <${email}> wrote on ${LEGAL.site}/contact:\n\n${message}\n\nReply to this email to answer them.`,
+      html: `<p><strong>${escape(name)}</strong> &lt;${escape(email)}&gt; wrote on ${LEGAL.site}/contact:</p><p style="white-space:pre-wrap">${escape(message)}</p><p style="color:#666">Reply to this email to answer them.</p>`,
+    })
+  } catch (e) {
+    // Never log the message or address; the message is saved in contact_messages either way.
+    console.error("contact email failed:", e instanceof Error ? e.message : e)
+  }
 }

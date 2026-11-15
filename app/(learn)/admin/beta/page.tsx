@@ -19,6 +19,7 @@ const SHOW: { id: BetaFilter; label: string }[] = [
   { id: "approved", label: "Approved" },
   { id: "declined", label: "Declined" },
   { id: "existing", label: "Accounts from before the beta" },
+  { id: "all", label: "Everyone" },
 ]
 const STATUS = { waiting: { label: "Waiting", tone: "warn" }, approved: { label: "Approved", tone: "primary" }, declined: { label: "Declined", tone: "muted" } } as const
 const label = (list: { id: string; label: string }[], id: string | null) => (id ? (list.find((x) => x.id === id)?.label ?? id) : "—")
@@ -74,6 +75,48 @@ export default async function AdminBeta({ searchParams }: { searchParams: Promis
         </form>
       </AdminSection>
 
+      <AdminSection
+        title="Where testers come from"
+        description="Share a named link in each group or community, like krpex.in/beta?ref=pydelhi (lower-case letters, digits and dashes). Each application keeps the first link its applicant came through."
+      >
+        {!data?.sources?.length ? (
+          <p className="text-sm text-muted-foreground">No applications yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-4 font-medium">Link</th>
+                  <th className="py-2 pr-4 text-right font-medium">Applied</th>
+                  <th className="py-2 pr-4 text-right font-medium">Waiting</th>
+                  <th className="py-2 pr-4 text-right font-medium">Approved</th>
+                  <th className="py-2 text-right font-medium">Active this week</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y tabular-nums">
+                {data.sources.map((src) => (
+                  <tr key={src.ref ?? ""}>
+                    <td className="py-2 pr-4">
+                      {src.ref ? (
+                        <Link href={`/admin/beta?show=all&q=${encodeURIComponent(src.ref)}`} className="font-medium hover:underline">
+                          {src.ref}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">No link</span>
+                      )}
+                    </td>
+                    <td className="py-2 pr-4 text-right">{src.applied}</td>
+                    <td className="py-2 pr-4 text-right">{src.waiting}</td>
+                    <td className="py-2 pr-4 text-right">{src.approved}</td>
+                    <td className="py-2 text-right">{src.active_7d}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </AdminSection>
+
       <AdminSection title={`${SHOW.find((s) => s.id === show)!.label} (${(data?.total ?? 0).toLocaleString("en-IN")})`}>
         <nav aria-label="Applications" className="mb-4 flex flex-wrap gap-2 text-sm">
           {SHOW.map((s) => (
@@ -84,7 +127,7 @@ export default async function AdminBeta({ searchParams }: { searchParams: Promis
         </nav>
         <form action="/admin/beta" className="mb-4 flex flex-wrap items-center gap-2">
           {show !== "waiting" ? <input type="hidden" name="show" value={show} /> : null}
-          <Input name="q" defaultValue={q} placeholder="Email, name or what they want to learn" aria-label="Search applications" className="h-9 w-full sm:w-72" />
+          <Input name="q" defaultValue={q} placeholder="Email, name, link or what they want to learn" aria-label="Search applications" className="h-9 w-full sm:w-72" />
           <Button type="submit" variant="outline" size="sm" className="h-9">
             Search
           </Button>
@@ -116,6 +159,7 @@ export default async function AdminBeta({ searchParams }: { searchParams: Promis
                   <>
                     <p className="text-xs text-muted-foreground">
                       {label(BETA_ROLES, r.role)} · {label(BETA_DEVICES, r.device)}
+                      {r.ref ? ` · link: ${r.ref}` : ""}
                       {r.heard_from ? ` · heard from: ${r.heard_from}` : ""}
                       {r.consent_at ? " · agreed to tracking and recording" : ""}
                     </p>
