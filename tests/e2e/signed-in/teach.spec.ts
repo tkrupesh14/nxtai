@@ -510,6 +510,10 @@ test("closed beta: a new account applies, waits, is approved by an admin and get
     await expect(list.getByRole("button", { name: "Approve Beta Tester" })).toHaveCount(0)
     await page.goto("/admin/beta?show=approved&q=Beta+Tester")
     await expect(list.getByText(/30 days of Pro given/)).toBeVisible()
+    await expect(list.getByRole("link", { name: "Send Beta Tester a welcome message on WhatsApp" })).toHaveAttribute(
+      "href",
+      /^https:\/\/wa\.me\/919876543210\?text=Hi%20Beta!.*Pro%20free%20for%2030%20days/,
+    )
 
     // In: Code, Community and courses open, with Pro.
     await t.goto("/beta?from=%2Fcode%2Fproblems")

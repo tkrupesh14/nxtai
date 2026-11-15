@@ -7,6 +7,7 @@ import { Button } from "@/components/site/ui/button"
 import { Input } from "@/components/site/ui/input"
 import { BETA_PER_PAGE, getBetaList, getFeedbackList, requireAdmin, type BetaFilter } from "@/lib/admin/data"
 import { BETA_DEVICES, BETA_ROLES } from "@/lib/beta/options"
+import { betaWelcomeMessage, whatsappLink } from "@/lib/beta/whatsapp"
 
 import { setBetaClosedAction } from "../actions"
 
@@ -162,7 +163,7 @@ export default async function AdminBeta({ searchParams }: { searchParams: Promis
                       {r.whatsapp ? (
                         <>
                           {" · WhatsApp "}
-                          <a href={`https://wa.me/${r.whatsapp.slice(1)}`} target="_blank" rel="noreferrer" className="tabular-nums text-primary hover:underline">
+                          <a href={whatsappLink(r.whatsapp)} target="_blank" rel="noreferrer" className="tabular-nums text-primary hover:underline">
                             {r.whatsapp}
                           </a>
                         </>
@@ -181,6 +182,20 @@ export default async function AdminBeta({ searchParams }: { searchParams: Promis
                       </p>
                     ) : r.note ? (
                       <p className="text-xs text-muted-foreground">Note: {r.note}</p>
+                    ) : null}
+                    {r.status === "approved" && r.whatsapp ? (
+                      <p>
+                        <Button asChild size="sm" variant="outline">
+                          <a
+                            href={whatsappLink(r.whatsapp, betaWelcomeMessage({ name: r.name, proDays: r.pro_days }))}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`Send ${r.name ?? r.email} a welcome message on WhatsApp`}
+                          >
+                            Send welcome on WhatsApp
+                          </a>
+                        </Button>
+                      </p>
                     ) : null}
                     <BetaDecideForm userId={r.user_id} name={r.name ?? r.email} status={r.status} proGiven={Boolean(r.pro_days)} />
                   </>
