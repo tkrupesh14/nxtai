@@ -31,7 +31,7 @@ export default function PrivacyPage() {
         <List>
           <li>
             <strong>Account:</strong> name, email address, password (stored only as a secure hash by our sign-in provider),
-            and, if you sign in with GitHub or Google, your public profile name and photo from that service.
+            and, if you sign in with GitHub, your public profile name and photo from GitHub.
           </li>
           <li>
             <strong>Learning profile:</strong> your goals, chosen subjects, level, background, learning style, available
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
             <strong>Beta testing (only if you join the closed beta):</strong>
             <ul className="mt-2 grid list-[circle] gap-2 pl-5">
               <li>
-                <em>Your application:</em> your name, what describes you (student, working, teacher…), what you want to
+                <em>Your application:</em> your name, your WhatsApp number (to add you to the testers&apos; group and contact you about the beta), what describes you (student, working, teacher…), what you want to
                 learn, the device you&apos;ll mostly use, how you heard of {LEGAL.brand} (including the name of the shared
                 link you came through, if any, such as a community&apos;s name), when you agreed to beta tracking,
                 our decision and our team&apos;s internal notes about it.
@@ -176,7 +176,7 @@ export default function PrivacyPage() {
             <strong>Sarvam AI</strong> (India): speech-to-text for lecture recordings that professors upload.
           </li>
           <li>
-            <strong>GitHub / Google</strong>: only if you choose to sign in with them.
+            <strong>GitHub</strong>: only if you choose to sign in with it.
           </li>
           <li>
             <strong>Razorpay</strong>: payment processing, when you buy a plan or credits.

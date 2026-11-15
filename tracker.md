@@ -55,7 +55,7 @@ Plan and context: [plan.md](./plan.md). Update the **Status** column as work mov
 
 | ID | Task | Pri | Status | Owner | Notes |
 |----|------|-----|--------|-------|-------|
-| 1.1 | Enable OAuth providers; Site URL + redirect URLs | P0 | 🟡 | 👤 | GitHub ✅; Google ⬜ |
+| 1.1 | Enable OAuth providers; Site URL + redirect URLs | P0 | 🟡 | 👤 | GitHub ✅; Google ⬜ — button removed from login / sign-up 2026-11-15 (wasn't working); add it back in `components/site/oauth-buttons.tsx` once the Google provider is set up in Supabase |
 | 1.2 | Profile rows, protected routes, `/error` | P0 | ✅ | | D5, D8 |
 | 1.6 | Email/password in the new design; retire `/auth/*` pages | P1 | ✅ | | D19 |
 | 1.7 | Signed-in state in the site navbar | P1 | ✅ | 🤖 | Navbar since `ed2e4b2`; home and pricing buttons follow the signed-in state |
@@ -142,7 +142,7 @@ Plan: plan.md "Closed beta". Covers krpex.in, code.krpex.in and community.krpex.
 | B.3 | Tester activity on all three sites: page visits, per-tester timeline, funnel, pages used | P1 | ✅ | 🤖 | Migration 044; consent required; kept 90 days Built 2026-11-14: tracker on all three sites (`components/beta/activity-tracker.tsx` → `/api/beta/activity`), `/admin/beta/activity` (funnel, sites, most/least used pages with sessions ended, testers, per-tester timeline by session). Live 2026-11-14 (0adfaef) |
 | B.4 | Session replay for consenting testers (masked; not on account, payments, admin) | P1 | ✅ | 👤🤖 | Built 2026-11-14 with Microsoft Clarity (`@microsoft/clarity`, project in `NEXT_PUBLIC_CLARITY_PROJECT_ID`): started by the activity tracker for tracked testers only, whole page masked (`data-clarity-mask` on body), stopped on account / admin / teach / sign-in pages, anonymous tag `t-…` shown on `/admin/beta/activity`. Live 2026-11-14 (c5411ad). You: Masking → Strict in Clarity settings |
 | B.5 | Privacy page + terms for tracking, recordings and screenshots | P0 | ✅ | 🤖👤 | Drafted 2026-11-14: privacy page (feedback; beta application, activity, recordings with everything typed and page text hidden; 90 days; the recording service named once chosen via `LEGAL.sessionReplay`; leaving the beta), terms §6 "The closed beta" (unfinished features, consent, free Pro is a gift, feedback licence). Deleting an account now deletes feedback screenshots (migration 043). Reviewed; live 2026-11-14 (c4d0147) |
-| B.6 | Recruiting testers: named links (`/beta?ref=<group>`) with per-link counts on `/admin/beta`; `/beta` share card for WhatsApp / LinkedIn | P1 | 🔄 | 🤖👤 | Built 2026-11-15. Migration 045 (`beta_testers.ref`, `beta_apply(…, p_ref)`, `admin_beta_list` sources). First link kept (also remembered in the browser across sign-up). Note: parked YouTube stash also uses 045, so renumber it to 046 when restored. You: apply migration 045, then post one group at a time |
+| B.6 | Recruiting testers: named links (`/beta?ref=<group>`) with per-link counts on `/admin/beta`; `/beta` share card for WhatsApp / LinkedIn | P1 | 🔄 | 🤖👤 | Built 2026-11-15. Migration 045 (`beta_testers.ref`, `beta_apply(…, p_ref)`, `admin_beta_list` sources). First link kept (also remembered in the browser across sign-up). Note: parked YouTube stash also uses 045, so renumber it to 046 when restored. You: apply migration 045, then post one group at a time. 2026-11-15: WhatsApp number on the application (required in the form; migration 046, `private.whatsapp_number` adds +91 to 10-digit Indian mobiles), shown on `/admin/beta` as a wa.me link |
 
 ## Phase 6 — Payments (Razorpay)
 

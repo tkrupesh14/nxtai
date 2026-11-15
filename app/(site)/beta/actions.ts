@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 
-import { BETA_DEVICES, BETA_ROLES, betaRef } from "@/lib/beta/options"
+import { BETA_DEVICES, BETA_ROLES, betaRef, whatsappNumber } from "@/lib/beta/options"
 import { createClient } from "@/lib/supabase/server"
 
 export type BetaApplyState = { status: "idle" | "saved" | "error"; message?: string }
@@ -22,10 +22,13 @@ export async function applyForBeta(_prev: BetaApplyState, formData: FormData): P
   const heard = String(formData.get("heard_from") ?? "").trim()
   const consent = formData.get("consent") === "on"
   const ref = betaRef(formData.get("ref"))
+  const whatsapp = whatsappNumber(formData.get("whatsapp"))
 
   if (!name || name.length > 80) return { status: "error", message: "Please enter your name (up to 80 characters)." }
   if (!BETA_ROLES.some((r) => r.id === role)) return { status: "error", message: "Please choose what describes you best." }
   if (goal.length < 3 || goal.length > 500) return { status: "error", message: "Please tell us what you'd like to learn (up to 500 characters)." }
+  if (!whatsapp)
+    return { status: "error", message: "Please enter your WhatsApp number: 10 digits for an Indian number, or + and the country code for others." }
   if (!BETA_DEVICES.some((d) => d.id === device)) return { status: "error", message: "Please choose the device you'll mostly use." }
   if (heard.length > 200) return { status: "error", message: "Please keep “How did you hear about Krpex?” under 200 characters." }
   if (!consent) return { status: "error", message: "Beta testers agree to activity tracking and session recording. Please tick the box to apply." }
@@ -39,6 +42,7 @@ export async function applyForBeta(_prev: BetaApplyState, formData: FormData): P
     p_heard_from: heard,
     p_consent: consent,
     p_ref: ref,
+    p_whatsapp: whatsapp,
   })
   if (error) {
     console.error("beta_apply failed:", error.code, error.message)

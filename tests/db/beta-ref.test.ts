@@ -48,3 +48,17 @@ describe("beta links", () => {
     expect(found.rows.map((r: { email: string; ref: string }) => [r.email, r.ref])).toEqual([["asha@example.com", "pydelhi"]])
   })
 })
+
+describe("beta WhatsApp number", () => {
+  it("tidies the number, refuses a bad one and keeps it when an update leaves it out", async () => {
+    const wa = (n: string | null) => call(`public.beta_apply('Asha', 'college', 'Python', 'android', '', true, null, $1)`, [n])
+    await t.asUser(USER_A)
+    expect(await wa("+91 98765-43210")).toBe("ok")
+    await expect(wa("12345")).rejects.toThrow(/bad whatsapp/)
+    expect(await wa(null)).toBe("ok") // the older app: the number stays
+    expect((await call(`public.beta_my_status()`)).application.whatsapp).toBe("+919876543210")
+    await t.asUser(USER_ADMIN)
+    const found = await call(`public.admin_beta_list('all', '98765', 50, 0)`)
+    expect(found.rows.map((r: { whatsapp: string }) => r.whatsapp)).toEqual(["+919876543210"])
+  })
+})

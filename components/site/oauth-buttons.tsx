@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/site/ui/button"
 import { createClient } from "@/lib/supabase/client"
 
-type Provider = "github" | "google"
+type Provider = "github" // Google sign-in is off until it is set up in Supabase (tracker)
 
 // Supabase OAuth sign-in. After the provider redirects back, /auth/callback
 // exchanges the code for a session and sends the user to `next` (default /learn).
@@ -26,7 +26,7 @@ export function OAuthButtons({ next = "/learn" }: { next?: string }) {
       console.error("OAuth sign-in failed:", message)
       setError(
         /not enabled/i.test(message)
-          ? `${provider === "github" ? "GitHub" : "Google"} sign-in isn't available yet. Please try another option.`
+          ? "GitHub sign-in isn't available yet. Please use your email instead."
           : "Couldn't start sign-in. Please try again.",
       )
       setPending(null)
@@ -37,9 +37,6 @@ export function OAuthButtons({ next = "/learn" }: { next?: string }) {
     <div className="grid gap-3">
       <Button variant="outline" onClick={() => signIn("github")} disabled={pending !== null} className="w-full">
         {pending === "github" ? "Redirecting…" : "Continue with GitHub"}
-      </Button>
-      <Button variant="outline" onClick={() => signIn("google")} disabled={pending !== null} className="w-full">
-        {pending === "google" ? "Redirecting…" : "Continue with Google"}
       </Button>
       {error && (
         <p role="alert" className="text-center text-sm text-destructive-foreground">

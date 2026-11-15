@@ -265,6 +265,7 @@ export type BetaRow = {
   device: string | null
   heard_from: string | null
   ref: string | null
+  whatsapp?: string | null // migration 046
   consent_at: string | null
   note: string | null
   pro_days: number | null

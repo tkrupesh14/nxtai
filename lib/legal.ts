@@ -14,7 +14,7 @@ export const LEGAL = {
   grievanceOfficer: "" as string,
   /** Session-recording service for beta testers (B.4), e.g. "Microsoft Clarity"; empty until recordings are switched on. */
   sessionReplay: "Microsoft Clarity" as string,
-  lastUpdated: "14 November 2026",
+  lastUpdated: "15 November 2026",
 }
 
 export const operatorName = () => LEGAL.operator || LEGAL.brand

@@ -127,7 +127,7 @@ export default async function AdminBeta({ searchParams }: { searchParams: Promis
         </nav>
         <form action="/admin/beta" className="mb-4 flex flex-wrap items-center gap-2">
           {show !== "waiting" ? <input type="hidden" name="show" value={show} /> : null}
-          <Input name="q" defaultValue={q} placeholder="Email, name, link or what they want to learn" aria-label="Search applications" className="h-9 w-full sm:w-72" />
+          <Input name="q" defaultValue={q} placeholder="Email, name, phone, link or what they want to learn" aria-label="Search applications" className="h-9 w-full sm:w-72" />
           <Button type="submit" variant="outline" size="sm" className="h-9">
             Search
           </Button>
@@ -159,6 +159,14 @@ export default async function AdminBeta({ searchParams }: { searchParams: Promis
                   <>
                     <p className="text-xs text-muted-foreground">
                       {label(BETA_ROLES, r.role)} · {label(BETA_DEVICES, r.device)}
+                      {r.whatsapp ? (
+                        <>
+                          {" · WhatsApp "}
+                          <a href={`https://wa.me/${r.whatsapp.slice(1)}`} target="_blank" rel="noreferrer" className="tabular-nums text-primary hover:underline">
+                            {r.whatsapp}
+                          </a>
+                        </>
+                      ) : null}
                       {r.ref ? ` · link: ${r.ref}` : ""}
                       {r.heard_from ? ` · heard from: ${r.heard_from}` : ""}
                       {r.consent_at ? " · agreed to tracking and recording" : ""}

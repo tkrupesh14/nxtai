@@ -489,6 +489,7 @@ test("closed beta: a new account applies, waits, is approved by an admin and get
 
     // Back on /beta, signed in: apply.
     await expect(t).toHaveURL(/\/beta\?from=%2Fcode%2Fproblems$/)
+    await t.getByLabel("WhatsApp number").fill("98765 43210")
     await t.getByLabel("What describes you best?").selectOption("college")
     await t.getByLabel("Device you'll mostly use").selectOption("android")
     await t.getByLabel("What would you like to learn or practise on Krpex?").fill("Python for my placements")
@@ -504,6 +505,7 @@ test("closed beta: a new account applies, waits, is approved by an admin and get
     await page.goto("/admin/beta?q=Beta+Tester")
     const list = page.getByRole("list", { name: "Beta applications" })
     await expect(list.getByText("Python for my placements")).toBeVisible()
+    await expect(list.getByRole("link", { name: "+919876543210" })).toHaveAttribute("href", "https://wa.me/919876543210")
     await list.getByRole("button", { name: "Approve Beta Tester" }).click()
     await expect(list.getByRole("button", { name: "Approve Beta Tester" })).toHaveCount(0)
     await page.goto("/admin/beta?show=approved&q=Beta+Tester")

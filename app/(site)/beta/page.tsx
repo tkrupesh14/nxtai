@@ -87,6 +87,12 @@ export default async function BetaPage({ searchParams }: { searchParams: Promise
             <dd className="break-words">{app.name}</dd>
             <dt className="text-muted-foreground">About you</dt>
             <dd>{label(BETA_ROLES, app.role)}</dd>
+            {app.whatsapp ? (
+              <>
+                <dt className="text-muted-foreground">WhatsApp</dt>
+                <dd className="tabular-nums">{app.whatsapp}</dd>
+              </>
+            ) : null}
             <dt className="text-muted-foreground">Device</dt>
             <dd>{label(BETA_DEVICES, app.device)}</dd>
             <dt className="text-muted-foreground">Wants to learn</dt>

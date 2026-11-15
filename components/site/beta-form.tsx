@@ -41,6 +41,25 @@ export function BetaForm({ name, initial, refCode = null }: { name: string; init
         <Label htmlFor="beta-name">Your name</Label>
         <Input id="beta-name" name="name" defaultValue={initial?.name ?? name} required maxLength={80} autoComplete="name" />
       </div>
+      <div className="grid gap-2">
+        <Label htmlFor="beta-whatsapp">WhatsApp number</Label>
+        <Input
+          id="beta-whatsapp"
+          name="whatsapp"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          required
+          maxLength={20}
+          pattern="[+0-9 ()\-]{8,20}"
+          defaultValue={initial?.whatsapp ?? ""}
+          placeholder="98765 43210"
+          aria-describedby="beta-whatsapp-note"
+        />
+        <p id="beta-whatsapp-note" className="text-xs text-muted-foreground">
+          We&apos;ll add you to the testers&apos; WhatsApp group when you&apos;re in. Outside India, start with + and your country code.
+        </p>
+      </div>
       <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
         <div className="grid gap-2">
           <Label htmlFor="beta-role">What describes you best?</Label>
